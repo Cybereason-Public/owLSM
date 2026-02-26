@@ -1,6 +1,11 @@
-name: Build Artifacts
+name: Build Artifact Full Lifecycle
 
 on:
+  pull_request:
+    types:
+      - opened
+    branches:
+      - 'main'
   workflow_dispatch:
     inputs:
       major:
@@ -18,7 +23,23 @@ on:
         required: true
         default: '0'
         type: string
-
+      run_automation_tests:
+        description: 'Run automation tests with runners'
+        type: boolean
+        default: true
+      automation-tests-command-args:
+        description: "Command to run automation tests"
+        required: true
+        type: string
+        default: "features/ --junitxml=$AUTOMATION_ROOT_DIR/results.xml -v -s"
+      destroy_runners:
+        description: 'Destroy runner VMs after tests'
+        type: boolean
+        default: true
+      ephemeral_runners:
+        description: 'Make runners ephemeral (unregister after first job)'
+        type: boolean
+        default: true
 env:
   DOCKER_IMAGE: owlsm-ci-ubuntu
   # Use inputs if workflow_dispatch, otherwise default to 1.0.0 for push triggers
@@ -26,6 +47,7 @@ env:
 
 jobs:
   build:
+    name: Build Artifact
     runs-on: ["OCI", "owLSM"]
     steps:
       - name: Checkout repository
@@ -153,3 +175,20 @@ jobs:
           cd ${{ github.workspace }}
           sudo git clean -ffdx
           echo "==> Cleanup completed!"
+          
+    outputs:
+      artifact_name: ${{ steps.archive.outputs.artifact_name }}
+
+  automation-tests-runners:
+    name: Create runners and run automation tests
+    needs: [build]
+    if: github.event_name == 'push' || github.event.inputs.run_automation_tests == true
+    uses: ./.github/workflows/automation-tests-runners.yml
+    with:
+      artifact-name: ${{ needs.build.outputs.artifact_name }}
+      automation-tests-command-args: ${{ inputs.automation-tests-command-args || 'features/ --junitxml=$AUTOMATION_ROOT_DIR/results.xml -v -s' }}
+      destroy_runners: ${{ inputs.destroy_runners == '' && true || inputs.destroy_runners }}
+      ephemeral_runners: ${{ inputs.ephemeral_runners == '' && true || inputs.ephemeral_runners }}
+    secrets:
+      GH_RUNNER_PAT: ${{ secrets.GH_RUNNER_PAT }}
+      SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}

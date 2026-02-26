@@ -1,0 +1,285 @@
+<mxfile host="65bd71144e">
+    <diagram id="automation-infra" name="Automation Tests Infrastructure">
+        <mxGraphModel dx="295" dy="271" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" value="&lt;b&gt;Automation Tests Infrastructure&lt;/b&gt;&lt;br&gt;Runner Provisioning → Test Execution → Cleanup" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=16;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="480" y="15" width="420" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="gh_layer" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;strokeWidth=2;dashed=0;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="80" width="400" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="gh_label" value="&lt;b&gt;GitHub Actions&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=13;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="50" y="85" width="120" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="wf_build" value="&lt;b&gt;build-artifacts-&lt;br&gt;full-lifecycle.yml&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Orchestrator workflow&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="120" width="160" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="wf_runners" value="&lt;b&gt;automation-tests-&lt;br&gt;runners.yml&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Reusable workflow&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="260" y="120" width="160" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="wf_tests" value="&lt;b&gt;automation-tests.yml&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Reusable workflow&lt;br&gt;(per-runner matrix jobs)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="260" y="210" width="160" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="wf_destroy" value="&lt;b&gt;destroy-runners.yml&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Reusable workflow&lt;br&gt;+ daily cron + manual&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="155" y="205" width="90" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="ew1" value="" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#6c8ebf;fontColor=#f5f4f4;" parent="1" source="wf_build" target="wf_runners" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="ew2" value="calls (matrix jobs)" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#82b366;fontColor=#080707;labelBackgroundColor=#fcfbfe;" parent="1" source="wf_runners" target="wf_tests" edge="1">
+                    <mxGeometry x="0.3333" y="40" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="ew3" value="" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#b85450;fontColor=#000000;" parent="1" source="wf_runners" target="wf_destroy" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="340" y="195"/>
+                            <mxPoint x="105" y="195"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="controller_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="500" y="80" width="280" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="controller_label" value="&lt;b&gt;Self-Hosted Controller Runner&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;runs-on: [OCI, owLSM]&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=12;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="510" y="85" width="220" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="ctrl_terraform" value="&lt;b&gt;Terraform&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;v1.14.4&lt;br&gt;init → plan → apply&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6c8ebf;fontSize=11;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="520" y="130" width="120" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="ctrl_scripts" value="&lt;b&gt;Scripts&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;wait-for-runners.sh&lt;br&gt;deregister-runners.sh&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6c8ebf;fontSize=11;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="650" y="130" width="120" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="ctrl_tfvars" value="&lt;b&gt;runners.auto.tfvars.json&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Defines runner array for matrix jobs:&lt;br&gt;image_id, shape, labels&lt;/font&gt;" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=15;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="520" y="200" width="240" height="65" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_gh_ctrl" value="" style="edgeStyle=orthogonalEdgeStyle;strokeWidth=2;strokeColor=#6c8ebf;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="wf_runners" target="ctrl_terraform" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="oci_label" value="&lt;b&gt;Oracle Cloud Infrastructure (OCI)&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=14;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="50" y="345" width="260" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="vm1" value="&lt;b&gt;ubuntu-22&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;VM.Standard.E5.Flex&lt;br&gt;2 OCPU / 16GB&lt;br&gt;100GB boot&lt;/font&gt;" style="shape=mxgraph.cisco.computers_and_peripherals.virtual_desktop;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;rounded=1;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="400" width="140" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="vm2" value="&lt;b&gt;ubuntu-24&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;VM.Standard.E5.Flex&lt;br&gt;2 OCPU / 16GB&lt;br&gt;100GB boot&lt;/font&gt;" style="shape=mxgraph.cisco.computers_and_peripherals.virtual_desktop;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;rounded=1;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="220" y="400" width="140" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="vm3" value="&lt;b&gt;oracle-10&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;VM.Standard.E5.Flex&lt;br&gt;2 OCPU / 16GB&lt;br&gt;100GB boot&lt;/font&gt;" style="shape=mxgraph.cisco.computers_and_peripherals.virtual_desktop;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;rounded=1;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="380" y="400" width="140" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="vm4" value="&lt;b&gt;Other runner VM&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px;&quot;&gt;VM.Standard.E5.Flex&lt;br&gt;2 OCPU / 16GB&lt;br&gt;100GB boot&lt;/font&gt;" style="shape=mxgraph.cisco.computers_and_peripherals.virtual_desktop;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;rounded=1;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="540" y="400" width="140" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_tf_vm1" style="edgeStyle=orthogonalEdgeStyle;strokeWidth=1;strokeColor=#82b366;dashed=1;" parent="1" source="ctrl_terraform" target="vm1" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="580" y="310"/>
+                            <mxPoint x="130" y="310"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e_tf_vm2" style="edgeStyle=orthogonalEdgeStyle;strokeWidth=1;strokeColor=#82b366;dashed=1;" parent="1" source="ctrl_terraform" target="vm2" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="580" y="310"/>
+                            <mxPoint x="290" y="310"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e_tf_vm3" style="edgeStyle=orthogonalEdgeStyle;strokeWidth=1;strokeColor=#82b366;dashed=1;" parent="1" source="ctrl_terraform" target="vm3" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="580" y="310"/>
+                            <mxPoint x="450" y="310"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="e_tf_vm4" style="edgeStyle=orthogonalEdgeStyle;strokeWidth=1;strokeColor=#82b366;dashed=1;" parent="1" source="ctrl_terraform" target="vm4" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="580" y="310"/>
+                            <mxPoint x="610" y="310"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="vm_inside" value="ssds" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6c8ebf;strokeWidth=1;dashed=1;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="510" width="620" height="102" as="geometry"/>
+                </mxCell>
+                <mxCell id="s1" value="Install&lt;br&gt;gh + uv" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6c8ebf;fontSize=9;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="80" y="545" width="80" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="10" value="" style="edgeStyle=none;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;exitX=0.89;exitY=0.978;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" target="vm1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="129.7000000000001" y="513.0500000000001" as="sourcePoint"/>
+                        <Array as="points"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="s2" value="Download&lt;br&gt;Artifact&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;GH API&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6c8ebf;fontSize=9;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="180" y="545" width="80" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="s3" value="Extract to&lt;br&gt;/opt/owLSM" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6c8ebf;fontSize=9;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="280" y="545" width="80" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="s4" value="Setup venv&lt;br&gt;&amp;amp; deps&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;uv pip install&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#6c8ebf;fontSize=9;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="380" y="545" width="80" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="s5" value="&lt;b&gt;Run pytest&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;sudo pytest&lt;br&gt;features/&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="480" y="545" width="80" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="9" style="edgeStyle=none;html=1;entryX=-0.012;entryY=0.777;entryDx=0;entryDy=0;entryPerimeter=0;labelBackgroundColor=#fcfbfe;fontColor=#080707;" parent="1" source="s6" target="destroy_box" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="s6" value="Upload&lt;br&gt;results.xml" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="580" y="545" width="80" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="es1" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#6c8ebf;" parent="1" source="s1" target="s2" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="es2" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#6c8ebf;" parent="1" source="s2" target="s3" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="es3" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#6c8ebf;" parent="1" source="s3" target="s4" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="es4" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#6c8ebf;" parent="1" source="s4" target="s5" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="es5" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#6c8ebf;" parent="1" source="s5" target="s6" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="destroy_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;strokeWidth=2;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="740" y="345" width="300" height="275" as="geometry"/>
+                </mxCell>
+                <mxCell id="destroy_title" value="&lt;b&gt;Cleanup Phase&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;destroy-runners.yml&lt;br&gt;Triggers: after tests / daily cron / manual&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=12;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="820" y="345" width="280" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="d_init" value="Terraform Init" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#b85450;fontSize=10;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="790" y="405" width="200" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="d_destroy" value="Terraform Destroy&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Remove all OCI compute instances&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#b85450;fontSize=10;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="790" y="450" width="200" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="d_dereg" value="Deregister Offline Runners&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;deregister-runners.sh&lt;br&gt;label: owLSM-automation&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#b85450;fontSize=10;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="790" y="505" width="200" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="d_clean" value="Cleanup Workspace&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;git clean -ffdx (always)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="790" y="570" width="200" height="35" as="geometry"/>
+                </mxCell>
+                <mxCell id="ed_1" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#b85450;" parent="1" source="d_init" target="d_destroy" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="ed_2" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#b85450;" parent="1" source="d_destroy" target="d_dereg" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="ed_3" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#666666;" parent="1" source="d_dereg" target="d_clean" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="secrets_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;strokeWidth=2;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="800" y="80" width="230" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="secrets_label" value="&lt;b&gt;Secrets &amp;amp; Configuration&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=12;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="850" y="85" width="190" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="sec1" value="&lt;font style=&quot;font-size:10px&quot;&gt;&lt;b&gt;GH_RUNNER_PAT&lt;/b&gt;&lt;br&gt;GitHub runner registration&lt;br&gt;&amp;amp; API access&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#d79b00;fontSize=10;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="820" y="120" width="190" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="sec2" value="&lt;font style=&quot;font-size:10px&quot;&gt;&lt;b&gt;SSH_PUBLIC_KEY&lt;/b&gt;&lt;br&gt;Injected into runner VMs&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#d79b00;fontSize=10;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="820" y="170" width="190" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="sec3" value="&lt;font style=&quot;font-size:10px&quot;&gt;&lt;b&gt;OCI Credentials&lt;/b&gt;&lt;br&gt;Pre-baked in runner image&lt;br&gt;/home/ghrunner/.oci/&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#d79b00;fontSize=10;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="820" y="225" width="190" height="45" as="geometry"/>
+                </mxCell>
+                <mxCell id="flow_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#333333;strokeWidth=2;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="1070" y="80" width="340" height="540" as="geometry"/>
+                </mxCell>
+                <mxCell id="flow_title" value="&lt;b&gt;End-to-End Flow&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=top;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=13;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="1170" y="85" width="130" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="f1" value="1. Manual Dispatch&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Set version, test options&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="1110" y="120" width="260" height="35" as="geometry"/>
+                </mxCell>
+                <mxCell id="f2" value="2. Build Artifact&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Docker build → unit tests → make → archive&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="1110" y="170" width="260" height="35" as="geometry"/>
+                </mxCell>
+                <mxCell id="f3" value="3. Upload Artifact&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;VERSION-BRANCH-REV.tar.gz → GitHub Artifacts&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="1110" y="220" width="260" height="35" as="geometry"/>
+                </mxCell>
+                <mxCell id="f4" value="4. Provision OCI Runner VMs&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Terraform: init → plan → apply (5 VMs)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="1110" y="270" width="260" height="35" as="geometry"/>
+                </mxCell>
+                <mxCell id="f5" value="5. Wait for Runner Registration&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;wait-for-runners.sh polls GH API&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="1110" y="320" width="260" height="35" as="geometry"/>
+                </mxCell>
+                <mxCell id="f6" value="6. Run Automation Tests (matrix)&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Download artifact → pytest on each distro&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="1110" y="370" width="260" height="35" as="geometry"/>
+                </mxCell>
+                <mxCell id="f7" value="7. Upload Test Results&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;results.xml per runner (30-day retention)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="1110" y="420" width="260" height="35" as="geometry"/>
+                </mxCell>
+                <mxCell id="f8" value="8. Destroy Runner VMs&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Terraform destroy + deregister from GitHub&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="1110" y="470" width="260" height="35" as="geometry"/>
+                </mxCell>
+                <mxCell id="f9" value="9. Cleanup&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Workspace cleanup (always runs)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=10;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="1110" y="520" width="260" height="35" as="geometry"/>
+                </mxCell>
+                <mxCell id="ef1" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#333333;" parent="1" source="f1" target="f2" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="ef2" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#333333;" parent="1" source="f2" target="f3" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="ef3" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#333333;" parent="1" source="f3" target="f4" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="ef4" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#333333;" parent="1" source="f4" target="f5" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="ef5" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#333333;" parent="1" source="f5" target="f6" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="ef6" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#333333;" parent="1" source="f6" target="f7" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="ef7" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#333333;" parent="1" source="f7" target="f8" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="ef8" style="edgeStyle=orthogonalEdgeStyle;strokeColor=#333333;" parent="1" source="f8" target="f9" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="l_title" value="&lt;b&gt;Legend:&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=10;fontColor=#000000;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="647.5" width="60" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="13" value="" style="edgeStyle=none;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" target="vm2">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="290" y="510" as="sourcePoint"/>
+                        <mxPoint x="260" y="460" as="targetPoint"/>
+                        <Array as="points"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="14" value="&lt;font color=&quot;#141414&quot;&gt;automation-tests.yml job runs on each automation tests runner VMs&lt;/font&gt;" style="text;strokeColor=none;align=center;fillColor=none;html=1;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="155" y="510" width="405" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="15" value="" style="edgeStyle=none;html=1;exitX=0.75;exitY=0;exitDx=0;exitDy=0;entryX=0.566;entryY=1.021;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="14" target="vm3">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="460" y="500" as="sourcePoint"/>
+                        <mxPoint x="460" y="490" as="targetPoint"/>
+                        <Array as="points"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="16" value="" style="edgeStyle=none;html=1;exitX=0.891;exitY=-0.014;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="vm_inside">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="630" y="500" as="sourcePoint"/>
+                        <mxPoint x="612" y="480" as="targetPoint"/>
+                        <Array as="points"/>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

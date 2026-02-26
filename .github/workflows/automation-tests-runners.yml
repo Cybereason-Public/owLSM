@@ -35,6 +35,19 @@ on:
         description: "Name of the build artifact to download for automation tests"
         required: true
         type: string
+      destroy_runners:
+        description: 'Destroy runner VMs after tests'
+        type: boolean
+        default: true
+      ephemeral_runners:
+        description: 'Make runners ephemeral (unregister after first job)'
+        type: boolean
+        default: true
+      automation-tests-command-args:
+        description: "Command to run automation tests"
+        required: false
+        type: string
+        default: "features/ --junitxml=$AUTOMATION_ROOT_DIR/results.xml -v -s"
     secrets:
       GH_RUNNER_PAT:
         required: true
