@@ -65,7 +65,7 @@ void Logger::initialize(const std::string& log_path, enum log_level level, bool 
     } 
     catch (const ::spdlog::spdlog_ex& ex) 
     {
-        throw std::runtime_error("Logger initialization failed: " + std::string(ex.what()));
+        throw std::runtime_error(":Logger initialization failed: " + std::string(ex.what()));
     }
 }
 
