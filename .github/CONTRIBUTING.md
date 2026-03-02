@@ -24,6 +24,17 @@ If you have any questions or need help, please don't hesitate to ask on discord 
 3. Write clear, descriptive commit messages
 4. Open a pull request with a detailed description of what you've done
 
+### Contributor License Agreement (CLA)
+
+To keep contribution flow low-friction while ensuring clear legal rights, owLSM uses an automated CLA check on pull requests.
+
+- The first time you contribute, a bot comment will ask you to sign once.
+- Individual contributors: review and sign [`CLA.md`](./CLA.md).
+- Contributors submitting code owned by an employer: ensure the employer signs [`CCLA.md`](./CCLA.md) as well.
+- Sign by commenting the exact phrase on your PR:
+  `I have read the CLA and I hereby sign it`
+- After signing, your next PRs should pass CLA automatically.
+
 ## Use cursor and other AI features:
 ### MCP related
 **enable MCP's when needed**: go to your IDE settings and enable the relevant MCP's to the current workflow. Always enabling all the MCP's will degrade the results.<br>
@@ -71,6 +82,7 @@ When opening a pull request:
 - [ ] Changes are documented where necessary
 - [ ] Tests pass locally
 - [ ] Commit messages are clear and descriptive
+- [ ] CLA is signed (first contribution only)
 
 ## Code Review
 
