@@ -182,7 +182,7 @@ jobs:
   automation-tests-runners:
     name: Create runners and run automation tests
     needs: [build]
-    if: github.event_name == 'push' || github.event.inputs.run_automation_tests == true
+    if: github.event_name == 'pull_request' || inputs.run_automation_tests == true
     uses: ./.github/workflows/automation-tests-runners.yml
     with:
       artifact-name: ${{ needs.build.outputs.artifact_name }}
