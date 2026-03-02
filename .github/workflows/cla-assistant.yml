@@ -1,0 +1,35 @@
+name: CLA Assistant
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_target:
+    types: [opened, synchronize, closed, reopened]
+
+permissions:
+  actions: write
+  contents: write
+  pull-requests: write
+  statuses: write
+
+jobs:
+  cla:
+    runs-on: ubuntu-latest
+    steps:
+      - name: CLA Assistant
+        if: github.event_name == 'pull_request_target' || github.event.comment.body == 'recheck' || github.event.comment.body == 'I have read the CLA and I hereby sign it'
+        uses: contributor-assistant/github-action@v2.6.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          path-to-signatures: signatures/version1/cla-signatures.json
+          path-to-document: https://github.com/${{ github.repository }}/blob/${{ github.event.repository.default_branch }}/.github/CLA.md
+          branch: ${{ github.event.repository.default_branch }}
+          allowlist: dependabot[bot],renovate[bot],github-actions[bot],bot*
+          custom-pr-sign-comment: I have read the CLA and I hereby sign it
+          custom-notsigned-prcomment: >
+            Thanks for your contribution.
+            Please review and sign our CLA by commenting:
+            "I have read the CLA and I hereby sign it"
+            CLA document: https://github.com/${{ github.repository }}/blob/${{ github.event.repository.default_branch }}/.github/CLA.md
+          custom-allsigned-prcomment: All contributors have signed the CLA.
