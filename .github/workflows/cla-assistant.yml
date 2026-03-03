@@ -24,12 +24,13 @@ jobs:
         with:
           path-to-signatures: signatures/version1/cla-signatures.json
           path-to-document: https://github.com/${{ github.repository }}/blob/${{ github.event.repository.default_branch }}/.github/CLA.md
-          branch: ${{ github.event.repository.default_branch }}
+          # Signatures must be stored on an unprotected branch.
+          # Create this branch once in the repository settings and keep it unprotected.
+          branch: cla-signatures
           allowlist: dependabot[bot],renovate[bot],github-actions[bot],bot*
           custom-pr-sign-comment: I have read the CLA and I hereby sign it
           custom-notsigned-prcomment: >
-            Thanks for your contribution.
-            Please review and sign our CLA by commenting:
+            Please sign the [Contributor License Agreement](https://github.com/${{ github.repository }}/blob/${{ github.event.repository.default_branch }}/.github/CLA.md)
+            by commenting exactly:
             "I have read the CLA and I hereby sign it"
-            CLA document: https://github.com/${{ github.repository }}/blob/${{ github.event.repository.default_branch }}/.github/CLA.md
           custom-allsigned-prcomment: All contributors have signed the CLA.
