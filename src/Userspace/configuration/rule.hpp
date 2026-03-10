@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include <semver/semver.hpp>
+#include <semver/semver_wrapper.hpp>
 
 namespace owlsm::config {
 

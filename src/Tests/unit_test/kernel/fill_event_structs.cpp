@@ -1,6 +1,8 @@
 #include <filesystem>
 #include <sys/stat.h>
 #include <sys/sysmacros.h> 
+#include <sys/syscall.h>
+#include <linux/stat.h>
 #include <fcntl.h> 
 #include <unistd.h>
 #include <fstream>
@@ -29,7 +31,7 @@ std::pair<struct file_t, struct file_t> setup(auto* skel, const std::string& pat
     const std::string filename = path.substr(path.find_last_of('/') + 1);
     struct file_t expected, result = {};
     struct statx statx_buf;
-    if (statx(AT_FDCWD, path.c_str(), AT_SYMLINK_NOFOLLOW, STATX_ALL, &statx_buf) != 0)
+    if (syscall(SYS_statx, AT_FDCWD, path.c_str(), AT_SYMLINK_NOFOLLOW, STATX_ALL, &statx_buf) != 0)
     {
         throw std::system_error(errno, std::generic_category(), "file create or statx failed");
     }

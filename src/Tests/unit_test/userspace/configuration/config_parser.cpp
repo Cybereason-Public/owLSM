@@ -6,7 +6,7 @@
 #include "configuration/schema.inc"
 
 #include <stdexcept>
-#include <semver/semver.hpp>
+#include <semver/semver_wrapper.hpp>
 
 class ConfigParserTest : public ::testing::Test 
 {

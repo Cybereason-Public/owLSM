@@ -4,7 +4,7 @@
 #include "logger.hpp"
 #include "globals/global_objects.hpp"
 
-#include <semver/semver.hpp>
+#include <semver/semver_wrapper.hpp>
 #include <algorithm>
 
 namespace owlsm

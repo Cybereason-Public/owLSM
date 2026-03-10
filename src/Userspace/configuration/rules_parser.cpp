@@ -1,6 +1,6 @@
 #include "rules_parser.hpp"
 
-#include <3rd_party/semver/semver.hpp>
+#include <semver/semver_wrapper.hpp>
 
 namespace owlsm::config 
 {

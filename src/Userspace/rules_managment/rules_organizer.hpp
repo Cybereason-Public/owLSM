@@ -5,7 +5,7 @@
 #include "globals/global_objects.hpp"
 
 #include <magic_enum/magic_enum.hpp>
-#include <semver/semver.hpp>
+#include <semver/semver_wrapper.hpp>
 #include <algorithm>
 #include <unordered_map>
 #include <memory>

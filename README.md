@@ -25,10 +25,10 @@ Help us grow and protect the world by giving us a ⭐
 
 ```bash
 # Build the Docker image (one-time setup):
-docker build -t owlsm-ci-ubuntu20 .
+docker build -t owlsm-ci-ubuntu18 .
 
 # Start the build container
-docker run -it --rm -v "$PWD":/workspace -w /workspace owlsm-ci-ubuntu20 bash
+docker run -it --rm -v "$PWD":/workspace -w /workspace owlsm-ci-ubuntu18 bash
 
 # Build owLSM
 make -j$(nproc)
