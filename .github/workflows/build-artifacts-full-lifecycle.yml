@@ -8,6 +8,10 @@ on:
       - 'main'
   workflow_dispatch:
     inputs:
+      create_tag:
+        description: 'Create a Git tag for release'
+        type: boolean
+        default: false
       major:
         description: 'Major version'
         required: true
@@ -40,6 +44,7 @@ on:
         description: 'Make runners ephemeral (unregister after first job)'
         type: boolean
         default: true
+
 env:
   DOCKER_IMAGE: owlsm-ci-ubuntu
   # Use inputs if workflow_dispatch, otherwise default to 1.0.0 for push triggers
@@ -52,6 +57,8 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       github.event.review.state == 'approved'
     runs-on: ["OCI", "owLSM"]
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -63,8 +70,10 @@ jobs:
         run: |
           BRANCH_NAME=${GITHUB_REF_NAME//\//-}  # Replace / with -
           BRANCH_REVISION=$(git rev-parse --short HEAD)
+          COMMIT_SHA=$(git rev-parse HEAD)
           echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
           echo "branch_revision=$BRANCH_REVISION" >> $GITHUB_OUTPUT
+          echo "commit_sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
           echo "Branch: $BRANCH_NAME"
           echo "Revision: $BRANCH_REVISION"
 
@@ -129,7 +138,7 @@ jobs:
           sudo ./build/unit_tests/bin/unit_tests
           echo "==> Unit tests passed!"
 
-      - name: Create release archive
+      - name: Create CI archive
         id: archive
         run: |
           ARTIFACT_NAME="${{ env.VERSION }}-${{ steps.branch_info.outputs.branch_name }}-${{ steps.branch_info.outputs.branch_revision }}"
@@ -152,12 +161,31 @@ jobs:
           echo "archive_file=$ARCHIVE_FILE" >> $GITHUB_OUTPUT
           ls -lh "$ARCHIVE_FILE"
 
-      - name: Upload artifact
+      - name: Upload CI artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.archive.outputs.artifact_name }}
           path: ${{ steps.archive.outputs.archive_file }}
           retention-days: 30
+
+      - name: Create release tarball (binaries only)
+        if: inputs.create_tag == true
+        id: release_archive
+        run: |
+          echo "==> Creating release tarball (binaries only)..."
+          sudo tar -czf build/owlsm-${{ env.VERSION }}.tar.gz -C build owlsm
+          ls -lh build/owlsm-${{ env.VERSION }}.tar.gz
+
+          RELEASE_ARTIFACT="release-owlsm-${{ env.VERSION }}"
+          echo "release_artifact_name=$RELEASE_ARTIFACT" >> $GITHUB_OUTPUT
+
+      - name: Upload release artifact
+        if: inputs.create_tag == true
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.release_archive.outputs.release_artifact_name }}
+          path: build/owlsm-${{ env.VERSION }}.tar.gz
+          retention-days: 90
 
       - name: Summary
         run: |
@@ -168,19 +196,23 @@ jobs:
           echo "| Version | ${{ env.VERSION }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Branch | ${{ steps.branch_info.outputs.branch_name }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Revision | ${{ steps.branch_info.outputs.branch_revision }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Artifact | ${{ steps.archive.outputs.artifact_name }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| CI Artifact | ${{ steps.archive.outputs.artifact_name }} |" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ inputs.create_tag }}" = "true" ]; then
+            echo "| Release Artifact | ${{ steps.release_archive.outputs.release_artifact_name }} |" >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: Cleanup workspace
         if: always()
         run: |
-          echo "==> Cleaning up workspace..." # test comment
+          echo "==> Cleaning up workspace..."
           docker rmi ${{ env.DOCKER_IMAGE }} || true
           cd ${{ github.workspace }}
           sudo git clean -ffdx
           echo "==> Cleanup completed!"
-          
+
     outputs:
       artifact_name: ${{ steps.archive.outputs.artifact_name }}
+      commit_sha: ${{ steps.branch_info.outputs.commit_sha }}
 
   automation-tests-runners:
     name: Create runners and run automation tests
@@ -195,3 +227,37 @@ jobs:
     secrets:
       GH_RUNNER_PAT: ${{ secrets.GH_RUNNER_PAT }}
       SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
+
+  create-tag:
+    name: Create Git tag
+    needs: [build, automation-tests-runners]
+    if: >-
+      always() &&
+      inputs.create_tag == true &&
+      needs.build.result == 'success' &&
+      (needs.automation-tests-runners.result == 'success' || needs.automation-tests-runners.result == 'skipped')
+    runs-on: ["OCI", "owLSM"]
+    permissions:
+      contents: write
+    steps:
+      - name: Create tag via GitHub API
+        env:
+          GH_TOKEN: ${{ secrets.GH_RUNNER_PAT }}
+        run: |
+          TAG="v${{ env.VERSION }}"
+          SHA="${{ needs.build.outputs.commit_sha }}"
+          echo "==> Creating tag: $TAG (sha: $SHA)"
+
+          gh api "/repos/${{ github.repository }}/git/refs" \
+            -f ref="refs/tags/${TAG}" \
+            -f sha="${SHA}"
+          echo "==> Tag $TAG created successfully"
+
+      - name: Summary
+        run: |
+          echo "## Tag Created" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Property | Value |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|----------|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Tag | v${{ env.VERSION }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Release Artifact | release-owlsm-${{ env.VERSION }} |" >> "$GITHUB_STEP_SUMMARY"

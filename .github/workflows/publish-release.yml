@@ -1,0 +1,122 @@
+name: Publish GitHub Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag_version:
+        description: 'Version to release (e.g. 1.0.0)'
+        required: true
+        type: string
+      release_name:
+        description: 'Release name (defaults to tag if empty)'
+        required: false
+        type: string
+
+jobs:
+  release:
+    name: Publish Release
+    runs-on: ["OCI", "owLSM"]
+    permissions:
+      contents: write
+    steps:
+      - name: Validate version and resolve metadata
+        id: meta
+        run: |
+          VERSION="${{ inputs.tag_version }}"
+
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Version must match X.Y.Z format, got '$VERSION'"
+            exit 1
+          fi
+
+          TAG="v${VERSION}"
+          ARTIFACT_NAME="release-owlsm-${VERSION}"
+          RELEASE_NAME="${{ inputs.release_name }}"
+          if [ -z "$RELEASE_NAME" ]; then
+            RELEASE_NAME="$TAG"
+          fi
+
+          echo "version=$VERSION"               >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG"                       >> "$GITHUB_OUTPUT"
+          echo "artifact_name=$ARTIFACT_NAME"   >> "$GITHUB_OUTPUT"
+          echo "release_name=$RELEASE_NAME"     >> "$GITHUB_OUTPUT"
+          echo "Version: $VERSION | Tag: $TAG | Artifact: $ARTIFACT_NAME | Release: $RELEASE_NAME"
+
+      - name: Verify tag exists
+        run: |
+          git ls-remote --exit-code --tags origin "refs/tags/${{ steps.meta.outputs.tag }}" || {
+            echo "::error::Tag ${{ steps.meta.outputs.tag }} does not exist on remote. Run Build Artifact Full Lifecycle with create_tag=true first."
+            exit 1
+          }
+
+      - name: Download release artifact via GitHub API
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ARTIFACT_NAME="${{ steps.meta.outputs.artifact_name }}"
+          REPO="${{ github.repository }}"
+
+          echo "==> Searching for artifact '$ARTIFACT_NAME' in $REPO..."
+          ARTIFACT_JSON=$(gh api "/repos/${REPO}/actions/artifacts?name=${ARTIFACT_NAME}&per_page=1" \
+            --jq '.artifacts[0]')
+
+          if [ -z "$ARTIFACT_JSON" ] || [ "$ARTIFACT_JSON" = "null" ]; then
+            echo "::error::Artifact '$ARTIFACT_NAME' not found. Run Build Artifact Full Lifecycle with create_tag=true first."
+            exit 1
+          fi
+
+          ARTIFACT_ID=$(echo "$ARTIFACT_JSON" | jq -r '.id')
+          EXPIRED=$(echo "$ARTIFACT_JSON" | jq -r '.expired')
+          CREATED=$(echo "$ARTIFACT_JSON" | jq -r '.created_at')
+
+          echo "Found artifact: id=$ARTIFACT_ID, created=$CREATED, expired=$EXPIRED"
+
+          if [ "$EXPIRED" = "true" ]; then
+            echo "::error::Artifact '$ARTIFACT_NAME' has expired. Re-run Build Artifact Full Lifecycle."
+            exit 1
+          fi
+
+          mkdir -p release-assets
+          gh api "/repos/${REPO}/actions/artifacts/${ARTIFACT_ID}/zip" > release-assets/artifact.zip
+          cd release-assets && unzip artifact.zip && rm artifact.zip
+          echo "==> Artifact downloaded and extracted:"
+          ls -lh
+
+      - name: Locate and verify tarball
+        id: artifact
+        run: |
+          TARBALL=$(find release-assets/ -name "*.tar.gz" -type f | head -1)
+          if [ -z "$TARBALL" ]; then
+            echo "::error::No .tar.gz found in downloaded artifact"
+            exit 1
+          fi
+          echo "tarball=$TARBALL" >> "$GITHUB_OUTPUT"
+          ls -lh "$TARBALL"
+
+      - name: Generate SHA256 checksums
+        run: |
+          cd "$(dirname "${{ steps.artifact.outputs.tarball }}")"
+          sha256sum "$(basename "${{ steps.artifact.outputs.tarball }}")" > SHA256SUMS
+          echo "==> Checksums:"
+          cat SHA256SUMS
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: ${{ steps.meta.outputs.release_name }}
+          generate_release_notes: true
+          files: |
+            ${{ steps.artifact.outputs.tarball }}
+            release-assets/SHA256SUMS
+
+      - name: Summary
+        run: |
+          echo "## Release Published" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Property | Value |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|----------|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Tag | ${{ steps.meta.outputs.tag }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Release | ${{ steps.meta.outputs.release_name }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Artifact | ${{ steps.meta.outputs.artifact_name }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| SHA256 | Attached as SHA256SUMS |" >> "$GITHUB_STEP_SUMMARY"
