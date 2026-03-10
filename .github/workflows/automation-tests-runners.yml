@@ -82,7 +82,7 @@ jobs:
       # Setup
       # =====================================================================
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Calculate expected runner count and labels
         id: runner_count
@@ -204,10 +204,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download all test result artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           path: ${{ env.RESULTS_DIR }}
           pattern: automation-test-results-*
@@ -240,7 +240,7 @@ jobs:
 
       - name: Upload aggregated results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: aggregated-test-results
           path: aggregated-results/aggregated_results.json

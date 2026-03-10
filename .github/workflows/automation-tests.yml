@@ -132,7 +132,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: automation-test-results-${{ inputs.runner-label }}
           path: ${{ env.AUTOMATION_ROOT_DIR }}/results-${{ inputs.runner-label }}.xml
