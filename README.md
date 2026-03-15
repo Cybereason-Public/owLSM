@@ -1,20 +1,34 @@
 <p align="center">
   <img width="525" height="150" alt="owLSM_logo-Photoroom" src="docs/owLSM_logo-Photoroom.png" />
   <br><br>
-  🛡️ <i>Transform linux protection with real prevention capabilities</i> 🛡️
+  🛡️ <i>owLSM aspires to become the gold standard for prevention and detection on Linux systems</i> 🛡️
   <br><br>
   <a href="https://cybereason-public.github.io/owLSM/"><img src="https://img.shields.io/badge/Docs-GitHub%20Pages-blue?style=flat-square&logo=github" alt="Docs"></a>
   <a href="https://discord.gg/gQk5Jxd6vs"><img src="https://img.shields.io/discord/1467824033188941952?label=Discord&logo=discord&style=flat-square" alt="Discord"></a>
   <a href="AGENTS.md"><img src="https://img.shields.io/badge/AI%20Agents-Friendly-blueviolet?style=flat-square" alt="Agent Friendly"></a>
 </p>
 
-**owLSM** aspires to become the gold standard for prevention and detection on Linux systems.  
-While projects like Sysdig and others excel at tracing and observability, real and scalable **inline prevention** remains an unsolved challenge.  
-Using eBPF LSM hooks, owLSM brings powerful, rules-based protection directly into the kernel.  
-We focus on:
-- Implementing sigma rules engine in the kernel
-- Enriching events and rules with context important for defenders 
-- Features designed around needs of real security teams  
+owLSM is an eBPF LSM agent that implements a stateful Sigma rules engine focused on prevention.
+
+<p>
+<b>What is the project:</b> owLSM focuses on three main things:<br>
+1) Prevention capabilities using a Sigma Rules Engine implemented via eBPF LSM.<br>
+2) Data correlation between eBPF probes for stateful prevention capabilities.<br>
+3) Security-focused system monitoring where each event contains all the context a security expert needs.
+</p>
+
+**Who is it for:** Teams that defend Linux systems, companies offering Linux/Cloud security solutions, and developers or agents looking for implementation examples of complex eBPF solutions.
+
+**Where is it already being used:** Customers of the security firms Cybereason and LevelBlue.
+
+**Why we created this project:** After years of using projects like Falco, Tetragon, and KubeArmor, we kept running into the same gaps. These solutions offer little to no prevention (enforcement) capabilities. Those that do offer enforcement policies lack basic features like substring matching, full process command line access, and parent termination of malicious processes.
+
+<p>
+We decided to take a completely different approach:<br>
+1) Use the standard Sigma rules structure and support as many Sigma rules features as possible (constantly adding more).<br>
+2) Solve the core limitation of current eBPF LSM projects: they are stateless. Almost all data available in an enforcement rule comes only from the current hook.<br>
+We created stateful eBPF programs that use multiple consecutive hook points and correlate data between them, so at the point of the prevention decision, users have all the data they need. We took this stateful approach so far that, for example, when monitoring write events, you can specify prevention rules based on the shell command that initiated the write.
+</p>
 
 Help us grow and protect the world by giving us a ⭐ 
  <br><br>
