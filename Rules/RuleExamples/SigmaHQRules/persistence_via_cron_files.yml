@@ -1,0 +1,41 @@
+# Inspired by SigmaHQ rule: https://github.com/SigmaHQ/sigma/blob/master/rules/linux/file_event/file_event_lnx_persistence_cron_files.yml
+
+title: Persistence Via Cron Files
+id: 203
+status: test
+description: "Detects creation or modification of cron files or files in cron directories which could indicate potential persistence"
+references:
+    - https://github.com/microsoft/MSTIC-Sysmon/blob/f1477c0512b0747c1455283069c21faec758e29d/linux/configs/attack-based/persistence/T1053.003_Cron_Activity.xml
+author: Roberto Rodriguez (Cyb3rWard0g), OTR (Open Threat Research), MSTIC
+date: 2021-10-15
+modified: 2022-12-31
+tags:
+    - attack.privilege-escalation
+    - attack.execution
+    - attack.persistence
+    - attack.t1053.003
+logsource:
+    product: linux
+    category: file_event
+action: "BLOCK_EVENT"
+events:
+    - FILE_CREATE
+    - WRITE
+detection:
+    selection_cron_dirs:
+        target.file.path|startswith:
+            - "/etc/cron.d/"
+            - "/etc/cron.daily/"
+            - "/etc/cron.hourly/"
+            - "/etc/cron.monthly/"
+            - "/etc/cron.weekly/"
+            - "/var/spool/cron/crontabs/"
+    selection_cron_files:
+        target.file.path|contains:
+            - "/etc/cron.allow"
+            - "/etc/cron.deny"
+            - "/etc/crontab"
+    condition: 1 of selection*
+falsepositives:
+    - Any legitimate cron file modification
+level: medium

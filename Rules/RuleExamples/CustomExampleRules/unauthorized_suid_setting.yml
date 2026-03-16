@@ -1,0 +1,20 @@
+id: 301
+description: "Detect non-root processes setting SUID/SGID bits on system executables"
+action: "BLOCK_EVENT"
+events:
+    - CHMOD
+detection:
+    selection_dangerous_mode:
+        chmod.requested_mode|gte: 2048
+    selection_system_path:
+        target.file.path|startswith:
+            - "/usr/bin/"
+            - "/usr/sbin/"
+            - "/usr/local/bin/"
+            - "/bin/"
+            - "/sbin/"
+    selection_regular_file:
+        target.file.type: "REGULAR_FILE"
+    filter_root:
+        process.euid: 0
+    condition: all of selection* and not filter_root

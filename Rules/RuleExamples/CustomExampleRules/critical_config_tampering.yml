@@ -1,0 +1,19 @@
+id: 304
+description: "Detect critical system config file modification by processes that do not own the file"
+action: "BLOCK_EVENT"
+events:
+    - WRITE
+    - UNLINK
+detection:
+    selection_critical_paths:
+        target.file.path|startswith:
+            - "/etc/passwd"
+            - "/etc/shadow"
+            - "/etc/sudoers"
+            - "/etc/ssh/"
+            - "/etc/pam.d/"
+    filter_owner:
+        process.euid|fieldref: "target.file.owner.uid"
+    filter_root:
+        process.euid: 0
+    condition: selection_critical_paths and not filter_owner and not filter_root

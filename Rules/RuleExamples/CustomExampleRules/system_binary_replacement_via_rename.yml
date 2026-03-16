@@ -1,0 +1,25 @@
+id: 303
+description: "Detect suspicious renames moving files from temp directories into system binary paths"
+action: "BLOCK_EVENT"
+events:
+    - RENAME
+detection:
+    selection_target_sysbin:
+        rename.destination_file.path|startswith:
+            - "/usr/bin/"
+            - "/usr/sbin/"
+            - "/usr/local/bin/"
+            - "/bin/"
+            - "/sbin/"
+    selection_source_temp:
+        rename.source_file.path|startswith:
+            - "/tmp/"
+            - "/var/tmp/"
+            - "/dev/shm/"
+            - "/home/"
+    filter_package_manager:
+        process.file.path|startswith:
+            - "/usr/bin/dpkg"
+            - "/usr/bin/rpm"
+            - "/usr/lib/apt"
+    condition: selection_target_sysbin and selection_source_temp and not filter_package_manager

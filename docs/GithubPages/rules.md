@@ -14,6 +14,8 @@ In order to fully understand the owLSM rules, we strongly advise to read [sigma-
 
 ## Rule Examples
 
+For more examples, see [`Rules/RuleExamples`](https://github.com/cybereason-labs/owLSM/tree/main/Rules/RuleExamples)  
+
 <div class="tab-container">
   <div class="tab-buttons">
     <button class="tab-button active" data-tab="simple">Simple Example</button>

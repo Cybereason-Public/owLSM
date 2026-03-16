@@ -1,0 +1,27 @@
+id: 300
+description: "Detect container escape attempts via namespace manipulation, cgroup exploits, or Docker socket abuse"
+action: "BLOCK_KILL_PROCESS_KILL_PARENT"
+events:
+    - EXEC
+detection:
+    selection_nsenter:
+        target.process.file.filename: "nsenter"
+        target.process.cmd|contains: "-t 1"
+    selection_proc_escape:
+        target.process.cmd|contains|all:
+            - "/proc"
+            - "release_agent"
+    selection_docker_sock:
+        target.process.cmd|contains: "docker.sock"
+    selection_mount_cgroup:
+        target.process.file.filename: "mount"
+        target.process.cmd|contains: "cgroup"
+    selection_unshare:
+        target.process.file.filename: "unshare"
+        target.process.cmd|contains: "--mount"
+    filter_runtime:
+        process.file.path|startswith:
+            - "/usr/lib/docker"
+            - "/usr/bin/containerd"
+            - "/usr/bin/dockerd"
+    condition: 1 of selection* and not filter_runtime

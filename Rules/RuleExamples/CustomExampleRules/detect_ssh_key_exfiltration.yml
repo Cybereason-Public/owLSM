@@ -1,12 +1,3 @@
-# Detect SSH Key Exfiltration Attempt
-# 
-# This rule detects suspicious read access to SSH private keys by
-# non-standard processes. SSH keys should typically only be read by
-# the SSH client or SSH agent, not by curl, wget, or shell scripts.
-#
-# Real-world attack: Attackers often try to steal SSH keys for lateral
-# movement within a network. This rule helps detect such attempts.
-
 id: 100
 description: "Detect unauthorized SSH private key access"
 action: "BLOCK_EVENT"

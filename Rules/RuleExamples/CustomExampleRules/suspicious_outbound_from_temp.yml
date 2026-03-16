@@ -1,0 +1,22 @@
+id: 302
+description: "Detect outbound network connections from processes running in temporary directories"
+action: "BLOCK_KILL_PROCESS"
+events:
+    - NETWORK
+detection:
+    selection_temp_process:
+        process.file.path|startswith:
+            - "/tmp/"
+            - "/var/tmp/"
+            - "/dev/shm/"
+    selection_outbound:
+        network.direction: "OUTGOING"
+    selection_high_port:
+        network.destination_port|gt: 1024
+    filter_local:
+        network.destination_ip|cidr:
+            - "127.0.0.0/8"
+            - "10.0.0.0/8"
+            - "172.16.0.0/12"
+            - "192.168.0.0/16"
+    condition: all of selection* and not filter_local

