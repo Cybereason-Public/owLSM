@@ -126,14 +126,74 @@ jobs:
       # Wait for Runners to Register
       # =====================================================================
       - name: Wait for runners to become available
+        id: wait_runners
         if: steps.apply.outputs.runners_ready == 'true'
         env:
           GH_TOKEN: ${{ secrets.GH_RUNNER_PAT }}
         run: |
+          set +e
           ${{ env.TF_WORKING_DIR }}/scripts/wait-for-runners.sh \
             "${{ github.repository }}" \
             "run-${{ github.run_id }}" \
-            "${{ steps.runner_count.outputs.count }}"
+            "${{ steps.runner_count.outputs.count }}" \
+            "${{ env.TF_WORKING_DIR }}/runners.auto.tfvars.json" \
+            500
+          
+          EXIT_CODE=$?
+          echo "wait_exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+          if [ "$EXIT_CODE" -eq 0 ]; then
+            exit 0
+          elif [ "$EXIT_CODE" -eq 2 ]; then
+            echo "::warning::Some runners failed to register. Will retry failed instances."
+            exit 0
+          else
+            echo "::error::No runners came online."
+            exit 1
+          fi
+
+      # =====================================================================
+      # Retry Failed Runners
+      # =====================================================================
+      - name: Retry failed runners
+        id: retry_runners
+        if: steps.wait_runners.outputs.wait_exit_code == '2'
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        env:
+          GH_TOKEN: ${{ secrets.GH_RUNNER_PAT }}
+        run: |
+          FAILED='${{ steps.wait_runners.outputs.failed_runners }}'
+          echo "==> Failed runners to retry: $FAILED"
+
+          TARGET_FLAGS=""
+          for key in $(echo "$FAILED" | jq -r '.[]'); do
+            RESOURCE="oci_core_instance.gh_runner[\"$key\"]"
+            echo "==> Tainting $RESOURCE..."
+            terraform taint "$RESOURCE"
+            TARGET_FLAGS="$TARGET_FLAGS -target=$RESOURCE"
+          done
+
+          echo "==> Re-applying Terraform (only failed instances)..."
+          terraform apply -auto-approve $TARGET_FLAGS
+
+          FAILED_COUNT=$(echo "$FAILED" | jq 'length')
+          echo "==> Waiting for $FAILED_COUNT re-provisioned runner(s)..."
+
+          set +e
+          scripts/wait-for-runners.sh \
+            "${{ github.repository }}" \
+            "run-${{ github.run_id }}" \
+            "${{ steps.runner_count.outputs.count }}" \
+            "runners.auto.tfvars.json"
+          
+          RETRY_EXIT=$?
+          set -e
+
+          if [ "$RETRY_EXIT" -eq 0 ]; then
+            echo "==> All runners online after retry!"
+          else
+            echo "::error::Runners still not online after retry (exit=$RETRY_EXIT)."
+            exit 1
+          fi
 
       # =====================================================================
       # Summary
