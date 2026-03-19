@@ -105,13 +105,8 @@ get_runner_token() {
     echo "$token"
 }
 
-# Get runner registration token dynamically
-log_info "Retrieving runner registration token from GitHub API..."
-RUNNER_TOKEN=$(get_runner_token "$RUNNER_URL" "$GITHUB_PAT") || {
-    log_error "Failed to get runner token. Exiting."
-    exit 1
-}
-log_info "Runner token retrieved successfully (expires in 1 hour)"
+# Runner token is fetched inside the registration retry loop (STEP 6)
+# to ensure a fresh token on each attempt.
 
 # Release apt locks before installing packages (cloud-init may race with unattended-upgrades)
 release_apt_locks() {
@@ -205,10 +200,8 @@ log_info "Installing runner dependencies..."
 "$RUNNER_DIR/bin/installdependencies.sh" || log_warn "installdependencies.sh exited with errors (non-fatal, continuing)"
 
 # =============================================================================
-# STEP 6: Configure Runner
+# STEP 6: Configure, Install, and Start Runner (with retry)
 # =============================================================================
-log_info "Configuring runner..."
-
 EPHEMERAL_FLAG=""
 if [ "$EPHEMERAL_RUNNER" = "true" ]; then
     EPHEMERAL_FLAG="--ephemeral"
@@ -216,20 +209,6 @@ if [ "$EPHEMERAL_RUNNER" = "true" ]; then
 else
     log_info "Runner will be persistent (multi job)"
 fi
-
-sudo -u "$RUNNER_USER" bash -c "
-    cd '$RUNNER_DIR'
-    ./config.sh \
-        --url '$RUNNER_URL' \
-        --token '$RUNNER_TOKEN' \
-        --name '$RUNNER_NAME' \
-        --labels '$RUNNER_LABELS' \
-        --work '$RUNNER_WORK_DIR' \
-        --unattended \
-        --replace \
-        --disableupdate \
-        $EPHEMERAL_FLAG
-"
 
 # =============================================================================
 # STEP 6b: Prevent needrestart from killing runner mid-job
@@ -245,21 +224,89 @@ NEEDRESTART_EOF
 fi
 
 # =============================================================================
-# STEP 7: Install and Start Service
+# STEP 7: Retrieve runner registration token and register runner with retries
 # =============================================================================
-log_info "Installing runner service..."
-cd "$RUNNER_DIR"
-./svc.sh install "$RUNNER_USER"
 
-log_info "Starting runner service..."
-./svc.sh start
+MAX_REGISTRATION_ATTEMPTS=3
+REGISTRATION_RETRY_DELAY=30
 
-# =============================================================================
-# STEP 8: Verify
-# =============================================================================
-log_info "Verifying installation..."
-sleep 3
-./svc.sh status
+for attempt in $(seq 1 $MAX_REGISTRATION_ATTEMPTS); do
+    log_info "Registration attempt $attempt/$MAX_REGISTRATION_ATTEMPTS..."
+
+    # Fetch a fresh token for each attempt
+    log_info "Retrieving runner registration token from GitHub API..."
+    RUNNER_TOKEN=$(get_runner_token "$RUNNER_URL" "$GITHUB_PAT") || {
+        log_error "Failed to get runner token on attempt $attempt."
+        if [ "$attempt" -lt "$MAX_REGISTRATION_ATTEMPTS" ]; then
+            log_warn "Retrying in $${REGISTRATION_RETRY_DELAY}s..."
+            sleep "$REGISTRATION_RETRY_DELAY"
+            continue
+        fi
+        log_error "All $MAX_REGISTRATION_ATTEMPTS token retrieval attempts failed."
+        touch /tmp/runner-registration-failed
+        exit 1
+    }
+    log_info "Runner token retrieved successfully"
+
+    # Clean up any partial state from a previous attempt
+    cd "$RUNNER_DIR"
+    ./svc.sh stop 2>/dev/null || true
+    ./svc.sh uninstall 2>/dev/null || true
+
+    # Configure
+    log_info "Running config.sh..."
+    CONFIG_OK=true
+    sudo -u "$RUNNER_USER" bash -c "
+        cd '$RUNNER_DIR'
+        ./config.sh \
+            --url '$RUNNER_URL' \
+            --token '$RUNNER_TOKEN' \
+            --name '$RUNNER_NAME' \
+            --labels '$RUNNER_LABELS' \
+            --work '$RUNNER_WORK_DIR' \
+            --unattended \
+            --replace \
+            --disableupdate \
+            $EPHEMERAL_FLAG
+    " || CONFIG_OK=false
+
+    if [ "$CONFIG_OK" = "false" ]; then
+        log_error "config.sh failed on attempt $attempt."
+        if [ "$attempt" -lt "$MAX_REGISTRATION_ATTEMPTS" ]; then
+            log_warn "Retrying in $${REGISTRATION_RETRY_DELAY}s..."
+            sleep "$REGISTRATION_RETRY_DELAY"
+            continue
+        fi
+        log_error "All $MAX_REGISTRATION_ATTEMPTS config attempts failed."
+        touch /tmp/runner-registration-failed
+        exit 1
+    fi
+
+    # Install and start service
+    log_info "Installing runner service..."
+    ./svc.sh install "$RUNNER_USER"
+
+    log_info "Starting runner service..."
+    ./svc.sh start
+
+    # Verify
+    log_info "Verifying installation..."
+    sleep 3
+    if ./svc.sh status; then
+        log_info "Runner service is running (attempt $attempt succeeded)"
+        break
+    fi
+
+    log_error "Service verification failed on attempt $attempt."
+    if [ "$attempt" -lt "$MAX_REGISTRATION_ATTEMPTS" ]; then
+        log_warn "Retrying in $${REGISTRATION_RETRY_DELAY}s..."
+        sleep "$REGISTRATION_RETRY_DELAY"
+    else
+        log_error "All $MAX_REGISTRATION_ATTEMPTS registration attempts failed."
+        touch /tmp/runner-registration-failed
+        exit 1
+    fi
+done
 
 # =============================================================================
 # DONE
