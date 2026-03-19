@@ -17,11 +17,11 @@
       },
       "cpp-lsp": {
         "command": "/root/go/bin/mcp-language-server",
-        "args": ["--workspace", "/home/ariels/owLSM", "--lsp", "clangd"]
+        "args": ["--workspace", "~/owLSM", "--lsp", "clangd"]
       },
       "python-lsp": {
         "command": "/root/go/bin/mcp-language-server",
-        "args": ["--workspace", "/home/ariels/owLSM/Rules/RulesGenerator", "--lsp", "pyright-langserver", "--", "--stdio"]
+        "args": ["--workspace", "~/owLSM/Rules/RulesGenerator", "--lsp", "pyright-langserver", "--", "--stdio"]
       }
     }
   }

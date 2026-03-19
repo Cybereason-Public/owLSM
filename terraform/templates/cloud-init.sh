@@ -232,6 +232,19 @@ sudo -u "$RUNNER_USER" bash -c "
 "
 
 # =============================================================================
+# STEP 6b: Prevent needrestart from killing runner mid-job
+# =============================================================================
+# unattended-upgrades + needrestart can restart services (including the runner)
+# after library updates. Configure needrestart to only LIST services needing
+# restart, not auto-restart them. Prevents runner disconnect during tests.
+if [ -d /etc/needrestart/conf.d ]; then
+    log_info "Configuring needrestart to avoid auto-restarting runner service..."
+    cat > /etc/needrestart/conf.d/disable-auto-restart.conf << 'NEEDRESTART_EOF'
+$$nrconf{restart} = 'l';
+NEEDRESTART_EOF
+fi
+
+# =============================================================================
 # STEP 7: Install and Start Service
 # =============================================================================
 log_info "Installing runner service..."

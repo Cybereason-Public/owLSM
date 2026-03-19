@@ -19,6 +19,11 @@ echo "[1/9] Updating system packages..."
 apt-get update
 apt-get upgrade -y
 
+# Disable needrestart and unattended-upgrades to prevent them from
+# killing CI runner processes during ephemeral job execution
+apt-get remove -y needrestart unattended-upgrades
+systemctl disable --now apt-daily.timer apt-daily-upgrade.timer 2>/dev/null || true
+
 # Install sudo first if not present
 echo "[2/9] Installing sudo and base utilities..."
 apt-get install -y sudo iptables grep software-properties-common
