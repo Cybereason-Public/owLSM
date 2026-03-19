@@ -65,7 +65,7 @@ variable "instance_tags" {
 variable "runner_version" {
   description = "GitHub Actions runner version to install"
   type        = string
-  default     = "2.321.0"
+  default     = "2.333.0"
 }
 
 variable "runner_group" {
