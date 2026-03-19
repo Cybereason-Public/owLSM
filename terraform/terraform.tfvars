@@ -4,7 +4,7 @@ availability_domain = "Akey:US-ASHBURN-AD-1"
 region              = "us-ashburn-1"
 
 runner_user          = "ghrunner"
-runner_version       = "2.321.0"
+runner_version       = "2.333.0"
 runner_shared_labels = ["owLSM-automation"]
 
 network_security_group_ids = [

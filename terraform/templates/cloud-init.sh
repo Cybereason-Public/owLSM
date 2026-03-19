@@ -227,6 +227,7 @@ sudo -u "$RUNNER_USER" bash -c "
         --work '$RUNNER_WORK_DIR' \
         --unattended \
         --replace \
+        --disableupdate \
         $EPHEMERAL_FLAG
 "
 
