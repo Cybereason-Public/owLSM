@@ -6,6 +6,7 @@
   <a href="https://cybereason-public.github.io/owLSM/"><img src="https://img.shields.io/badge/Docs-GitHub%20Pages-blue?style=flat-square&logo=github" alt="Docs"></a>
   <a href="https://discord.gg/gQk5Jxd6vs"><img src="https://img.shields.io/discord/1467824033188941952?label=Discord&logo=discord&style=flat-square" alt="Discord"></a>
   <a href="AGENTS.md"><img src="https://img.shields.io/badge/AI%20Agents-Friendly-blueviolet?style=flat-square" alt="Agent Friendly"></a>
+  <a href="https://github.com/Cybereason-Public/owLSM/actions/runs/23287577166"><img src="https://img.shields.io/badge/CI-passing-brightgreen?style=flat-square" alt="CI passing"></a>
 </p>
 
 owLSM is an eBPF LSM agent that implements a stateful Sigma rules engine focused on prevention.
@@ -85,6 +86,14 @@ cd build/unit_tests/bin
 
 # Run the unit tests
 sudo ./unit_tests
+```
+
+## Check Compatibility
+
+Before running owLSM, verify your system meets the requirements:
+
+```bash
+chmod +x scripts/check_compatibility.sh && ./scripts/check_compatibility.sh
 ```
 
 ## Automation Tests (Integration Testing)

@@ -28,7 +28,10 @@ See [How to generate a config](https://github.com/cybereason-labs/owLSM/blob/mai
                 "<a href="#features-file_monitoring-events-mkdir" class="code-link">mkdir</a>": true,
                 "<a href="#features-file_monitoring-events-rmdir" class="code-link">rmdir</a>": true
             }
-        },C
+        },
+        "<a href="#features-shell_commands_monitoring" class="code-link">shell_commands_monitoring</a>": {
+            "<a href="#features-shell_commands_monitoring-enabled" class="code-link">enabled</a>": true
+        },
         "<a href="#features-network_monitoring" class="code-link">network_monitoring</a>": {
             "<a href="#features-network_monitoring-enabled" class="code-link">enabled</a>": true
         }
@@ -59,8 +62,8 @@ See [How to generate a config](https://github.com/cybereason-labs/owLSM/blob/mai
 <p><strong>Required:</strong> false</p>
 <p><strong>Default value:</strong> All monitoring features are enabled by default</p>
 </div>
-Control what security features are enabled.<br>
-The following features are always enabled: exec monitoring, fork monitoring, and process exit monitoring.
+Control what security features are enabled.<br><br>
+<strong>Features that are always enabled:<strong> exec monitoring, fork monitoring, and process exit monitoring.
 </div>
 
 <h3 id="features-file_monitoring" class="section-anchor">
@@ -215,6 +218,34 @@ Monitor write syscall. Only for regular files and symlinks.
 
 Monitor read syscall. Only for regular files and symlinks.<br>
 Due to high volume of read syscalls, we strongly advise to disable this feature.
+</div>
+
+<h3 id="features-shell_commands_monitoring" class="section-anchor">
+  <span class="section-path">features<span class="dot">.</span>shell_commands_monitoring</span>
+</h3>
+
+<div class="config-section">
+<div class="field-meta">
+<p><strong>Required:</strong> false</p>
+<p><strong>Default value:</strong> <code>shell commands monitoring is enabled</code></p>
+</div>
+
+Monitor commands typed in interactive shell sessions (Bash, Zsh, Dash) and the commands to the process context. This allows you to write rules that match based on the shell command that initiated an operation.
+</div>
+
+<h3 id="features-shell_commands_monitoring-enabled" class="section-anchor">
+  <span class="section-path">features<span class="dot">.</span>shell_commands_monitoring<span class="dot">.</span>enabled</span>
+</h3>
+
+<div class="config-section">
+<div class="field-meta">
+<p><strong>Required:</strong> false</p>
+<p><strong>Default value:</strong> <code>true</code></p>
+<p><strong>Options:</strong> <code>true</code>, <code>false</code></p>
+</div>
+
+Enable shell command monitoring.<br>
+Supported shells: Bash, Zsh, Dash.
 </div>
 
 <h3 id="features-network_monitoring" class="section-anchor">

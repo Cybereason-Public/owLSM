@@ -1,0 +1,324 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "owLSM Event",
+    "description": "Schema for owLSM security events",
+    "type": "object",
+    "required": ["id", "type", "action", "matched_rule_id", "matched_rule_metadata", "had_error", "process", "parent_process", "time", "data"],
+    "additionalProperties": false,
+    "properties": {
+        "id": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Monotonically increasing event ID, global across all event types"
+        },
+        "type": {
+            "type": "string",
+            "enum": ["EXEC", "FORK", "EXIT", "FILE_CREATE", "UNLINK", "MKDIR", "RMDIR", "CHMOD", "CHOWN", "WRITE", "READ", "RENAME", "NETWORK"],
+            "description": "Event type"
+        },
+        "action": {
+            "type": "string",
+            "enum": ["ALLOW_EVENT", "BLOCK_EVENT", "BLOCK_KILL_PROCESS", "BLOCK_KILL_PROCESS_KILL_PARENT", "KILL_PROCESS", "EXCLUDE_EVENT"],
+            "description": "Action taken on this event"
+        },
+        "matched_rule_id": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "ID of the matched rule (0 if no rule matched)"
+        },
+        "matched_rule_metadata": {
+            "type": "object",
+            "required": ["description"],
+            "additionalProperties": false,
+            "properties": {
+                "description": {
+                    "type": "string"
+                }
+            }
+        },
+        "had_error": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "process": {
+            "$ref": "#/definitions/process_object"
+        },
+        "parent_process": {
+            "$ref": "#/definitions/process_object"
+        },
+        "time": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Nanoseconds since system boot (bpf_ktime_get_ns)"
+        },
+        "data": {
+            "description": "Event-specific data, varies by event type"
+        }
+    },
+    "allOf": [
+        {
+            "if": {
+                "properties": { "type": { "const": "FORK" } }
+            },
+            "then": {
+                "properties": {
+                    "data": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {}
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": { "type": { "const": "EXIT" } }
+            },
+            "then": {
+                "properties": {
+                    "data": {
+                        "type": "object",
+                        "required": ["exit_code", "signal"],
+                        "additionalProperties": false,
+                        "properties": {
+                            "exit_code": { "type": "integer" },
+                            "signal": { "type": "integer", "minimum": 0 }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": { "type": { "const": "EXEC" } }
+            },
+            "then": {
+                "properties": {
+                    "data": {
+                        "type": "object",
+                        "required": ["target"],
+                        "additionalProperties": false,
+                        "properties": {
+                            "target": {
+                                "type": "object",
+                                "required": ["process"],
+                                "additionalProperties": false,
+                                "properties": {
+                                    "process": { "$ref": "#/definitions/process_object" }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": { "type": { "enum": ["FILE_CREATE", "UNLINK", "MKDIR", "RMDIR", "READ", "WRITE"] } }
+            },
+            "then": {
+                "properties": {
+                    "data": {
+                        "type": "object",
+                        "required": ["target"],
+                        "additionalProperties": false,
+                        "properties": {
+                            "target": {
+                                "type": "object",
+                                "required": ["file"],
+                                "additionalProperties": false,
+                                "properties": {
+                                    "file": { "$ref": "#/definitions/file_object" }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": { "type": { "const": "CHMOD" } }
+            },
+            "then": {
+                "properties": {
+                    "data": {
+                        "type": "object",
+                        "required": ["target", "chmod"],
+                        "additionalProperties": false,
+                        "properties": {
+                            "target": {
+                                "type": "object",
+                                "required": ["file"],
+                                "additionalProperties": false,
+                                "properties": {
+                                    "file": { "$ref": "#/definitions/file_object" }
+                                }
+                            },
+                            "chmod": {
+                                "type": "object",
+                                "required": ["requested_mode"],
+                                "additionalProperties": false,
+                                "properties": {
+                                    "requested_mode": { "type": "integer", "minimum": 0 }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": { "type": { "const": "CHOWN" } }
+            },
+            "then": {
+                "properties": {
+                    "data": {
+                        "type": "object",
+                        "required": ["target", "chown"],
+                        "additionalProperties": false,
+                        "properties": {
+                            "target": {
+                                "type": "object",
+                                "required": ["file"],
+                                "additionalProperties": false,
+                                "properties": {
+                                    "file": { "$ref": "#/definitions/file_object" }
+                                }
+                            },
+                            "chown": {
+                                "type": "object",
+                                "required": ["requested_owner_uid", "requested_owner_gid"],
+                                "additionalProperties": false,
+                                "properties": {
+                                    "requested_owner_uid": { "type": "integer", "minimum": 0 },
+                                    "requested_owner_gid": { "type": "integer", "minimum": 0 }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": { "type": { "const": "RENAME" } }
+            },
+            "then": {
+                "properties": {
+                    "data": {
+                        "type": "object",
+                        "required": ["flags", "rename"],
+                        "additionalProperties": false,
+                        "properties": {
+                            "flags": { "type": "integer", "minimum": 0 },
+                            "rename": {
+                                "type": "object",
+                                "required": ["source_file", "destination_file"],
+                                "additionalProperties": false,
+                                "properties": {
+                                    "source_file": { "$ref": "#/definitions/file_object" },
+                                    "destination_file": { "$ref": "#/definitions/file_object" }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": { "type": { "const": "NETWORK" } }
+            },
+            "then": {
+                "properties": {
+                    "data": {
+                        "type": "object",
+                        "required": ["network"],
+                        "additionalProperties": false,
+                        "properties": {
+                            "network": {
+                                "type": "object",
+                                "required": ["direction", "source_ip", "destination_ip", "source_port", "destination_port", "protocol", "ip_type"],
+                                "additionalProperties": false,
+                                "properties": {
+                                    "direction": { "type": "string", "enum": ["INCOMING", "OUTGOING"] },
+                                    "source_ip": { "type": "string" },
+                                    "destination_ip": { "type": "string" },
+                                    "source_port": { "type": "integer", "minimum": 0 },
+                                    "destination_port": { "type": "integer", "minimum": 0 },
+                                    "protocol": { "type": "integer", "minimum": 0 },
+                                    "ip_type": { "type": "integer", "minimum": 0 }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ],
+    "definitions": {
+        "file_type": {
+            "type": "string",
+            "enum": ["UNKNOWN_FILE_TYPE", "REGULAR_FILE", "DIRECTORY", "SYMLINK", "BLOCK_DEVICE", "CHAR_DEVICE", "SOCKET", "FIFO", "NO_FILE"]
+        },
+        "file_object": {
+            "type": "object",
+            "required": ["inode", "dev", "path", "owner", "mode", "type", "suid", "sgid", "last_modified_seconds", "nlink", "filename"],
+            "additionalProperties": false,
+            "properties": {
+                "inode": { "type": "integer", "minimum": 0 },
+                "dev": { "type": "integer", "minimum": 0 },
+                "path": { "type": "string" },
+                "owner": {
+                    "type": "object",
+                    "required": ["uid", "gid"],
+                    "additionalProperties": false,
+                    "properties": {
+                        "uid": { "type": "integer", "minimum": 0 },
+                        "gid": { "type": "integer", "minimum": 0 }
+                    }
+                },
+                "mode": { "type": "integer", "minimum": 0 },
+                "type": { "$ref": "#/definitions/file_type" },
+                "suid": { "type": "integer", "minimum": 0 },
+                "sgid": { "type": "integer", "minimum": 0 },
+                "last_modified_seconds": { "type": "integer", "minimum": 0 },
+                "nlink": { "type": "integer", "minimum": 0 },
+                "filename": { "type": "string" }
+            }
+        },
+        "stdio_file_descriptors": {
+            "type": "object",
+            "required": ["stdin", "stdout", "stderr"],
+            "additionalProperties": false,
+            "properties": {
+                "stdin": { "$ref": "#/definitions/file_type" },
+                "stdout": { "$ref": "#/definitions/file_type" },
+                "stderr": { "$ref": "#/definitions/file_type" }
+            }
+        },
+        "process_object": {
+            "type": "object",
+            "required": ["pid", "ppid", "ruid", "rgid", "euid", "egid", "suid", "cgroup_id", "start_time", "ptrace_flags", "file", "cmd", "shell_command", "stdio_file_descriptors_at_process_creation"],
+            "additionalProperties": false,
+            "properties": {
+                "pid": { "type": "integer", "minimum": 0 },
+                "ppid": { "type": "integer", "minimum": 0 },
+                "ruid": { "type": "integer", "minimum": 0 },
+                "rgid": { "type": "integer", "minimum": 0 },
+                "euid": { "type": "integer", "minimum": 0 },
+                "egid": { "type": "integer", "minimum": 0 },
+                "suid": { "type": "integer", "minimum": 0 },
+                "cgroup_id": { "type": "integer", "minimum": 0 },
+                "start_time": { "type": "integer", "minimum": 0 },
+                "ptrace_flags": { "type": "integer", "minimum": 0 },
+                "file": { "$ref": "#/definitions/file_object" },
+                "cmd": { "type": "string" },
+                "shell_command": { "type": "string" },
+                "stdio_file_descriptors_at_process_creation": { "$ref": "#/definitions/stdio_file_descriptors" }
+            }
+        }
+    }
+}

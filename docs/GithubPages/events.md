@@ -39,7 +39,7 @@ Every event shares a common top-level structure. The `data` field varies dependi
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `id` | int | Monotonically increasing event ID |
+| `id` | int | Monotonically increasing event ID, global across all event types |
 | `type` | string | Event type. See [Event Types](#event-types) |
 | `action` | string | Action taken. See [Actions](#actions) |
 | `matched_rule_id` | int | ID of the matched rule (0 if no rule matched) |
@@ -220,7 +220,7 @@ Every event shares a common top-level structure. The `data` field varies dependi
     <tbody>
     <tr><td><code>inode</code></td><td>int</td><td>Inode number</td></tr>
     <tr><td><code>dev</code></td><td>int</td><td>Device number</td></tr>
-    <tr><td><code>path</code></td><td>string</td><td>Full file path</td></tr>
+    <tr><td><code>path</code></td><td>string</td><td>Absolute file path</td></tr>
     <tr><td><code>owner.uid</code></td><td>int</td><td>File owner user ID</td></tr>
     <tr><td><code>owner.gid</code></td><td>int</td><td>File owner group ID</td></tr>
     <tr><td><code>mode</code></td><td>int</td><td>File permission mode</td></tr>

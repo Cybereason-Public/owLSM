@@ -83,6 +83,7 @@ int BPF_PROG(inet_conn_established, struct sock *sk, struct sk_buff *skb)
         return ALLOW;
     }
     event->id = get_next_event_id();
+    event->time = bpf_ktime_get_ns();
     if(fill_outgoing_connection_network_event_t_second_part(&event->data.network, sk) != SUCCESS)
     {
         goto discard_sk_storage;

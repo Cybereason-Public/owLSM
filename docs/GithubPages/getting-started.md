@@ -25,6 +25,15 @@ Before installing owLSM, ensure your system meets these requirements:
 
 For complete build and installation instructions, please refer to the [GitHub repository](https://github.com/cybereason-labs/owLSM).
 
+## Check System Compatibility
+
+Run the script to verify your system meets all requirements.  
+The script checks kernel version, glibc version, BTF support, and eBPF LSM support, and reports which requirements pass or fail.
+
+```bash
+chmod +x scripts/check_compatibility.sh && ./scripts/check_compatibility.sh
+```
+
 ## Startup Time
 
 owLSM loads many eBPF programs into the kernel at startup. Each program must pass the kernel's eBPF verifier.

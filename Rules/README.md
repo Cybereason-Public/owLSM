@@ -15,16 +15,25 @@ uv pip install -r requirements.txt
 ```
 
 ### Usage
-The config file controls many aspects of owLSM. 
-Check [base_config.json](./RulesGenerator/base_config.json) to see config example without any rules. 
+The config file controls many aspects of owLSM.   
+[base_config.json](./RulesGenerator/base_config.json) is an example of a configuration without any rules.  
+[RuleExamples](./Rules/RuleExamples) is an example directory of rules. `create_config.py` searches for all the yaml files in this directory recursively 
 
 ```bash
 # create a config file with rules
+# the output_config is the complete config. Its your base config + rules.
 python create_config.py -d <rules directory> -c <input config> -o <output_config>
 
 # Real example 
 python create_config.py -d ../RuleExamples -c base_config.json -o full_config.json
 ```
+
+Now you can run owLSM with the generated config. Do it outside the docker  
+```bash 
+sudo /path/to/owlsm -c /path/to/full_config.json
+```
+
+> **Important:** Every time you add, remove, or modify Sigma rules, you must regenerate the full config file by re-running `create_config.py`. You cannot append or edit rules directly in the generated config — it must be rebuilt from your rule files each time.
 
 ## Rule Format
 Rules are written in YAML format based on Sigma syntax. See `RuleExamples/` for examples.
