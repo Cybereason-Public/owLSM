@@ -24,7 +24,7 @@ pygments==2.19.2
 pynacl==1.6.2
 pytest==9.0.2
 pytest-bdd==8.1.0
-requests==2.32.5
+requests==2.33.0
 setuptools==79.0.1
 six==1.17.0
 typing-extensions==4.15.0
