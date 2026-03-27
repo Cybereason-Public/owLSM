@@ -320,7 +320,10 @@ jobs:
   destroy-runners:
     name: Destroy OCI Runner VMs
     needs: [provision-runners, run-automation-tests, aggregate-results]
-    if: always() && inputs.destroy_runners == true
+    if: >-
+      always() &&
+      inputs.destroy_runners == true &&
+      needs.run-automation-tests.result == 'success'
     uses: ./.github/workflows/destroy-runners.yml
     secrets:
       GH_RUNNER_PAT: ${{ secrets.GH_RUNNER_PAT }}

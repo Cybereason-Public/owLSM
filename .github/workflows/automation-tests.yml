@@ -124,6 +124,27 @@ jobs:
           sudo PYTHONPATH=$AUTOMATION_ROOT_DIR $AUTOMATION_ROOT_DIR/venv/bin/pytest ${{inputs.automation-tests-command-args}}
 
       # =====================================================================
+      # Collect Debug Logs (only on failure or cancellation)
+      # =====================================================================
+      - name: Collect debug logs
+        id: collect_logs
+        if: failure() || cancelled()
+        run: |
+          sudo python3 /opt/owLSM/scripts/zip_logs.py \
+            --automation-dir "$AUTOMATION_ROOT_DIR" \
+            --output-dir /tmp/collected_logs
+          ZIP_PATH=$(ls /tmp/collected_logs/*.zip)
+          echo "zip_path=$ZIP_PATH" >> "$GITHUB_OUTPUT"
+
+      - name: Upload debug logs
+        if: (failure() || cancelled()) && steps.collect_logs.outputs.zip_path != ''
+        uses: actions/upload-artifact@v5
+        with:
+          name: debug-logs-${{ inputs.runner-label }}
+          path: ${{ steps.collect_logs.outputs.zip_path }}
+          retention-days: 14
+
+      # =====================================================================
       # Upload Results
       # =====================================================================
       - name: Rename results file
