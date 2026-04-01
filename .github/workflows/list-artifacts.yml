@@ -1,0 +1,105 @@
+name: List Artifacts
+
+on:
+  workflow_dispatch:
+    inputs:
+      list_releases:
+        description: 'List release artifacts (prefixed with "release-")'
+        type: boolean
+        default: true
+      list_regular_artifacts:
+        description: 'List regular build artifacts (prefixed with "<major>.<minor>.<patch>-")'
+        type: boolean
+        default: true
+
+jobs:
+  list-artifacts:
+    name: List Artifacts
+    runs-on: ["OCI", "owLSM"]
+    permissions:
+      actions: read
+
+    steps:
+      - name: Fetch all artifacts
+        id: fetch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ALL_ARTIFACTS="[]"
+          PAGE=1
+
+          while true; do
+            RESPONSE=$(gh api "/repos/${{ github.repository }}/actions/artifacts?per_page=100&page=${PAGE}" --jq '.artifacts')
+            COUNT=$(echo "$RESPONSE" | jq 'length')
+            if [ "$COUNT" -eq 0 ]; then
+              break
+            fi
+            ALL_ARTIFACTS=$(echo "$ALL_ARTIFACTS $RESPONSE" | jq -s '.[0] + .[1]')
+            PAGE=$((PAGE + 1))
+          done
+
+          echo "$ALL_ARTIFACTS" > /tmp/all_artifacts.json
+          TOTAL=$(jq 'length' /tmp/all_artifacts.json)
+          echo "Fetched $TOTAL artifact(s) across $((PAGE - 1)) page(s)"
+
+      - name: List release artifacts
+        if: inputs.list_releases == true
+        run: |
+          echo "## Release Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          RELEASE=$(jq -r '[.[] | select(.name | test("^release-"))]
+            | sort_by(.created_at) | reverse' /tmp/all_artifacts.json)
+
+          COUNT=$(echo "$RELEASE" | jq 'length')
+          echo "Found $COUNT release artifact(s)"
+
+          if [ "$COUNT" -eq 0 ]; then
+            echo "_No release artifacts found._" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Name | Size | Created At | Expires At |" >> $GITHUB_STEP_SUMMARY
+            echo "|------|------|------------|------------|" >> $GITHUB_STEP_SUMMARY
+
+            echo "$RELEASE" | jq -r '.[] |
+              "| \(.name) | \((.size_in_bytes / 1048576 * 100 | floor) / 100) MB | \(.created_at) | \(.expires_at // "N/A") |"' \
+              >> $GITHUB_STEP_SUMMARY
+
+            echo ""
+            printf "  %-55s %10s   %-25s  %-25s\n" "NAME" "SIZE" "CREATED" "EXPIRES"
+            printf "  %-55s %10s   %-25s  %-25s\n" "----" "----" "-------" "-------"
+            echo "$RELEASE" | jq -r '.[] | "\(.name)|\((.size_in_bytes / 1048576 * 100 | floor) / 100) MB|\(.created_at)|\(.expires_at // "N/A")"' \
+              | while IFS='|' read -r name size created expires; do
+                  printf "  %-55s %10s   %-25s  %-25s\n" "$name" "$size" "$created" "$expires"
+                done
+          fi
+
+      - name: List regular build artifacts
+        if: inputs.list_regular_artifacts == true
+        run: |
+          echo "## Regular Build Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          REGULAR=$(jq -r '[.[] | select(.name | test("^[0-9]+\\.[0-9]+\\.[0-9]+-"))]
+            | sort_by(.created_at) | reverse' /tmp/all_artifacts.json)
+
+          COUNT=$(echo "$REGULAR" | jq 'length')
+          echo "Found $COUNT regular build artifact(s)"
+
+          if [ "$COUNT" -eq 0 ]; then
+            echo "_No regular build artifacts found._" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Name | Size | Created At | Expires At |" >> $GITHUB_STEP_SUMMARY
+            echo "|------|------|------------|------------|" >> $GITHUB_STEP_SUMMARY
+
+            echo "$REGULAR" | jq -r '.[] |
+              "| \(.name) | \((.size_in_bytes / 1048576 * 100 | floor) / 100) MB | \(.created_at) | \(.expires_at // "N/A") |"' \
+              >> $GITHUB_STEP_SUMMARY
+
+            echo ""
+            printf "  %-55s %10s   %-25s  %-25s\n" "NAME" "SIZE" "CREATED" "EXPIRES"
+            printf "  %-55s %10s   %-25s  %-25s\n" "----" "----" "-------" "-------"
+            echo "$REGULAR" | jq -r '.[] | "\(.name)|\((.size_in_bytes / 1048576 * 100 | floor) / 100) MB|\(.created_at)|\(.expires_at // "N/A")"' \
+              | while IFS='|' read -r name size created expires; do
+                  printf "  %-55s %10s   %-25s  %-25s\n" "$name" "$size" "$created" "$expires"
+                done
+          fi
