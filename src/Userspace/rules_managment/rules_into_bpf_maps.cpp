@@ -1,5 +1,6 @@
 #include "rules_into_bpf_maps.hpp"
 #include "rule_converter.hpp"
+#include "dfa_builder.hpp"
 #include "globals/global_strings.hpp"
 #include <filesystem>
 
@@ -14,6 +15,7 @@ void RulesIntoBpfMaps::create_rule_maps_from_organized_rules(
     populate_predicates_map(id_to_predicate);
     populate_rules_strings_map(id_to_string);
     populate_idx_to_DFA_map(id_to_string);
+    populate_idx_to_accepting_states_map();
     populate_rules_ips_map(id_to_ip);
     populate_event_rule_maps(organized_rules);
 }
@@ -45,7 +47,7 @@ void RulesIntoBpfMaps::populate_rules_strings_map(const std::unordered_map<int, 
         unsigned int key = static_cast<unsigned int>(id);
         rule_string_t c_string = RuleStructConverter::convertRuleString(rule_string);
         
-        c_string.idx_to_DFA = rule_string.is_contains ? id : -1;
+        c_string.idx_to_DFA = (rule_string.string_type != STRING_TYPE_DEFAULT) ? id : -1;
         if (bpf_map_update_elem(fd, &key, &c_string, BPF_ANY) < 0)
         {
             close(fd);
@@ -62,19 +64,52 @@ void RulesIntoBpfMaps::populate_idx_to_DFA_map(const std::unordered_map<int, con
     int fd = create_pin_map(BPF_MAP_TYPE_HASH, std::string("idx_to_DFA_map"), sizeof(struct flat_2d_dfa_array_t), MAX_TOTAL_PREDS, BPF_F_NO_PREALLOC);
     for (const auto& [id, rule_string] : id_to_string)
     {
-        if (!rule_string.is_contains)
+        if (rule_string.string_type == STRING_TYPE_DEFAULT)
         {
             continue;
         }
         
         unsigned int key = static_cast<unsigned int>(id);
         flat_2d_dfa_array_t dfa;
-        build_dfa(rule_string.value, dfa);
+        
+        if (rule_string.string_type == STRING_TYPE_CONTAINS)
+        {
+            DfaBuilder::buildKmpDfa(rule_string.value, dfa);
+        }
+        else if (rule_string.string_type == STRING_TYPE_REGEX)
+        {
+            auto result = DfaBuilder::buildRegexDfa(rule_string.value);
+            dfa = result.dfa;
+            m_regex_accepting_states[id] = result.accepting_states;
+        }
         
         if (bpf_map_update_elem(fd, &key, &dfa, BPF_ANY) < 0)
         {
             close(fd);
             throw std::system_error(errno, std::generic_category(), "Failed to update idx_to_DFA_map for string id " + std::to_string(id));
+        }
+    }
+    
+    freeze_map(fd);
+    close(fd);
+}
+
+void RulesIntoBpfMaps::populate_idx_to_accepting_states_map()
+{
+    if (m_regex_accepting_states.empty())
+    {
+        return;
+    }
+    
+    int fd = create_pin_map(BPF_MAP_TYPE_HASH, std::string("idx_to_accepting_states_map"), sizeof(unsigned long long), MAX_TOTAL_PREDS, BPF_F_NO_PREALLOC);
+    for (const auto& [id, accepting_states] : m_regex_accepting_states)
+    {
+        unsigned int key = static_cast<unsigned int>(id);
+        
+        if (bpf_map_update_elem(fd, &key, &accepting_states, BPF_ANY) < 0)
+        {
+            close(fd);
+            throw std::system_error(errno, std::generic_category(), "Failed to update idx_to_accepting_states_map for string id " + std::to_string(id));
         }
     }
     

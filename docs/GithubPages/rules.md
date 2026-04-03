@@ -342,11 +342,46 @@ Modifiers specify how field values are compared.
 | Modifier | Syntax | Description |
 |----------|--------|-------------|
 | `exactmatch` | `field: "value"` | Exact string match (default) |
-| `contains` | `field|contains: "value"` | Substring match |
-| `startswith` | `field|startswith: "value"` | Prefix match |
-| `endswith` | `field|endswith: "value"` | Suffix match |
+| `contains` | `field\|contains: "value"` | Substring match |
+| `startswith` | `field\|startswith: "value"` | Prefix match |
+| `endswith` | `field\|endswith: "value"` | Suffix match |
+| `re` | `field\|re: "pattern"` | Regex match |
 
-**Limitation:** Rule string values are capped at 32 characters.
+**Limitations:** 
+
+- Rule string values are capped at 32 characters.
+- Rule regex expressions are capped at 32 states. 
+
+### Regex Modifier (`re`)
+
+**Supported regex features:**
+
+| Feature | Syntax | Example |
+|---------|--------|---------|
+| Literals | normal characters | `"abc"` |
+| Character ranges | `[a-z]`, `[0-9A-F]` | `"[a-z]+"` |
+| Negated ranges | `[^a-z]`, `[^/]` | `"[^/]+"` |
+| Character classes | `\d`, `\w`, `\s` | `"\\d+"` |
+| Negated classes | `\D`, `\W`, `\S` | `"\\D+"` |
+| Dot (printable ASCII) | `.` | `"a.c"` |
+| Alternation | `a\|b` | `"cat\|dog"` |
+| Grouping | `(...)` | `"(ab)+"` |
+| Repetition | `*`, `+`, `?` | `"ab*c"`, `"a+"` |
+| Bounded repetition | `{n}`, `{n,m}`, `{n,}` | `"a{2,4}"` |
+| Non-greedy | `*?`, `+?`, `??` | `"a+?"` |
+| Case insensitive | `(?i)` | `"(?i)hello"` |
+| Escape sequences | `\n`, `\t`, `\\`, `\.` | `"a\\.b"` |
+
+**Regex DFA state limit:** Regex patterns are compiled to Deterministic Finite Automata (DFAs) for efficient O(n) matching in the kernel. Each DFA is limited to **32 states**. Simple patterns (literals, short alternations, character classes) use only a few states. Complex patterns with many branches or long literals may exceed this limit — if so, simplify the pattern.
+
+<div class="interactive-code">
+<pre><code>detection:
+    sel_config_files:
+        target.file.path|re: "/etc/[a-z]+\\.conf"
+    sel_scripts:
+        process.file.filename|re: "(python|bash|perl)[23]?"
+    condition: sel_config_files and sel_scripts</code></pre>
+</div><br>
 
 ### Negation Modifier
 

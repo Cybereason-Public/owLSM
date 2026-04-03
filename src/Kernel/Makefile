@@ -28,7 +28,7 @@ BPF_CFLAGS     := -O2 -g -Wall -Wno-unused-function -Wno-c23-extensions -target 
 BPF_SRC        := common_maps.bpf.c \
                   error_reports.bpf.c \
                   event_and_rule_matcher.bpf.c \
-                  kmp_dfa.bpf.c \
+                  dfa.bpf.c \
                   Programs/syscall_monitoring/on_chown.bpf.c \
                   Programs/syscall_monitoring/on_chmod.bpf.c \
                   Programs/syscall_monitoring/on_fork.bpf.c \

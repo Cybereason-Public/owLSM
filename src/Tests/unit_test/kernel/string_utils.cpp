@@ -209,3 +209,217 @@ TEST_F(BpfTestBase, StringUtils_BoundaryLengthTest)
     std::string needle_max_b(MAX_NEEDLE_LENGTH, 'b');
     EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{haystack_with_max, needle_max_b, COMPARISON_TYPE_CONTAINS}));
 }
+
+// =============================================================================
+// Regex DFA tests (full kernel path: userspace DFA build → BPF regex_dfa_search)
+// =============================================================================
+
+TEST_F(BpfTestBase, StringUtils_Regex_LiteralMatch)
+{
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"abc", "abc", COMPARISON_TYPE_REGEX}));
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"xabcx", "abc", COMPARISON_TYPE_REGEX}));
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"abcd", "abc", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{"abd", "abc", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{"ab", "abc", COMPARISON_TYPE_REGEX}));
+}
+
+TEST_F(BpfTestBase, StringUtils_Regex_CharRangeAndRepetition)
+{
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"hello", "[a-z]+", COMPARISON_TYPE_REGEX}));
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"a", "[a-z]+", COMPARISON_TYPE_REGEX}));
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"Hello", "[a-z]+", COMPARISON_TYPE_REGEX}));
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"abc123", "[a-z]+", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{"", "[a-z]+", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{"123", "[a-z]+", COMPARISON_TYPE_REGEX}));
+}
+
+TEST_F(BpfTestBase, StringUtils_Regex_CharClasses)
+{
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"123", "\\d+", COMPARISON_TYPE_REGEX}));
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"abc123", "\\d+", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{"abc", "\\d+", COMPARISON_TYPE_REGEX}));
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"test_123", "\\w+", COMPARISON_TYPE_REGEX}));
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"test 123", "\\w+", COMPARISON_TYPE_REGEX}));
+}
+
+TEST_F(BpfTestBase, StringUtils_Regex_Dot)
+{
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"abc", "a.c", COMPARISON_TYPE_REGEX}));
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"a5c", "a.c", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{"ac", "a.c", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{"abbc", "a.c", COMPARISON_TYPE_REGEX}));
+}
+
+TEST_F(BpfTestBase, StringUtils_Regex_Alternation)
+{
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"cat", "cat|dog", COMPARISON_TYPE_REGEX}));
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"dog", "cat|dog", COMPARISON_TYPE_REGEX}));
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"hotdog", "cat|dog", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{"bird", "cat|dog", COMPARISON_TYPE_REGEX}));
+}
+
+TEST_F(BpfTestBase, StringUtils_Regex_StarAndOptional)
+{
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"ac", "ab*c", COMPARISON_TYPE_REGEX}));
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"abc", "ab*c", COMPARISON_TYPE_REGEX}));
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"abbbbc", "ab*c", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{"adc", "ab*c", COMPARISON_TYPE_REGEX}));
+
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"http://", "https?://", COMPARISON_TYPE_REGEX}));
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"https://", "https?://", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{"httpx://", "https?://", COMPARISON_TYPE_REGEX}));
+}
+
+TEST_F(BpfTestBase, StringUtils_Regex_BoundedRepetition)
+{
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"aaa", "a{3}", COMPARISON_TYPE_REGEX}));
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"xaaax", "a{3}", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{"aa", "a{3}", COMPARISON_TYPE_REGEX}));
+
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"aa", "a{2,4}", COMPARISON_TYPE_REGEX}));
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"xaax", "a{2,4}", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{"a", "a{2,4}", COMPARISON_TYPE_REGEX}));
+}
+
+TEST_F(BpfTestBase, StringUtils_Regex_CaseInsensitive)
+{
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"hello", "(?i)hello", COMPARISON_TYPE_REGEX}));
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"HELLO", "(?i)hello", COMPARISON_TYPE_REGEX}));
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"HeLLo", "(?i)hello", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{"hell", "(?i)hello", COMPARISON_TYPE_REGEX}));
+}
+
+TEST_F(BpfTestBase, StringUtils_Regex_EscapedChars)
+{
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"a.b", "a\\.b", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{"axb", "a\\.b", COMPARISON_TYPE_REGEX}));
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"a*b", "a\\*b", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{"ab", "a\\*b", COMPARISON_TYPE_REGEX}));
+}
+
+TEST_F(BpfTestBase, StringUtils_Regex_ComplexPatterns)
+{
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"/tmp/app.log", "/tmp/[a-z]+\\.log", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{"/tmp/App.log", "/tmp/[a-z]+\\.log", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{"/var/app.log", "/tmp/[a-z]+\\.log", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{"/tmp/app.txt", "/tmp/[a-z]+\\.log", COMPARISON_TYPE_REGEX}));
+
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"3.14", "\\d+\\.\\d+", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{"3", "\\d+\\.\\d+", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{"3.", "\\d+\\.\\d+", COMPARISON_TYPE_REGEX}));
+}
+
+TEST_F(BpfTestBase, StringUtils_Regex_NestedGroups)
+{
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"ababc", "((ab)+c)+", COMPARISON_TYPE_REGEX}));
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"abcababc", "((ab)+c)+", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{"ab", "((ab)+c)+", COMPARISON_TYPE_REGEX}));
+}
+
+TEST_F(BpfTestBase, StringUtils_Regex_StateLimit)
+{
+    // 30-char unique literal → 32 DFA states (dead + start + 30 intermediate)
+    std::string pattern_30 = "abcdefghijklmnopqrstuvwxyz1234";
+    std::string haystack_match = pattern_30;
+    std::string haystack_short = pattern_30.substr(0, 29);
+
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{haystack_match, pattern_30, COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{haystack_short, pattern_30, COMPARISON_TYPE_REGEX}));
+}
+
+TEST_F(BpfTestBase, StringUtils_Regex_MaxLengthInput_ComplexPath)
+{
+    // 255-char haystack: long path matched by a regex with mixed features
+    std::string long_path(PATH_MAX - 1 - 8, 'a');
+    long_path = "/" + long_path + "/x.conf";
+    ASSERT_EQ(long_path.size(), PATH_MAX - 1);
+
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{long_path, "/[a-z]+/[a-z]+\\.conf", COMPARISON_TYPE_REGEX}));
+
+    std::string no_match_path = long_path;
+    no_match_path.back() = 'x';
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{no_match_path, "/[a-z]+/[a-z]+\\.conf", COMPARISON_TYPE_REGEX}));
+}
+
+TEST_F(BpfTestBase, StringUtils_Regex_MaxLengthInput_MatchAtEnd)
+{
+    // The meaningful match is at the very end of a 255-char string.
+    // Regex checks that the string is lowercase/slash chars ending in ".log"
+    std::string long_path(PATH_MAX - 1 - 4, 'z');
+    long_path[0] = '/';
+    long_path += ".log";
+    ASSERT_EQ(long_path.size(), PATH_MAX - 1);
+
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{long_path, "[a-z/]+\\.log", COMPARISON_TYPE_REGEX}));
+
+    // Same length but ending in ".txt" → no match
+    std::string no_match = long_path;
+    no_match.replace(no_match.size() - 4, 4, ".txt");
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{no_match, "[a-z/]+\\.log", COMPARISON_TYPE_REGEX}));
+}
+
+TEST_F(BpfTestBase, StringUtils_Regex_NegatedCharRange)
+{
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"hello", "[^0-9]+", COMPARISON_TYPE_REGEX}));
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"abc123", "[^0-9]+", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{"42", "[^0-9]+", COMPARISON_TYPE_REGEX}));
+
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"abc", "[^/]+", COMPARISON_TYPE_REGEX}));
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"a/b", "[^/]+", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{"/", "[^/]+", COMPARISON_TYPE_REGEX}));
+}
+
+TEST_F(BpfTestBase, StringUtils_Regex_NegatedCharClasses)
+{
+    // \D matches non-digits
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"abc", "\\D+", COMPARISON_TYPE_REGEX}));
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"abc1", "\\D+", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{"123", "\\D+", COMPARISON_TYPE_REGEX}));
+
+    // \W matches non-word chars
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{" -.", "\\W+", COMPARISON_TYPE_REGEX}));
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"a b", "\\W+", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{"abc", "\\W+", COMPARISON_TYPE_REGEX}));
+
+    // \S matches non-space chars
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"abc", "\\S+", COMPARISON_TYPE_REGEX}));
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{" a ", "\\S+", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{" ", "\\S+", COMPARISON_TYPE_REGEX}));
+}
+
+TEST_F(BpfTestBase, StringUtils_Regex_SpaceClass)
+{
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{" ", "\\s+", COMPARISON_TYPE_REGEX}));
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{std::string(1, '\t'), "\\s+", COMPARISON_TYPE_REGEX}));
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{" \t ", "\\s+", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{"abc", "\\s+", COMPARISON_TYPE_REGEX}));
+}
+
+TEST_F(BpfTestBase, StringUtils_Regex_AtLeastBounded)
+{
+    // {2,} means 2 or more
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"aa", "a{2,}", COMPARISON_TYPE_REGEX}));
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"aaaaa", "a{2,}", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{"a", "a{2,}", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{"", "a{2,}", COMPARISON_TYPE_REGEX}));
+}
+
+TEST_F(BpfTestBase, StringUtils_Regex_PlusRepetition)
+{
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"a", "[a-z]+", COMPARISON_TYPE_REGEX}));
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"abcdef", "[a-z]+", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{"", "[a-z]+", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{"123", "[a-z]+", COMPARISON_TYPE_REGEX}));
+}
+
+TEST_F(BpfTestBase, StringUtils_Regex_EscapeSequences)
+{
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{std::string("a\tb"), "a\\tb", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{"atb", "a\\tb", COMPARISON_TYPE_REGEX}));
+
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{std::string("a\nb"), "a\\nb", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{"anb", "a\\nb", COMPARISON_TYPE_REGEX}));
+
+    EXPECT_TRUE(executeBpfProgram(skel, StringUtilsTestCase{"a\\b", "a\\\\b", COMPARISON_TYPE_REGEX}));
+    EXPECT_FALSE(executeBpfProgram(skel, StringUtilsTestCase{"ab", "a\\\\b", COMPARISON_TYPE_REGEX}));
+}

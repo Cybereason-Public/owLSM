@@ -42,6 +42,9 @@ int test_string_utils_program(struct __sk_buff *skb)
         case COMPARISON_TYPE_ENDS_WITH: 
             t->actual_result = ends_with(sctx);
             break;
+        case COMPARISON_TYPE_REGEX:
+            t->actual_result = regex_dfa_search(sctx);
+            break;
         default:
             t->actual_result = FALSE;
             break;

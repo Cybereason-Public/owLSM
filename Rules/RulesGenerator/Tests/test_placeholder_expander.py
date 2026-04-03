@@ -448,8 +448,9 @@ detection:
         assert "/tmp/" in string_values
         assert "/var/tmp/" in string_values
 
+        from constants import StringType
         for entry in ctx.id_to_string.values():
-            assert entry.is_contains is True
+            assert entry.string_type == StringType.CONTAINS
 
     def test_expand_with_all_modifier_e2e(self, tmp_path):
         """expand + all: all expanded values must match (AND)."""

@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 import ipaddress
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Tuple
 from sigma.rule import SigmaRule as PySigmaRule
 from sigma.collection import SigmaCollection
 from sigma.conversion.base import Backend
@@ -37,14 +37,16 @@ from constants import (
     COMPARISON_TYPE_BELOW,
     COMPARISON_TYPE_EQUAL_ABOVE,
     COMPARISON_TYPE_EQUAL_BELOW,
+    COMPARISON_TYPE_REGEX,
     AF_INET,
     AF_INET6,
+    StringType,
 )
 
 @dataclass
 class StringEntry:
     value: str
-    is_contains: bool = False
+    string_type: StringType = StringType.DEFAULT
 
 
 @dataclass
@@ -118,20 +120,34 @@ class ParsedRulesContext:
     id_to_predicate: Dict[int, Predicate] = field(default_factory=dict)
     id_to_ip: Dict[int, RuleIP] = field(default_factory=dict)
     rules: List[ParsedRule] = field(default_factory=list)
-    _string_to_id: Dict[str, int] = field(default_factory=dict)
+    _string_to_id: Dict[Tuple[str, bool], int] = field(default_factory=dict)
     _pred_to_id: Dict[Predicate, int] = field(default_factory=dict)
     _ip_to_id: Dict[tuple, int] = field(default_factory=dict)
     
-    def get_or_add_string(self, s: str, is_contains: bool = False) -> int:
-        if s in self._string_to_id:
-            idx = self._string_to_id[s]
-            if is_contains and not self.id_to_string[idx].is_contains:
-                self.id_to_string[idx].is_contains = True
+    def get_or_add_string(self, s: str, string_type: StringType = StringType.DEFAULT) -> int:
+        """
+        Add a string to the context or return existing index.
+        
+        For DEFAULT and CONTAINS strings:
+        - They share the same entry (keyed by string value only)
+        - If a string is used with CONTAINS, it upgrades from DEFAULT to CONTAINS
+        
+        For REGEX strings:
+        - They have separate entries (different semantics from literal strings)
+        """
+        is_regex = (string_type == StringType.REGEX)
+        key = (s, is_regex)
+        
+        if key in self._string_to_id:
+            idx = self._string_to_id[key]
+            if not is_regex and string_type == StringType.CONTAINS:
+                if self.id_to_string[idx].string_type == StringType.DEFAULT:
+                    self.id_to_string[idx].string_type = StringType.CONTAINS
             return idx
         
         new_idx = len(self.id_to_string)
-        self.id_to_string[new_idx] = StringEntry(value=s, is_contains=is_contains)
-        self._string_to_id[s] = new_idx
+        self.id_to_string[new_idx] = StringEntry(value=s, string_type=string_type)
+        self._string_to_id[key] = new_idx
         return new_idx
     
     def get_or_add_predicate(self, pred: Predicate) -> int:
@@ -301,8 +317,11 @@ class OwlsmBackend(Backend):
         return self._create_field_condition_expr(field, operation, value)
     
     def _create_string_predicate_expr(self, field: str, comparison_type: str, value: str) -> ConditionExpr:
-        is_contains = (comparison_type == COMPARISON_TYPE_CONTAINS)
-        string_idx = self.ctx.get_or_add_string(value, is_contains=is_contains)
+        if comparison_type == COMPARISON_TYPE_CONTAINS:
+            string_type = StringType.CONTAINS
+        else:
+            string_type = StringType.DEFAULT
+        string_idx = self.ctx.get_or_add_string(value, string_type=string_type)
         pred = Predicate(field=field, comparison_type=comparison_type, string_idx=string_idx)
         pred_idx = self.ctx.get_or_add_predicate(pred)
         return ConditionExpr(operator_type="PRED", predicate_idx=pred_idx)
@@ -457,8 +476,23 @@ class OwlsmBackend(Backend):
     def convert_condition_field_eq_val_null(self, cond, state):
         self._unsupported("field_eq_val_null")
       
-    def convert_condition_field_eq_val_re(self, cond, state):
-        self._unsupported("field_eq_val_re (regex)")
+    def _create_regex_predicate_expr(self, field: str, pattern: str) -> ConditionExpr:
+        """
+        Create a regex predicate expression for a given field and pattern.
+        Used by both field-specific and keyword regex handlers.
+        """
+        string_idx = self.ctx.get_or_add_string(pattern, string_type=StringType.REGEX)
+        pred = Predicate(field=field, comparison_type=COMPARISON_TYPE_REGEX, string_idx=string_idx)
+        pred_idx = self.ctx.get_or_add_predicate(pred)
+        return ConditionExpr(operator_type="PRED", predicate_idx=pred_idx)
+    
+    def convert_condition_field_eq_val_re(self, cond, state) -> ConditionExpr:
+        """
+        Handle regex value patterns.
+        Creates a predicate with COMPARISON_TYPE_REGEX.
+        Regex validation is done in sigma_rule_loader.py.
+        """
+        return self._create_regex_predicate_expr(cond.field, str(cond.value.regexp))
     
     def convert_condition_field_eq_val_timestamp_part(self, cond, state):
         self._unsupported("field_eq_val_timestamp_part")
@@ -475,8 +509,27 @@ class OwlsmBackend(Backend):
     def convert_condition_val_num(self, cond, state):
         self._unsupported("val_num")
     
-    def convert_condition_val_re(self, cond, state):
-        self._unsupported("val_re (regex)")
+    def convert_condition_val_re(self, cond, state) -> ConditionExpr:
+        """
+        Handle unbound regex value (keyword regex) by expanding to all string fields for the event type.
+        Creates an OR of regex predicates for each string field.
+        Regex validation is done in sigma_rule_loader.py.
+        """
+        if self.event_type is None:
+            raise Exception("Regex keywords require event_type to be set in backend")
+        
+        pattern = str(cond.value.regexp)
+        
+        fields = get_string_fields_for_event(self.event_type)
+        fields = fields - IP_FIELDS
+        if not fields:
+            raise Exception(f"No string fields found for event type '{self.event_type}'")
+        
+        predicates = [self._create_regex_predicate_expr(field, pattern) for field in sorted(fields)]
+        
+        if len(predicates) == 1:
+            return predicates[0]
+        return ConditionExpr(operator_type="OR", children=predicates)
     
     def convert_condition_val_str(self, cond, state) -> ConditionExpr:
         """

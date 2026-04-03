@@ -37,7 +37,7 @@ TEST_F(RuleConverterTest, convert_rule_string_basic)
 {
     owlsm::config::RuleString cpp_string;
     cpp_string.value = "test_string";
-    cpp_string.is_contains = true;
+    cpp_string.string_type = STRING_TYPE_CONTAINS;
     
     rule_string_t c_string = RuleConverterTest::convertRuleString(cpp_string);
     
@@ -50,7 +50,7 @@ TEST_F(RuleConverterTest, convert_rule_string_empty)
 {
     owlsm::config::RuleString cpp_string;
     cpp_string.value = "";
-    cpp_string.is_contains = false;
+    cpp_string.string_type = STRING_TYPE_DEFAULT;
     
     rule_string_t c_string = RuleConverterTest::convertRuleString(cpp_string);
     
@@ -62,7 +62,7 @@ TEST_F(RuleConverterTest, convert_rule_string_too_long_string)
 {
     owlsm::config::RuleString cpp_string;
     cpp_string.value = std::string(MAX_RULE_STR_LENGTH + 1, 'a');
-    cpp_string.is_contains = true;
+    cpp_string.string_type = STRING_TYPE_CONTAINS;
     
     EXPECT_ANY_THROW(RuleConverterTest::convertRuleString(cpp_string));   
 }

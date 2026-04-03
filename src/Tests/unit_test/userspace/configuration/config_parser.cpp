@@ -124,9 +124,9 @@ TEST_F(ConfigParserTest, real_config_is_parsed_correctly)
     // Check id_to_string
     EXPECT_EQ(config.rules_config.id_to_string.size(), 2);
     EXPECT_EQ(config.rules_config.id_to_string[0].value, ".ssh/id_rsa");
-    EXPECT_TRUE(config.rules_config.id_to_string[0].is_contains);
+    EXPECT_EQ(config.rules_config.id_to_string[0].string_type, STRING_TYPE_CONTAINS);
     EXPECT_EQ(config.rules_config.id_to_string[1].value, "curl");
-    EXPECT_FALSE(config.rules_config.id_to_string[1].is_contains);
+    EXPECT_EQ(config.rules_config.id_to_string[1].string_type, STRING_TYPE_DEFAULT);
 
     // Check id_to_predicate
     EXPECT_EQ(config.rules_config.id_to_predicate.size(), 3);
@@ -182,10 +182,10 @@ TEST_F(ConfigParserTest, string_value_too_long_fails_validation)
     EXPECT_ANY_THROW(owlsm::config::ConfigParser parser(temp_file.getPath(), std::string(REAL_SCHEMA_4)));
 }
 
-TEST_F(ConfigParserTest, is_contains_not_boolean_fails_validation) 
+TEST_F(ConfigParserTest, string_type_not_integer_fails_validation) 
 {
     owlsm::RaiiTempFile temp_file;
-    temp_file << INVALID_IS_CONTAINS_NOT_BOOLEAN_JSON;
+    temp_file << INVALID_STRING_TYPE_NOT_INTEGER_JSON;
     EXPECT_ANY_THROW(owlsm::config::ConfigParser parser(temp_file.getPath(), std::string(REAL_SCHEMA_4)));
 }
 

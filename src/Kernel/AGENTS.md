@@ -32,7 +32,7 @@ Kernel/
 │       └── on_tcp_outgoing.bpf.c
 ├── common_maps.bpf.c/.h         # Shared BPF maps
 ├── event_and_rule_matcher.bpf.c/.h  # Rule and event evaluation engine
-├── kmp_dfa.bpf.c/.h             # String matching (KMP algorithm)
+├── dfa.bpf.c/.h                 # DFA-based string matching (KMP and regex)
 ├── process_cache.bpf.h          # Process info caching. Only functions in this file are allowed to access the process cache directly. 
 ├── allocators.bpf.h             # Memory allocation helpers
 ├── string_utils.bpf.h           # String related utils. Mostly comparison. 

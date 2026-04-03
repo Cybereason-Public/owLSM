@@ -1,0 +1,30 @@
+# Regex CHMOD rule - tests multiple regex patterns with different features
+# Includes both anchored-style and unanchored-style regex patterns
+# Match: /usr/bin/chmod 755 /tmp/regex_alpha
+# No-match: different filename or mode
+
+id: 51
+description: "Regex chmod test - multiple regex patterns on different fields"
+action: "BLOCK_EVENT"
+events:
+    - CHMOD
+detection:
+    regex_path:
+        target.file.path|re: "/tmp/regex_[a-z]+"
+
+    regex_filename:
+        target.file.filename|re: "regex_[a-z]+"
+
+    regex_process_name:
+        process.file.filename|re: "ch(mod|own)"
+
+    regex_process_path_unanchored:
+        process.file.path|re: "ch\\w+"
+
+    regex_cmd_unanchored:
+        process.cmd|re: "regex_[a-z]+"
+
+    mode_check:
+        chmod.requested_mode|gte: 400
+
+    condition: all of regex_* and mode_check

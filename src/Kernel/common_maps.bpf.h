@@ -258,6 +258,18 @@ struct {
 extern
 #endif
 struct {
+    __uint(type,       BPF_MAP_TYPE_HASH);
+    __uint(max_entries, MAX_TOTAL_PREDS);
+    __uint(map_flags,   BPF_F_NO_PREALLOC);
+    __type(key,        u32);
+    __type(value,      unsigned long long);
+    __uint(pinning,    LIBBPF_PIN_BY_NAME);
+} idx_to_accepting_states_map SEC(".maps");
+
+#ifndef DEFINE_MAPS
+extern
+#endif
+struct {
     __uint(type,       BPF_MAP_TYPE_ARRAY);
     __uint(max_entries, MAX_RULES_PER_MAP_PLUS1);
     __type(key,        u32);

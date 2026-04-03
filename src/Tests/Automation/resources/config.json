@@ -34,407 +34,423 @@
     "id_to_string": {
       "0": {
         "value": "chmod",
-        "is_contains": true
+        "string_type": 1
       },
       "1": {
         "value": "755",
-        "is_contains": true
+        "string_type": 1
       },
       "2": {
         "value": "complex",
-        "is_contains": true
+        "string_type": 1
       },
       "3": {
         "value": "python",
-        "is_contains": true
+        "string_type": 1
       },
       "4": {
         "value": "bin",
-        "is_contains": true
+        "string_type": 1
       },
       "5": {
         "value": "/tmp/",
-        "is_contains": false
+        "string_type": 0
       },
       "6": {
         "value": "excluded",
-        "is_contains": true
+        "string_type": 1
       },
       "7": {
         "value": "/bin",
-        "is_contains": true
+        "string_type": 1
       },
       "8": {
         "value": "test",
-        "is_contains": true
+        "string_type": 1
       },
       "9": {
         "value": "echo",
-        "is_contains": true
+        "string_type": 1
       },
       "10": {
         "value": "exec",
-        "is_contains": true
+        "string_type": 1
       },
       "11": {
         "value": "pytest",
-        "is_contains": true
+        "string_type": 1
       },
       "12": {
         "value": "appd",
-        "is_contains": false
+        "string_type": 0
       },
       "13": {
         "value": "/home/app/data",
-        "is_contains": true
+        "string_type": 1
       },
       "14": {
         "value": "/home/app/data/config.yaml",
-        "is_contains": false
+        "string_type": 0
       },
       "15": {
         "value": "bin/chmod",
-        "is_contains": false
+        "string_type": 0
       },
       "16": {
         "value": "666",
-        "is_contains": true
+        "string_type": 1
       },
       "17": {
         "value": "test2",
-        "is_contains": true
+        "string_type": 1
       },
       "18": {
         "value": "555 /tmp/test3",
-        "is_contains": false
+        "string_type": 0
       },
       "19": {
         "value": "test3",
-        "is_contains": false
+        "string_type": 0
       },
       "20": {
         "value": "444",
-        "is_contains": true
+        "string_type": 1
       },
       "21": {
         "value": "st4",
-        "is_contains": false
+        "string_type": 0
       },
       "22": {
         "value": "/usr/bin",
-        "is_contains": false
+        "string_type": 0
       },
       "23": {
         "value": "7:7",
-        "is_contains": true
+        "string_type": 1
       },
       "24": {
         "value": "bin/python",
-        "is_contains": true
+        "string_type": 1
       },
       "25": {
         "value": "ls",
-        "is_contains": true
+        "string_type": 1
       },
       "26": {
         "value": "ls -lAa /tmp",
-        "is_contains": false
+        "string_type": 0
       },
       "27": {
         "value": ". # . $. ^ . _",
-        "is_contains": true
+        "string_type": 1
       },
       "28": {
         "value": "blocked_write",
-        "is_contains": true
+        "string_type": 1
       },
       "29": {
         "value": "wc",
-        "is_contains": true
+        "string_type": 1
       },
       "30": {
         "value": "blocked_read",
-        "is_contains": true
+        "string_type": 1
       },
       "31": {
         "value": "nc",
-        "is_contains": true
+        "string_type": 1
       },
       "32": {
         "value": "netcat",
-        "is_contains": true
+        "string_type": 1
       },
       "33": {
         "value": "1338",
-        "is_contains": true
+        "string_type": 1
       },
       "34": {
         "value": "bin/rm",
-        "is_contains": true
+        "string_type": 1
       },
       "35": {
         "value": "hard_link",
-        "is_contains": true
+        "string_type": 1
       },
       "36": {
         "value": "bin/mv",
-        "is_contains": true
+        "string_type": 1
       },
       "37": {
         "value": "123.txt.old",
-        "is_contains": true
+        "string_type": 1
       },
       "38": {
         "value": "/tmp/test_exclude_event",
-        "is_contains": true
+        "string_type": 1
       },
       "39": {
         "value": "test1",
-        "is_contains": false
+        "string_type": 0
       },
       "40": {
         "value": "dir2",
-        "is_contains": false
+        "string_type": 0
       },
       "41": {
         "value": "ordering_check",
-        "is_contains": true
+        "string_type": 1
       },
       "42": {
         "value": "skip_first",
-        "is_contains": true
+        "string_type": 1
       },
       "43": {
         "value": "/tmp/escaped*wildcards?test",
-        "is_contains": false
+        "string_type": 0
       },
       "44": {
         "value": "wildcards",
-        "is_contains": true
+        "string_type": 1
       },
       "45": {
         "value": "/tmp/test_",
-        "is_contains": false
+        "string_type": 0
       },
       "46": {
         "value": "mod",
-        "is_contains": true
+        "string_type": 1
       },
       "47": {
         "value": "automation.txt",
-        "is_contains": false
+        "string_type": 0
       },
       "48": {
         "value": "777",
-        "is_contains": true
+        "string_type": 1
       },
       "49": {
         "value": "test_keywords",
-        "is_contains": false
+        "string_type": 0
       },
       "50": {
         "value": "l_modifier",
-        "is_contains": false
+        "string_type": 0
       },
       "51": {
         "value": "/usr/bin/ch",
-        "is_contains": false
+        "string_type": 0
       },
       "52": {
         "value": "keywords_modifier",
-        "is_contains": false
+        "string_type": 0
       },
       "53": {
         "value": "multi_event_keyword_exec_cmd",
-        "is_contains": true
+        "string_type": 1
       },
       "54": {
         "value": "multi_event_keyword_rename_src",
-        "is_contains": true
+        "string_type": 1
       },
       "55": {
         "value": "out_of_range_versions_test",
-        "is_contains": false
+        "string_type": 0
       },
       "56": {
         "value": "/tmp/test_exclude_mkdir_event",
-        "is_contains": true
+        "string_type": 1
       },
       "57": {
         "value": "_blocked_rmdir_test_",
-        "is_contains": true
+        "string_type": 1
       },
       "58": {
         "value": "/tmp/test_exclude_rmdir_event",
-        "is_contains": true
+        "string_type": 1
       },
       "59": {
         "value": "> /tmp/shell_command_blocking",
-        "is_contains": true
+        "string_type": 1
       },
       "60": {
         "value": "/tmp/shell_command_blocking.txt",
-        "is_contains": false
+        "string_type": 0
       },
       "61": {
         "value": "/tmp/neq_test",
-        "is_contains": false
+        "string_type": 0
       },
       "62": {
         "value": "/usr",
-        "is_contains": true
+        "string_type": 1
       },
       "63": {
         "value": "/usr/",
-        "is_contains": false
+        "string_type": 0
       },
       "64": {
         "value": "/chmod",
-        "is_contains": false
+        "string_type": 0
       },
       "65": {
         "value": "usr/bin",
-        "is_contains": true
+        "string_type": 1
       },
       "66": {
         "value": "bin/ch",
-        "is_contains": true
+        "string_type": 1
       },
       "67": {
         "value": "r/b",
-        "is_contains": true
+        "string_type": 1
       },
       "68": {
         "value": "hmo",
-        "is_contains": true
+        "string_type": 1
       },
       "69": {
         "value": "/usr/bin/chmod",
-        "is_contains": false
+        "string_type": 0
       },
       "70": {
         "value": "chm",
-        "is_contains": true
+        "string_type": 1
       },
       "71": {
         "value": "ch",
-        "is_contains": true
+        "string_type": 1
       },
       "72": {
         "value": "od",
-        "is_contains": false
+        "string_type": 0
       },
       "73": {
         "value": "c",
-        "is_contains": true
+        "string_type": 1
       },
       "74": {
         "value": "h",
-        "is_contains": true
+        "string_type": 1
       },
       "75": {
         "value": "/tmp",
-        "is_contains": true
+        "string_type": 1
       },
       "76": {
         "value": "120",
-        "is_contains": true
+        "string_type": 1
       },
       "77": {
         "value": " ",
-        "is_contains": true
+        "string_type": 1
       },
       "78": {
         "value": "75",
-        "is_contains": true
+        "string_type": 1
       },
       "79": {
         "value": "mp",
-        "is_contains": true
+        "string_type": 1
       },
       "80": {
         "value": "mp/",
-        "is_contains": true
+        "string_type": 1
       },
       "81": {
         "value": "plex",
-        "is_contains": true
+        "string_type": 1
       },
       "82": {
         "value": "lex_",
-        "is_contains": true
+        "string_type": 1
       },
       "83": {
         "value": "forbidden",
-        "is_contains": true
+        "string_type": 1
       },
       "84": {
         "value": "ignore_it",
-        "is_contains": true
+        "string_type": 1
       },
       "85": {
         "value": "skip_this",
-        "is_contains": true
+        "string_type": 1
       },
       "86": {
         "value": "bypass_me",
-        "is_contains": true
+        "string_type": 1
       },
       "87": {
         "value": "malware",
-        "is_contains": true
+        "string_type": 1
       },
       "88": {
         "value": "virus",
-        "is_contains": true
+        "string_type": 1
       },
       "89": {
         "value": "trojan",
-        "is_contains": true
+        "string_type": 1
       },
       "90": {
         "value": "hacktool",
-        "is_contains": true
+        "string_type": 1
       },
       "91": {
         "value": "/tmp/fieldref_chmod_test",
-        "is_contains": false
+        "string_type": 0
       },
       "92": {
         "value": "/tmp/fieldref_rename_src",
-        "is_contains": false
+        "string_type": 0
       },
       "93": {
         "value": "/usr/bin/",
-        "is_contains": true
+        "string_type": 1
       },
       "94": {
         "value": "/usr/sbin/",
-        "is_contains": true
+        "string_type": 1
       },
       "95": {
         "value": "/bin/",
-        "is_contains": true
+        "string_type": 1
       },
       "96": {
         "value": "/tmp/placeholder_blocked",
-        "is_contains": true
+        "string_type": 1
       },
       "97": {
         "value": "/tmp/placeholder_test_alpha",
-        "is_contains": true
+        "string_type": 1
       },
       "98": {
         "value": "/tmp/placeholder_test_beta",
-        "is_contains": true
+        "string_type": 1
       },
       "99": {
         "value": "/tmp/placeholder_test_gamma",
-        "is_contains": true
+        "string_type": 1
       },
       "100": {
         "value": "/tmp/placeholder_test_delta",
-        "is_contains": true
+        "string_type": 1
+      },
+      "101": {
+        "value": "/tmp/regex_[a-z]+",
+        "string_type": 2
+      },
+      "102": {
+        "value": "regex_[a-z]+",
+        "string_type": 2
+      },
+      "103": {
+        "value": "ch(mod|own)",
+        "string_type": 2
+      },
+      "104": {
+        "value": "ch\\w+",
+        "string_type": 2
       }
     },
     "id_to_predicate": {
@@ -2276,6 +2292,41 @@
         "field": "target.file.path",
         "comparison_type": "contains",
         "string_idx": 100,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "263": {
+        "field": "target.file.path",
+        "comparison_type": "regex",
+        "string_idx": 101,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "264": {
+        "field": "target.file.filename",
+        "comparison_type": "regex",
+        "string_idx": 102,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "265": {
+        "field": "process.file.filename",
+        "comparison_type": "regex",
+        "string_idx": 103,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "266": {
+        "field": "process.file.path",
+        "comparison_type": "regex",
+        "string_idx": 104,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "267": {
+        "field": "process.cmd",
+        "comparison_type": "regex",
+        "string_idx": 102,
         "numerical_value": -1,
         "fieldref": "FIELD_TYPE_NONE"
       }
@@ -5472,6 +5523,55 @@
           },
           {
             "operator_type": "OPERATOR_OR"
+          },
+          {
+            "operator_type": "OPERATOR_AND"
+          },
+          {
+            "operator_type": "OPERATOR_AND"
+          }
+        ]
+      },
+      {
+        "id": 51,
+        "description": "Regex chmod test - multiple regex patterns on different fields",
+        "action": "BLOCK_EVENT",
+        "applied_events": [
+          "CHMOD"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 263
+          },
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 264
+          },
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 265
+          },
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 266
+          },
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 267
+          },
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 10
+          },
+          {
+            "operator_type": "OPERATOR_AND"
+          },
+          {
+            "operator_type": "OPERATOR_AND"
+          },
+          {
+            "operator_type": "OPERATOR_AND"
           },
           {
             "operator_type": "OPERATOR_AND"

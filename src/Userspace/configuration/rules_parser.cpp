@@ -113,7 +113,7 @@ namespace owlsm::config
     void RulesParser::from_json(const nlohmann::json& j, RuleString& o) const
     {
         o.value = j.at("value").get<std::string>();
-        o.is_contains = j.at("is_contains").get<bool>();
+        o.string_type = static_cast<enum string_type>(j.at("string_type").get<int>());
     }
 
     void RulesParser::from_json(const nlohmann::json& j, Predicate& o) const
