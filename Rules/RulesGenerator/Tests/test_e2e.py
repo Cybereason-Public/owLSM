@@ -9,6 +9,7 @@ from sigma_rule_loader import load_sigma_rules, SigmaRule
 from AST import parse_rules
 from postfix import convert_to_postfix
 from serializer import serialize_context, to_json_string
+from constants import StringType
 
 
 # =============================================================================
@@ -1110,12 +1111,12 @@ detection:
             assert f"unique_cmd_{i}" in string_values
             assert f"/unique/path/{i}" in string_values
         
-        # Verify is_contains flags
+        # Verify string_type flags
         for entry in data["id_to_string"].values():
             if "cmd" in entry["value"]:
-                assert entry["is_contains"] == True
+                assert entry["string_type"] == StringType.CONTAINS.value
             else:
-                assert entry["is_contains"] == False
+                assert entry["string_type"] == StringType.DEFAULT.value
         
         # Verify predicates have correct string_idx and numerical_value
         for pred in data["id_to_predicate"].values():
@@ -1248,14 +1249,13 @@ detection:
         # Each rule uses same strings but different field+operation combinations
         assert len(data["id_to_predicate"]) == 25
         
-        # Verify string values are correct
+        # Verify all string values are present
         actual_values = {entry["value"] for entry in data["id_to_string"].values()}
         assert actual_values == set(shared_strings)
         
-        # Verify is_contains flags - strings used with |contains should have is_contains=True
-        # Rule 2 uses all contains, so all strings should have is_contains upgraded to True
+        # Verify string_type flags: all 5 entries are CONTAINS (upgraded because Rule 2 uses contains)
         for entry in data["id_to_string"].values():
-            assert entry["is_contains"] == True  # All strings are used with contains in rule 2
+            assert entry["string_type"] == StringType.CONTAINS.value
         
         # Verify all predicates are string predicates (no numeric)
         for pred in data["id_to_predicate"].values():
@@ -1312,12 +1312,12 @@ detection:
         string_values = {entry["value"] for entry in data["id_to_string"].values()}
         assert string_values == {"same_file.exe", "same_cmd", "/same/path"}
         
-        # Verify is_contains flags
+        # Verify string_type flags
         for entry in data["id_to_string"].values():
             if entry["value"] == "same_cmd":
-                assert entry["is_contains"] == True
+                assert entry["string_type"] == StringType.CONTAINS.value
             else:
-                assert entry["is_contains"] == False
+                assert entry["string_type"] == StringType.DEFAULT.value
         
         # Verify numeric predicate
         numeric_preds = [p for p in data["id_to_predicate"].values() if p["numerical_value"] != -1]

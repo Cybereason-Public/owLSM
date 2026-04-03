@@ -76,6 +76,17 @@ def generate_header(json_path: Path, output_path: Path) -> None:
             lines.append(f"    {key} = {value}{comma}")
         lines.append("};")
     
+    # Process string_type (dict with explicit numeric values)
+    if "string_type" in constants:
+        lines.append("")
+        lines.append("enum string_type {")
+        string_types = constants["string_type"]
+        items = list(string_types.items())
+        for i, (key, value) in enumerate(items):
+            comma = "," if i < len(items) - 1 else ""
+            lines.append(f"    {key} = {value}{comma}")
+        lines.append("};")
+    
     # Process comparison_types
     if "comparison_types" in constants:
         lines.append("")

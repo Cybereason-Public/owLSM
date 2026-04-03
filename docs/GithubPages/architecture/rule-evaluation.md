@@ -67,13 +67,14 @@ Every string value in the rule is assigned a unique ID and stored:
 
 ```
 id_to_string = {
-    0: { value: "/etc/passwd", is_contains: false },
-    1: { value: ".ssh",        is_contains: true  },
-    2: { value: "curl",        is_contains: false }
+    0: { value: "/etc/passwd", string_type: DEFAULT },
+    1: { value: ".ssh",        string_type: CONTAINS },
+    2: { value: "curl",        string_type: DEFAULT  },
+    3: { value: "[a-z]+\\.conf", string_type: REGEX  }
 }
 ```
 
-The `is_contains` flag marks strings that use the `contains` modifier — these require special handling with the KMP algorithm later.
+The `string_type` field indicates how the string is used: `DEFAULT` for exact/startswith/endswith comparisons, `CONTAINS` for substring matching (requires a KMP DFA later), or `REGEX` for regex pattern matching (requires a regex DFA later).
 
 #### id_to_ip Table
 IP addresses and CIDR ranges are stored separately:
@@ -170,7 +171,7 @@ After processing all rules, the generator outputs:
 ```json
 {
     "id_to_string": {
-        "0": { "value": "/etc/passwd", "is_contains": false },
+        "0": { "value": "/etc/passwd", "string_type": 0 },
         ...
     },
     "id_to_ip": {
@@ -215,16 +216,20 @@ The userspace component (`src/Userspace/`) parses the config and populates kerne
 |-----|-------------|
 | `{event}_rules_map` | Per-event-type rule arrays. CHMOD events only check `chmod_rules_map`, and EXEC events only check `exec_rules_map` |
 | `predicates_map` | Kernel representation of `id_to_predicate` |
-| `rules_strings_map` | kernel representation of id_to_string. However, Strings are structs with char arrays, length and DFA index |
-| `rules_ips_map` | kernel representation of id_to_ip |
-| `idx_to_DFA_map` | Pre-computed KMP DFA for `contains` strings |
+| `rules_strings_map` | Kernel representation of id_to_string. Strings are structs with char arrays, length and DFA index |
+| `rules_ips_map` | Kernel representation of id_to_ip |
+| `idx_to_DFA_map` | Pre-computed DFAs for `contains` (KMP) and `regex` strings |
+| `idx_to_accepting_states_map` | Accepting state bitmasks for regex DFAs |
 | `predicates_results_cache` | Caches predicate results within an event evaluation |
 
-### KMP DFA Computation
+### DFA Computation
 
-For strings with the `contains` modifier, userspace pre-computes a KMP (Knuth-Morris-Pratt algorithm) DFA (Deterministic Finite Automaton algorithm).<br>
-This DFA is stored in `idx_to_DFA_map` and referenced by entries in `rules_strings_map`.
-KMP DFA enables O(n) substring matching in the kernel. However, consumes a lot of memory.<br>
+Userspace pre-computes DFAs (Deterministic Finite Automata) for strings that require pattern matching:
+
+- **`contains` strings** use a KMP (Knuth-Morris-Pratt) DFA for O(n) substring matching.
+- **`regex` strings** go through a full regex-to-DFA pipeline: regex → AST → NFA (Thompson's construction) → unanchored skip-loop → DFA (subset construction) → minimization → normalization. The resulting DFA is limited to 32 states. Accepting states are stored as a bitmask in `idx_to_accepting_states_map`.
+
+Both DFA types are stored in `idx_to_DFA_map` and referenced by entries in `rules_strings_map`.<br>
 
 ### Rule Organization by Event Type
 
@@ -298,7 +303,7 @@ Its very likely that different rules (or even the same rule) will have identical
 `target.file.path: "/etc/hosts"`. So using the cache we don't evaluate this predicate twice for the same event.
 
 3. **Compare field** — Use the predicate's field and comparison_type to compare against the event:
-   - String fields: exact match, contains (via KMP DFA), starts_with, ends_with
+   - String fields: exact match, contains (via KMP DFA), starts_with, ends_with, regex (via regex DFA)
    - Numeric fields: equal, greater than, less than, etc.
    - IP fields: CIDR matching
 
@@ -328,4 +333,4 @@ The design optimizes for kernel performance:
 - **Lookup tables** minimize data duplication
 - **Per-event-type maps** reduce unnecessary rule checks
 - **Predicate caching** avoids redundant evaluations
-- **Pre-computed DFAs** enable O(n) string matching
+- **Pre-computed DFAs** enable O(n) string matching (substring & regex)

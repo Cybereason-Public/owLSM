@@ -9,6 +9,7 @@ MAX_TOKENS_PER_RULE: int = _config["MAX_TOKENS_PER_RULE"]
 MAX_NEEDLE_LENGTH: int = _config["MAX_NEEDLE_LENGTH"]
 MAX_TOTAL_PREDS: int = _config["MAX_TOTAL_PREDS"]
 MAX_RULES_PER_MAP: int = _config["MAX_RULES_PER_MAP"]
+MAX_REGEX_DFA_STATES: int = _config["MAX_REGEX_DFA_STATES"]
 
 ALLOWED_ACTIONS: set = set(_config["actions"])
 
@@ -41,6 +42,12 @@ class OperatorType(Enum):
     OPERATOR_OR = _config["operator_types"]["OPERATOR_OR"]
     OPERATOR_NOT = _config["operator_types"]["OPERATOR_NOT"]
 
+class StringType(Enum):
+    """String types for rule strings."""
+    DEFAULT = _config["string_type"]["STRING_TYPE_DEFAULT"]
+    CONTAINS = _config["string_type"]["STRING_TYPE_CONTAINS"]
+    REGEX = _config["string_type"]["STRING_TYPE_REGEX"]
+
 COMPARISON_TYPE_EXACT_MATCH: str = _config["comparison_types"]["COMPARISON_TYPE_EXACT_MATCH"]
 COMPARISON_TYPE_CONTAINS: str = _config["comparison_types"]["COMPARISON_TYPE_CONTAINS"]
 COMPARISON_TYPE_STARTS_WITH: str = _config["comparison_types"]["COMPARISON_TYPE_STARTS_WITH"]
@@ -50,4 +57,5 @@ COMPARISON_TYPE_ABOVE: str = _config["comparison_types"]["COMPARISON_TYPE_ABOVE"
 COMPARISON_TYPE_BELOW: str = _config["comparison_types"]["COMPARISON_TYPE_BELOW"]
 COMPARISON_TYPE_EQUAL_ABOVE: str = _config["comparison_types"]["COMPARISON_TYPE_EQUAL_ABOVE"]
 COMPARISON_TYPE_EQUAL_BELOW: str = _config["comparison_types"]["COMPARISON_TYPE_EQUAL_BELOW"]
+COMPARISON_TYPE_REGEX: str = _config["comparison_types"]["COMPARISON_TYPE_REGEX"]
 

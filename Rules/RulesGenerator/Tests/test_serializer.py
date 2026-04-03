@@ -7,6 +7,7 @@ from sigma_rule_loader import load_sigma_rules, SigmaRule
 from AST import parse_rules, Predicate
 from postfix import convert_to_postfix, Token, OperatorType, PostfixRule, PostfixRulesContext
 from serializer import serialize_context
+from constants import StringType
 
 
 class TestBasicSerialization:
@@ -41,7 +42,7 @@ class TestBasicSerialization:
         # id_to_string is a dict with string keys
         string_entry = data["id_to_string"]["0"]
         assert string_entry["value"] == "test_value"
-        assert string_entry["is_contains"] == True
+        assert string_entry["string_type"] == StringType.CONTAINS.value
     
     def test_preds_serialized_correctly(self):
         rule = SigmaRule(

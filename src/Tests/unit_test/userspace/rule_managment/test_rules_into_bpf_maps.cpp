@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "rules_managment/rules_into_bpf_maps.hpp"
+#include "rules_managment/dfa_builder.hpp"
 #include <cstring>
 
 class RulesIntoBpfMapsTest : public ::testing::Test 
@@ -7,8 +8,7 @@ class RulesIntoBpfMapsTest : public ::testing::Test
 public:
     static void build_dfa(const std::string& pattern, flat_2d_dfa_array_t& dfa)
     {
-        owlsm::RulesIntoBpfMaps rules_into_bpf_maps;
-        rules_into_bpf_maps.build_dfa(pattern, dfa);
+        owlsm::DfaBuilder::buildKmpDfa(pattern, dfa);
     }
 
     static std::string event_type_to_string(event_type type)

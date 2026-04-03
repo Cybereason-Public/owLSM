@@ -1098,3 +1098,95 @@ TEST_F(BpfTestBase, FieldrefStr_ParentCmdNeedleLonger_Endswith_NoMatch)
     auto rule = get_rule_by_id(organized_rules[event.type], 8011);
     EXPECT_FALSE(execute_matcher_test(skel, event, *rule));
 }
+
+// =============================================================================
+// Regex full-flow tests (userspace DFA build → BPF maps → kernel evaluation)
+// =============================================================================
+
+TEST_F(BpfTestBase, Regex_MultiFeature_Match)
+{
+    auto event = test_data::create_regex_multi_feature_matching_event();
+    auto organized_rules = MapPopulatorTest::populate_maps_from_json(test_data::REGEX_MULTI_FEATURE_JSON);
+    auto rule = get_rule_by_id(organized_rules[event.type], 6001);
+    EXPECT_TRUE(execute_matcher_test(skel, event, *rule));
+}
+
+TEST_F(BpfTestBase, Regex_MultiFeature_NoMatch)
+{
+    auto event = test_data::create_regex_multi_feature_non_matching_event();
+    auto organized_rules = MapPopulatorTest::populate_maps_from_json(test_data::REGEX_MULTI_FEATURE_JSON);
+    auto rule = get_rule_by_id(organized_rules[event.type], 6001);
+    EXPECT_FALSE(execute_matcher_test(skel, event, *rule));
+}
+
+TEST_F(BpfTestBase, Regex_MixedStringTypes_Match)
+{
+    auto event = test_data::create_mixed_types_matching_event();
+    auto organized_rules = MapPopulatorTest::populate_maps_from_json(test_data::REGEX_MIXED_STRING_TYPES_JSON);
+    auto rule = get_rule_by_id(organized_rules[event.type], 6002);
+    EXPECT_TRUE(execute_matcher_test(skel, event, *rule));
+}
+
+TEST_F(BpfTestBase, Regex_MixedStringTypes_NoMatch)
+{
+    auto event = test_data::create_mixed_types_non_matching_event();
+    auto organized_rules = MapPopulatorTest::populate_maps_from_json(test_data::REGEX_MIXED_STRING_TYPES_JSON);
+    auto rule = get_rule_by_id(organized_rules[event.type], 6002);
+    EXPECT_FALSE(execute_matcher_test(skel, event, *rule));
+}
+
+TEST_F(BpfTestBase, Regex_SameFieldDifferentTypes_Match)
+{
+    auto event = test_data::create_same_field_diff_types_matching_event();
+    auto organized_rules = MapPopulatorTest::populate_maps_from_json(test_data::REGEX_SAME_FIELD_DIFFERENT_TYPES_JSON);
+    auto rule = get_rule_by_id(organized_rules[event.type], 6003);
+    EXPECT_TRUE(execute_matcher_test(skel, event, *rule));
+}
+
+TEST_F(BpfTestBase, Regex_SameFieldDifferentTypes_NoMatch)
+{
+    auto event = test_data::create_same_field_diff_types_non_matching_event();
+    auto organized_rules = MapPopulatorTest::populate_maps_from_json(test_data::REGEX_SAME_FIELD_DIFFERENT_TYPES_JSON);
+    auto rule = get_rule_by_id(organized_rules[event.type], 6003);
+    EXPECT_FALSE(execute_matcher_test(skel, event, *rule));
+}
+
+TEST_F(BpfTestBase, Regex_StateLimit_Match)
+{
+    auto event = test_data::create_state_limit_matching_event();
+    auto organized_rules = MapPopulatorTest::populate_maps_from_json(test_data::REGEX_STATE_LIMIT_JSON);
+    auto rule = get_rule_by_id(organized_rules[event.type], 6004);
+    EXPECT_TRUE(execute_matcher_test(skel, event, *rule));
+}
+
+TEST_F(BpfTestBase, Regex_StateLimit_NoMatch)
+{
+    auto event = test_data::create_state_limit_non_matching_event();
+    auto organized_rules = MapPopulatorTest::populate_maps_from_json(test_data::REGEX_STATE_LIMIT_JSON);
+    auto rule = get_rule_by_id(organized_rules[event.type], 6004);
+    EXPECT_FALSE(execute_matcher_test(skel, event, *rule));
+}
+
+TEST_F(BpfTestBase, Regex_OrLogic_MatchFirst)
+{
+    auto event = test_data::create_regex_or_matching_event_first();
+    auto organized_rules = MapPopulatorTest::populate_maps_from_json(test_data::REGEX_WITH_OR_JSON);
+    auto rule = get_rule_by_id(organized_rules[event.type], 6005);
+    EXPECT_TRUE(execute_matcher_test(skel, event, *rule));
+}
+
+TEST_F(BpfTestBase, Regex_OrLogic_MatchSecond)
+{
+    auto event = test_data::create_regex_or_matching_event_second();
+    auto organized_rules = MapPopulatorTest::populate_maps_from_json(test_data::REGEX_WITH_OR_JSON);
+    auto rule = get_rule_by_id(organized_rules[event.type], 6005);
+    EXPECT_TRUE(execute_matcher_test(skel, event, *rule));
+}
+
+TEST_F(BpfTestBase, Regex_OrLogic_NoMatch)
+{
+    auto event = test_data::create_regex_or_non_matching_event();
+    auto organized_rules = MapPopulatorTest::populate_maps_from_json(test_data::REGEX_WITH_OR_JSON);
+    auto rule = get_rule_by_id(organized_rules[event.type], 6005);
+    EXPECT_FALSE(execute_matcher_test(skel, event, *rule));
+}

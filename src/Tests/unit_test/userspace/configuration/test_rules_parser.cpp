@@ -10,7 +10,7 @@ constexpr std::string_view MINIMAL_RULES_JSON = R"({
   "id_to_string": {
     "0": {
       "value": "test_string",
-      "is_contains": true
+      "string_type": 1
     }
   },
   "id_to_predicate": {
@@ -42,11 +42,11 @@ constexpr std::string_view COMPLEX_RULES_JSON = R"({
   "id_to_string": {
     "0": {
       "value": ".ssh/id_rsa",
-      "is_contains": true
+      "string_type": 1
     },
     "1": {
       "value": "curl",
-      "is_contains": false
+      "string_type": 0
     }
   },
   "id_to_predicate": {
@@ -118,7 +118,7 @@ TEST_F(RulesParserNewTest, parse_minimal_rules_config)
         // Check id_to_string
         EXPECT_EQ(config.id_to_string.size(), 1);
         EXPECT_EQ(config.id_to_string[0].value, "test_string");
-        EXPECT_TRUE(config.id_to_string[0].is_contains);
+        EXPECT_EQ(config.id_to_string[0].string_type, STRING_TYPE_CONTAINS);
         
         // Check id_to_predicate
         EXPECT_EQ(config.id_to_predicate.size(), 1);
@@ -154,9 +154,9 @@ TEST_F(RulesParserNewTest, parse_complex_rules_config)
         // Check id_to_string
         EXPECT_EQ(config.id_to_string.size(), 2);
         EXPECT_EQ(config.id_to_string[0].value, ".ssh/id_rsa");
-        EXPECT_TRUE(config.id_to_string[0].is_contains);
+        EXPECT_EQ(config.id_to_string[0].string_type, STRING_TYPE_CONTAINS);
         EXPECT_EQ(config.id_to_string[1].value, "curl");
-        EXPECT_FALSE(config.id_to_string[1].is_contains);
+        EXPECT_EQ(config.id_to_string[1].string_type, STRING_TYPE_DEFAULT);
         
         // Check id_to_predicate
         EXPECT_EQ(config.id_to_predicate.size(), 3);

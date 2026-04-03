@@ -1,6 +1,7 @@
 #pragma once
 #include "test_base.hpp"
 #include "rules_managment/rules_into_bpf_maps.hpp"
+#include "rules_managment/dfa_builder.hpp"
 #include "rules_managment/rules_organizer.hpp"
 #include "configuration/rules_parser.hpp"
 #include "rules_structs.h"
@@ -19,8 +20,7 @@ public:
     
     static void build_dfa(const std::string& pattern, flat_2d_dfa_array_t& dfa)
     {
-        owlsm::RulesIntoBpfMaps rules_into_bpf_maps;
-        rules_into_bpf_maps.build_dfa(pattern, dfa);
+        owlsm::DfaBuilder::buildKmpDfa(pattern, dfa);
     }
     
     template<typename T>
@@ -33,7 +33,9 @@ public:
         strncpy(rule_string.value, needle.c_str(), MAX_RULE_STR_LENGTH - 1);
         rule_string.value[MAX_RULE_STR_LENGTH - 1] = '\0';
         rule_string.length = needle.length();
-        rule_string.idx_to_DFA = (test_type == COMPARISON_TYPE_CONTAINS) ? TEST_ID : -1;
+        
+        bool needs_dfa = (test_type == COMPARISON_TYPE_CONTAINS || test_type == COMPARISON_TYPE_REGEX);
+        rule_string.idx_to_DFA = needs_dfa ? TEST_ID : -1;
         
         if (bpf_map_update_elem(rules_strings_map_fd, &key, &rule_string, BPF_ANY) < 0)
         {
@@ -51,6 +53,22 @@ public:
                 throw std::runtime_error("Failed to update idx_to_DFA_map");
             }
         }
+        else if (test_type == COMPARISON_TYPE_REGEX && needle.length() > 0)
+        {
+            auto result = owlsm::DfaBuilder::buildRegexDfa(needle);
+            
+            int idx_to_DFA_map_fd = bpf_map__fd(skel->maps.idx_to_DFA_map);
+            if (bpf_map_update_elem(idx_to_DFA_map_fd, &key, &result.dfa, BPF_ANY) < 0)
+            {
+                throw std::runtime_error("Failed to update idx_to_DFA_map for regex");
+            }
+            
+            int accepting_map_fd = bpf_map__fd(skel->maps.idx_to_accepting_states_map);
+            if (bpf_map_update_elem(accepting_map_fd, &key, &result.accepting_states, BPF_ANY) < 0)
+            {
+                throw std::runtime_error("Failed to update idx_to_accepting_states_map");
+            }
+        }
     }
     
     template<typename T>
@@ -63,6 +81,9 @@ public:
         
         int idx_to_DFA_map_fd = bpf_map__fd(skel->maps.idx_to_DFA_map);
         bpf_map_delete_elem(idx_to_DFA_map_fd, &key);
+        
+        int accepting_map_fd = bpf_map__fd(skel->maps.idx_to_accepting_states_map);
+        bpf_map_delete_elem(accepting_map_fd, &key);
     }
     
     static owlsm::OrganizedRules populate_maps_from_json(const std::string& json_str)

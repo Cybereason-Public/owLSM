@@ -203,15 +203,16 @@ constexpr std::string_view REAL_SCHEMA_4 = R"(
     "definitions": {
         "rule_string_t": {
             "type": "object",
-            "required": ["value", "is_contains"],
+            "required": ["value", "string_type"],
             "additionalProperties": false,
             "properties": {
                 "value": {
                     "type": "string",
                     "maxLength": 32
                 },
-                "is_contains": {
-                    "type": "boolean"
+                "string_type": {
+                    "type": "integer",
+                    "enum": [0, 1, 2]
                 }
             }
         },
@@ -253,7 +254,8 @@ constexpr std::string_view REAL_SCHEMA_4 = R"(
                         "above",
                         "below",
                         "equal_above",
-                        "equal_below"
+                        "equal_below",
+                        "regex"
                     ]
                 },
                 "string_idx": {
@@ -459,11 +461,11 @@ constexpr std::string_view REAL_JSON_5 = R"(
         "id_to_string": {
             "0": {
                 "value": ".ssh/id_rsa",
-                "is_contains": true
+                "string_type": 1
             },
             "1": {
                 "value": "curl",
-                "is_contains": false
+                "string_type": 0
             }
         },
         "id_to_predicate": {
@@ -533,7 +535,7 @@ constexpr std::string_view INVALID_STRING_TOO_LONG_JSON = R"(
         "id_to_string": {
             "0": {
                 "value": "this_string_is_way_too_long_and_exceeds_the_maximum_length_of_32_characters",
-                "is_contains": true
+                "string_type": 1
             }
         },
         "id_to_predicate": {
@@ -550,14 +552,14 @@ constexpr std::string_view INVALID_STRING_TOO_LONG_JSON = R"(
     }
 })";
 
-// Test JSON: is_contains not boolean
-constexpr std::string_view INVALID_IS_CONTAINS_NOT_BOOLEAN_JSON = R"(
+// Test JSON: string_type not integer
+constexpr std::string_view INVALID_STRING_TYPE_NOT_INTEGER_JSON = R"(
 {
     "rules": {
         "id_to_string": {
             "0": {
                 "value": "test",
-                "is_contains": "true"
+                "string_type": "invalid"
             }
         },
         "id_to_predicate": {
@@ -581,7 +583,7 @@ constexpr std::string_view INVALID_FIELD_NAME_JSON = R"(
         "id_to_string": {
             "0": {
                 "value": "test",
-                "is_contains": true
+                "string_type": 1
             }
         },
         "id_to_predicate": {
@@ -605,7 +607,7 @@ constexpr std::string_view INVALID_BOTH_INDICES_SET_JSON = R"(
         "id_to_string": {
             "0": {
                 "value": "test",
-                "is_contains": true
+                "string_type": 1
             }
         },
         "id_to_predicate": {
@@ -655,7 +657,7 @@ constexpr std::string_view INVALID_EMPTY_ID_TO_PREDICATE_JSON = R"(
         "id_to_string": {
             "0": {
                 "value": "test",
-                "is_contains": true
+                "string_type": 1
             }
         },
         "id_to_predicate": {},

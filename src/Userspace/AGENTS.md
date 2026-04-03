@@ -22,7 +22,8 @@ Userspace/
 │   └── ...
 ├── probes_objects/                 # eBPF program loading (libbpf)
 │   └── ...
-├── rules_managment/                # Rule loading and bpf map population
+├── rules_managment/                # Rule loading, regex-to-DFA conversion, and bpf map population
+│   ├── dfa_builder.hpp/.cpp        # Regex→AST→NFA→DFA pipeline and KMP DFA builder
 │   └── ...
 └── 3rd_party/                      # Vendored dependencies (DO NOT MODIFY CODE IN THESE FILES)
     ├── cxxopts/                    # CLI parsing

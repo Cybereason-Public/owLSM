@@ -20,7 +20,9 @@ from constants import (
     COMPARISON_TYPE_BELOW,
     COMPARISON_TYPE_EQUAL_ABOVE,
     COMPARISON_TYPE_EQUAL_BELOW,
+    COMPARISON_TYPE_REGEX,
 )
+from regex_dfa import validate_regex_or_raise
 
 # Derive field sets from the single source of truth (constants.json)
 ALL_FIELD_TYPES: Dict[str, str] = RULE_FIELD_TYPES
@@ -78,7 +80,7 @@ ALL_TARGET_FIELDS: Set[str] = (
     set(NETWORK_SPECIFIC_FIELDS.keys())
 )
 
-ALLOWED_STRING_MODIFIERS: Set[str] = {"contains", "startswith", "endswith"}
+ALLOWED_STRING_MODIFIERS: Set[str] = {"contains", "startswith", "endswith", "re"}
 ALLOWED_NUMERIC_MODIFIERS: Set[str] = {"gt", "gte", "lt", "lte"}
 ALLOWED_IP_MODIFIERS: Set[str] = {"cidr"} 
 ALLOWED_MODIFIERS: Set[str] = ALLOWED_STRING_MODIFIERS | ALLOWED_NUMERIC_MODIFIERS | ALLOWED_IP_MODIFIERS
@@ -209,6 +211,11 @@ def parse_field_key(field_key: str) -> FieldModifiers:
                     comparison = COMPARISON_TYPE_STARTS_WITH
                 elif modifier_lower == "endswith":
                     comparison = COMPARISON_TYPE_ENDS_WITH
+                elif modifier_lower == "re":
+                    if has_fieldref:
+                        raise Exception(
+                            f"The 're' modifier cannot be combined with 'fieldref' in field key '{field_key}'.")
+                    comparison = COMPARISON_TYPE_REGEX
             else:
                 allowed = ALLOWED_STRING_MODIFIERS | ALLOWED_IP_MODIFIERS if is_ip_field else ALLOWED_STRING_MODIFIERS
                 raise Exception(f"Invalid modifier '{modifier}' for string field '{field_name}'. Allowed modifiers: {allowed}")
@@ -375,7 +382,35 @@ def validate_selection_item(item: Dict[str, Any], selection_name: str, rule_file
         field_type = field_info.field_type
         
         if field_type == "string":
-            if isinstance(values, str):
+            if field_info.comparison == COMPARISON_TYPE_REGEX:
+                if isinstance(values, str):
+                    try:
+                        validate_regex_or_raise(values, f"field '{field_key}'")
+                    except Exception as e:
+                        raise Exception(
+                            f"Validation error in '{rule_file}': In selection '{selection_name}', "
+                            f"{e}"
+                        )
+                elif isinstance(values, list):
+                    for idx, v in enumerate(values):
+                        if not isinstance(v, str):
+                            raise Exception(
+                                f"Validation error in '{rule_file}': In selection '{selection_name}', "
+                                f"regex field '{field_key}': values must be strings, got {type(v).__name__}"
+                            )
+                        try:
+                            validate_regex_or_raise(v, f"field '{field_key}' value {idx}")
+                        except Exception as e:
+                            raise Exception(
+                                f"Validation error in '{rule_file}': In selection '{selection_name}', "
+                                f"{e}"
+                            )
+                else:
+                    raise Exception(
+                        f"Validation error in '{rule_file}': In selection '{selection_name}', "
+                        f"regex field '{field_key}': value must be string or list of strings, got {type(values).__name__}"
+                    )
+            elif isinstance(values, str):
                 validate_wildcard_pattern(values, field_key, selection_name, rule_file)
             elif isinstance(values, list):
                 for v in values:

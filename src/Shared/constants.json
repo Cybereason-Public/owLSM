@@ -4,6 +4,7 @@
     "MAX_TOTAL_PREDS": 16384,
     "MAX_RULES_PER_MAP": 100,
     "MAX_RULES_PER_MAP_PLUS1": 101,
+    "MAX_REGEX_DFA_STATES": 32,
     "AF_INET": 2,
     "AF_INET6": 10,
 
@@ -40,6 +41,12 @@
         "OUTGOING": 2
     },
 
+    "string_type": {
+        "STRING_TYPE_DEFAULT": 0,
+        "STRING_TYPE_CONTAINS": 1,
+        "STRING_TYPE_REGEX": 2
+    },
+
     "comparison_types": {
         "COMPARISON_TYPE_EXACT_MATCH": "exactmatch",
         "COMPARISON_TYPE_CONTAINS": "contains",
@@ -49,7 +56,8 @@
         "COMPARISON_TYPE_ABOVE": "above",
         "COMPARISON_TYPE_BELOW": "below",
         "COMPARISON_TYPE_EQUAL_ABOVE": "equal_above",
-        "COMPARISON_TYPE_EQUAL_BELOW": "equal_below"
+        "COMPARISON_TYPE_EQUAL_BELOW": "equal_below",
+        "COMPARISON_TYPE_REGEX": "regex"
     },
 
     "rule_field_types": {

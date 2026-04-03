@@ -12,7 +12,7 @@ namespace owlsm::config {
 struct RuleString
 {
     std::string value;
-    bool is_contains;
+    enum string_type string_type;
 };
 
 struct RuleIP

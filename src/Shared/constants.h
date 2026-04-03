@@ -17,6 +17,7 @@
 #define MAX_TOTAL_PREDS 16384
 #define MAX_RULES_PER_MAP 100
 #define MAX_RULES_PER_MAP_PLUS1 101
+#define MAX_REGEX_DFA_STATES 32
 #define AF_INET 2
 #define AF_INET6 10
 
@@ -57,6 +58,12 @@ enum connection_direction {
     OUTGOING = 2
 };
 
+enum string_type {
+    STRING_TYPE_DEFAULT = 0,
+    STRING_TYPE_CONTAINS = 1,
+    STRING_TYPE_REGEX = 2
+};
+
 enum comparison_type {
     COMPARISON_TYPE_EXACT_MATCH = 0,
     COMPARISON_TYPE_CONTAINS = 1,
@@ -66,7 +73,8 @@ enum comparison_type {
     COMPARISON_TYPE_ABOVE = 5,
     COMPARISON_TYPE_BELOW = 6,
     COMPARISON_TYPE_EQUAL_ABOVE = 7,
-    COMPARISON_TYPE_EQUAL_BELOW = 8
+    COMPARISON_TYPE_EQUAL_BELOW = 8,
+    COMPARISON_TYPE_REGEX = 9
 };
 
 enum rule_field_type {

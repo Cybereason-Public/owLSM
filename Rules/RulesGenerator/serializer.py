@@ -48,7 +48,7 @@ def serialize_rule(rule: PostfixRule) -> Dict[str, Any]:
 
 def serialize_context(ctx: PostfixRulesContext) -> Dict[str, Any]:
     id_to_string_json = {
-        str(idx): {"value": entry.value, "is_contains": entry.is_contains}
+        str(idx): {"value": entry.value, "string_type": entry.string_type.value}
         for idx, entry in ctx.id_to_string.items()
     }
 

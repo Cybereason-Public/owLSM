@@ -1,5 +1,5 @@
 #pragma once
-#include "kmp_dfa.bpf.h"
+#include "dfa.bpf.h"
 #include "common_maps.bpf.h"
 #include "preprocessor_definitions/defs.bpf.h"
 #include "allocators.bpf.h"

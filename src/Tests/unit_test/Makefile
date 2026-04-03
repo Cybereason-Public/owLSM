@@ -76,7 +76,7 @@ LOCAL_BPF_SRC  := $(wildcard $(KERNEL_TESTS_DIR)/*.bpf.c)
 BPF_SRC        := $(KERNEL_HDR_DIR)/common_maps.bpf.c \
                   $(KERNEL_HDR_DIR)/error_reports.bpf.c \
                   $(KERNEL_HDR_DIR)/event_and_rule_matcher.bpf.c \
-                  $(KERNEL_HDR_DIR)/kmp_dfa.bpf.c \
+                  $(KERNEL_HDR_DIR)/dfa.bpf.c \
                   $(LOCAL_BPF_SRC)
 
 BPF_OBJ        := $(addprefix $(KERNEL_TESTS_DIR)/, $(notdir $(BPF_SRC:.bpf.c=.bpf.o)))
@@ -97,6 +97,7 @@ USERSPACE_IMPL_SRC := $(USERSPACE_SRC_DIR)/logger.cpp \
                       $(USERSPACE_SRC_DIR)/configuration/rules_parser.cpp \
                       $(USERSPACE_SRC_DIR)/rules_managment/rule_converter.cpp \
                       $(USERSPACE_SRC_DIR)/rules_managment/rules_into_bpf_maps.cpp \
+                      $(USERSPACE_SRC_DIR)/rules_managment/dfa_builder.cpp \
                       $(USERSPACE_SRC_DIR)/probes_objects/probe_manager.cpp \
                       $(USERSPACE_SRC_DIR)/ringbuffers_messages_handlers.cpp \
                       $(USERSPACE_SRC_DIR)/events/parse_messages.cpp \

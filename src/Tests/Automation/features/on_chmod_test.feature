@@ -232,3 +232,20 @@ Scenario: neq_modifier_numeric_and_string_exclusion
         | data.chmod.requested_mode         | 493                                          |
         | matched_rule_id                   | 35                                           |
         | matched_rule_metadata.description | Normal chmod rule matching /tmp/neq_test - no neq |
+
+
+Scenario: regex_chmod_rule_match
+    Given The owLSM process is running
+    And I ensure the file "/tmp/regex_alpha" exists
+    When I run the command "/usr/bin/chmod 755 /tmp/regex_alpha" sync
+    Then I find the event in output in "30" seconds:
+        | process.ppid                      | <automation_pid>                                                          |
+        | action                            | BLOCK_EVENT                                                               |
+        | type                              | CHMOD                                                                     |
+        | process.file.path                 | /usr/bin/chmod                                                            |
+        | process.file.filename             | chmod                                                                     |
+        | data.target.file.path             | /tmp/regex_alpha                                                          |
+        | data.target.file.filename         | regex_alpha                                                               |
+        | data.chmod.requested_mode         | 493                                                                       |
+        | matched_rule_id                   | 51                                                                        |
+        | matched_rule_metadata.description | Regex chmod test - multiple regex patterns on different fields             |

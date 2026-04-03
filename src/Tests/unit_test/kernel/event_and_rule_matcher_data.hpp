@@ -7,16 +7,16 @@ namespace test_data {
 
 constexpr const char* AND_OPERATORS_JSON = R"({
   "id_to_string": {
-    "0": {"value": "/tmp/", "is_contains": false},
-    "1": {"value": "test", "is_contains": true},
-    "2": {"value": "/var/", "is_contains": true},
-    "3": {"value": "/usr/bin/", "is_contains": false},
-    "4": {"value": "bash", "is_contains": true},
-    "5": {"value": "/home/", "is_contains": false},
-    "6": {"value": ".bak", "is_contains": true},
-    "7": {"value": "mv", "is_contains": false},
-    "8": {"value": ".log", "is_contains": false},
-    "9": {"value": "/usr/", "is_contains": true}
+    "0": {"value": "/tmp/", "string_type": 0},
+    "1": {"value": "test", "string_type": 1},
+    "2": {"value": "/var/", "string_type": 1},
+    "3": {"value": "/usr/bin/", "string_type": 0},
+    "4": {"value": "bash", "string_type": 1},
+    "5": {"value": "/home/", "string_type": 0},
+    "6": {"value": ".bak", "string_type": 1},
+    "7": {"value": "mv", "string_type": 0},
+    "8": {"value": ".log", "string_type": 0},
+    "9": {"value": "/usr/", "string_type": 1}
   },
   "id_to_predicate": {
     "0": {"field": "target.file.path", "comparison_type": "startswith", "string_idx": 0, "numerical_value": -1, "fieldref": "FIELD_TYPE_NONE"},
@@ -278,16 +278,16 @@ inline event_t create_write_non_matching_event() {
 // ============================================================================
 constexpr const char* OR_OPERATORS_JSON = R"({
   "id_to_string": {
-    "0": {"value": "/tmp/", "is_contains": false},
-    "1": {"value": "chmod", "is_contains": true},
-    "2": {"value": "/var/", "is_contains": true},
-    "3": {"value": "/usr/bin/", "is_contains": false},
-    "4": {"value": "bash", "is_contains": true},
-    "5": {"value": "/home/", "is_contains": false},
-    "6": {"value": ".bak", "is_contains": true},
-    "7": {"value": "mv", "is_contains": false},
-    "8": {"value": ".log", "is_contains": false},
-    "9": {"value": "/usr/", "is_contains": true}
+    "0": {"value": "/tmp/", "string_type": 0},
+    "1": {"value": "chmod", "string_type": 1},
+    "2": {"value": "/var/", "string_type": 1},
+    "3": {"value": "/usr/bin/", "string_type": 0},
+    "4": {"value": "bash", "string_type": 1},
+    "5": {"value": "/home/", "string_type": 0},
+    "6": {"value": ".bak", "string_type": 1},
+    "7": {"value": "mv", "string_type": 0},
+    "8": {"value": ".log", "string_type": 0},
+    "9": {"value": "/usr/", "string_type": 1}
   },
   "id_to_predicate": {
     "0": {"field": "target.file.path", "comparison_type": "startswith", "string_idx": 0, "numerical_value": -1, "fieldref": "FIELD_TYPE_NONE"},
@@ -395,16 +395,16 @@ constexpr const char* OR_OPERATORS_JSON = R"({
 // ============================================================================
 constexpr const char* NOT_OPERATORS_JSON = R"({
   "id_to_string": {
-    "0": {"value": "/tmp/", "is_contains": false},
-    "1": {"value": "chmod", "is_contains": true},
-    "2": {"value": "/var/", "is_contains": true},
-    "3": {"value": "/usr/bin/", "is_contains": false},
-    "4": {"value": "bash", "is_contains": true},
-    "5": {"value": "/home/", "is_contains": false},
-    "6": {"value": ".bak", "is_contains": true},
-    "7": {"value": "mv", "is_contains": false},
-    "8": {"value": ".log", "is_contains": false},
-    "9": {"value": "/usr/", "is_contains": true}
+    "0": {"value": "/tmp/", "string_type": 0},
+    "1": {"value": "chmod", "string_type": 1},
+    "2": {"value": "/var/", "string_type": 1},
+    "3": {"value": "/usr/bin/", "string_type": 0},
+    "4": {"value": "bash", "string_type": 1},
+    "5": {"value": "/home/", "string_type": 0},
+    "6": {"value": ".bak", "string_type": 1},
+    "7": {"value": "mv", "string_type": 0},
+    "8": {"value": ".log", "string_type": 0},
+    "9": {"value": "/usr/", "string_type": 1}
   },
   "id_to_predicate": {
     "0": {"field": "target.file.path", "comparison_type": "startswith", "string_idx": 0, "numerical_value": -1, "fieldref": "FIELD_TYPE_NONE"},
@@ -945,13 +945,13 @@ inline event_t create_write_not_non_matching_event() {
 // ============================================================================
 constexpr const char* COMPLEX_OPERATORS_JSON = R"({
   "id_to_string": {
-    "0": {"value": "/tmp/", "is_contains": false},
-    "1": {"value": "bash", "is_contains": true},
-    "2": {"value": "safe", "is_contains": true},
-    "3": {"value": "/home/", "is_contains": false},
-    "4": {"value": ".bak", "is_contains": true},
-    "5": {"value": "mv", "is_contains": false},
-    "6": {"value": "protected", "is_contains": true}
+    "0": {"value": "/tmp/", "string_type": 0},
+    "1": {"value": "bash", "string_type": 1},
+    "2": {"value": "safe", "string_type": 1},
+    "3": {"value": "/home/", "string_type": 0},
+    "4": {"value": ".bak", "string_type": 1},
+    "5": {"value": "mv", "string_type": 0},
+    "6": {"value": "protected", "string_type": 1}
   },
   "id_to_predicate": {
     "0": {"field": "target.process.file.path", "comparison_type": "startswith", "string_idx": 0, "numerical_value": -1, "fieldref": "FIELD_TYPE_NONE"},
@@ -1322,27 +1322,27 @@ constexpr const char* ALL_FIELDS_RENAME_JSON = R"({
   "id_to_string": {
     "0": {
       "value": "/home/",
-      "is_contains": false
+      "string_type": 0
     },
     "1": {
       "value": "doc",
-      "is_contains": true
+      "string_type": 1
     },
     "2": {
       "value": ".bak",
-      "is_contains": false
+      "string_type": 0
     },
     "3": {
       "value": "document.bak",
-      "is_contains": false
+      "string_type": 0
     },
     "4": {
       "value": "mv",
-      "is_contains": true
+      "string_type": 1
     },
     "5": {
       "value": "/usr/bin/",
-      "is_contains": false
+      "string_type": 0
     }
   },
   "id_to_predicate": {
@@ -1681,23 +1681,23 @@ constexpr const char* ALL_FIELDS_EXEC_JSON = R"({
   "id_to_string": {
     "0": {
       "value": "script",
-      "is_contains": true
+      "string_type": 1
     },
     "1": {
       "value": "/tmp/",
-      "is_contains": false
+      "string_type": 0
     },
     "2": {
       "value": ".sh",
-      "is_contains": false
+      "string_type": 0
     },
     "3": {
       "value": "/usr/",
-      "is_contains": false
+      "string_type": 0
     },
     "4": {
       "value": "dangerous",
-      "is_contains": true
+      "string_type": 1
     }
   },
   "id_to_predicate": {
@@ -3485,6 +3485,283 @@ inline event_t create_fieldref_str_parent_cmd_needle_longer()
     event.parent_process.cmd.length = 10;
     memcpy(event.process.cmd.value, needle.c_str(), 20);
     event.process.cmd.length = 20;
+    return event;
+}
+
+// ============================================================================
+// REGEX TESTS
+// ============================================================================
+
+// Test 1: EXEC rule with multiple regex predicates (different regex features)
+constexpr const char* REGEX_MULTI_FEATURE_JSON = R"({
+  "id_to_string": {
+    "0": {"value": "python[23]?", "string_type": 2},
+    "1": {"value": "/usr/bin/[a-z0-9]+", "string_type": 2},
+    "2": {"value": "[a-z]+_task", "string_type": 2}
+  },
+  "id_to_predicate": {
+    "0": {"field": "process.file.filename", "comparison_type": "regex", "string_idx": 0, "numerical_value": -1, "fieldref": "FIELD_TYPE_NONE"},
+    "1": {"field": "target.process.file.path", "comparison_type": "regex", "string_idx": 1, "numerical_value": -1, "fieldref": "FIELD_TYPE_NONE"},
+    "2": {"field": "process.cmd", "comparison_type": "regex", "string_idx": 2, "numerical_value": -1, "fieldref": "FIELD_TYPE_NONE"}
+  },
+  "id_to_ip": {},
+  "rules": [
+    {
+      "id": 6001,
+      "description": "EXEC with multiple regex predicates",
+      "action": "BLOCK_EVENT",
+      "applied_events": ["EXEC"],
+      "tokens": [
+        {"operator_type": "OPERATOR_PREDICATE", "predicate_idx": 0},
+        {"operator_type": "OPERATOR_PREDICATE", "predicate_idx": 1},
+        {"operator_type": "OPERATOR_AND"},
+        {"operator_type": "OPERATOR_PREDICATE", "predicate_idx": 2},
+        {"operator_type": "OPERATOR_AND"}
+      ]
+    }
+  ]
+})";
+
+inline event_t create_regex_multi_feature_matching_event()
+{
+    event_t event = {};
+    event.type = EXEC;
+    event.time = 1000;
+    event.action = ALLOW_EVENT;
+
+    strncpy(event.process.file.filename.value, "python3", FILENAME_MAX_LENGTH);
+    event.process.file.filename.length = strlen("python3");
+
+    strncpy(event.data.exec.new_process.file.path.value, "/usr/bin/python3", PATH_MAX);
+    event.data.exec.new_process.file.path.length = strlen("/usr/bin/python3");
+
+    strncpy(event.process.cmd.value, "backup_task", CMD_MAX);
+    event.process.cmd.length = strlen("backup_task");
+
+    return event;
+}
+
+inline event_t create_regex_multi_feature_non_matching_event()
+{
+    event_t event = create_regex_multi_feature_matching_event();
+    strncpy(event.process.file.filename.value, "perl", FILENAME_MAX_LENGTH);
+    event.process.file.filename.length = strlen("perl");
+    return event;
+}
+
+// Test 2: Rule with 3 different fields, each using a different string type
+constexpr const char* REGEX_MIXED_STRING_TYPES_JSON = R"({
+  "id_to_string": {
+    "0": {"value": "/usr/bin/", "string_type": 0},
+    "1": {"value": "util", "string_type": 1},
+    "2": {"value": "/tmp/[a-z]+", "string_type": 2}
+  },
+  "id_to_predicate": {
+    "0": {"field": "process.file.path", "comparison_type": "startswith", "string_idx": 0, "numerical_value": -1, "fieldref": "FIELD_TYPE_NONE"},
+    "1": {"field": "process.cmd", "comparison_type": "contains", "string_idx": 1, "numerical_value": -1, "fieldref": "FIELD_TYPE_NONE"},
+    "2": {"field": "target.process.file.path", "comparison_type": "regex", "string_idx": 2, "numerical_value": -1, "fieldref": "FIELD_TYPE_NONE"}
+  },
+  "id_to_ip": {},
+  "rules": [
+    {
+      "id": 6002,
+      "description": "Mixed string types: startswith, contains, regex on different fields",
+      "action": "BLOCK_EVENT",
+      "applied_events": ["EXEC"],
+      "tokens": [
+        {"operator_type": "OPERATOR_PREDICATE", "predicate_idx": 0},
+        {"operator_type": "OPERATOR_PREDICATE", "predicate_idx": 1},
+        {"operator_type": "OPERATOR_AND"},
+        {"operator_type": "OPERATOR_PREDICATE", "predicate_idx": 2},
+        {"operator_type": "OPERATOR_AND"}
+      ]
+    }
+  ]
+})";
+
+inline event_t create_mixed_types_matching_event()
+{
+    event_t event = {};
+    event.type = EXEC;
+    event.time = 1000;
+    event.action = ALLOW_EVENT;
+
+    strncpy(event.process.file.path.value, "/usr/bin/python", PATH_MAX);
+    event.process.file.path.length = strlen("/usr/bin/python");
+
+    strncpy(event.process.cmd.value, "testutil", CMD_MAX);
+    event.process.cmd.length = strlen("testutil");
+
+    strncpy(event.data.exec.new_process.file.path.value, "/tmp/backup", PATH_MAX);
+    event.data.exec.new_process.file.path.length = strlen("/tmp/backup");
+
+    return event;
+}
+
+inline event_t create_mixed_types_non_matching_event()
+{
+    event_t event = create_mixed_types_matching_event();
+    strncpy(event.data.exec.new_process.file.path.value, "/home/backup", PATH_MAX);
+    event.data.exec.new_process.file.path.length = strlen("/home/backup");
+    return event;
+}
+
+// Test 3: Same field (process.cmd) with 3 different string types
+constexpr const char* REGEX_SAME_FIELD_DIFFERENT_TYPES_JSON = R"({
+  "id_to_string": {
+    "0": {"value": "[a-z]+_script", "string_type": 2},
+    "1": {"value": "script", "string_type": 1},
+    "2": {"value": "test", "string_type": 0}
+  },
+  "id_to_predicate": {
+    "0": {"field": "process.cmd", "comparison_type": "regex", "string_idx": 0, "numerical_value": -1, "fieldref": "FIELD_TYPE_NONE"},
+    "1": {"field": "process.cmd", "comparison_type": "contains", "string_idx": 1, "numerical_value": -1, "fieldref": "FIELD_TYPE_NONE"},
+    "2": {"field": "process.cmd", "comparison_type": "startswith", "string_idx": 2, "numerical_value": -1, "fieldref": "FIELD_TYPE_NONE"}
+  },
+  "id_to_ip": {},
+  "rules": [
+    {
+      "id": 6003,
+      "description": "Same field with regex, contains, startswith",
+      "action": "BLOCK_EVENT",
+      "applied_events": ["EXEC"],
+      "tokens": [
+        {"operator_type": "OPERATOR_PREDICATE", "predicate_idx": 0},
+        {"operator_type": "OPERATOR_PREDICATE", "predicate_idx": 1},
+        {"operator_type": "OPERATOR_AND"},
+        {"operator_type": "OPERATOR_PREDICATE", "predicate_idx": 2},
+        {"operator_type": "OPERATOR_AND"}
+      ]
+    }
+  ]
+})";
+
+inline event_t create_same_field_diff_types_matching_event()
+{
+    event_t event = {};
+    event.type = EXEC;
+    event.time = 1000;
+    event.action = ALLOW_EVENT;
+
+    strncpy(event.process.cmd.value, "test_script", CMD_MAX);
+    event.process.cmd.length = strlen("test_script");
+
+    return event;
+}
+
+inline event_t create_same_field_diff_types_non_matching_event()
+{
+    event_t event = create_same_field_diff_types_matching_event();
+    strncpy(event.process.cmd.value, "run_script", CMD_MAX);
+    event.process.cmd.length = strlen("run_script");
+    return event;
+}
+
+// Test 4: Regex at state limit (30-char literal = 32 DFA states)
+constexpr const char* REGEX_STATE_LIMIT_JSON = R"({
+  "id_to_string": {
+    "0": {"value": "abcdefghijklmnopqrstuvwxyz1234", "string_type": 2}
+  },
+  "id_to_predicate": {
+    "0": {"field": "target.file.path", "comparison_type": "regex", "string_idx": 0, "numerical_value": -1, "fieldref": "FIELD_TYPE_NONE"}
+  },
+  "id_to_ip": {},
+  "rules": [
+    {
+      "id": 6004,
+      "description": "Regex at max state limit",
+      "action": "BLOCK_EVENT",
+      "applied_events": ["CHMOD"],
+      "tokens": [
+        {"operator_type": "OPERATOR_PREDICATE", "predicate_idx": 0}
+      ]
+    }
+  ]
+})";
+
+inline event_t create_state_limit_matching_event()
+{
+    event_t event = {};
+    event.type = CHMOD;
+    event.time = 1000;
+    event.action = ALLOW_EVENT;
+
+    strncpy(event.data.chmod.file.path.value, "abcdefghijklmnopqrstuvwxyz1234", PATH_MAX);
+    event.data.chmod.file.path.length = 30;
+
+    return event;
+}
+
+inline event_t create_state_limit_non_matching_event()
+{
+    event_t event = create_state_limit_matching_event();
+    strncpy(event.data.chmod.file.path.value, "abcdefghijklmnopqrstuvwxyz123", PATH_MAX);
+    event.data.chmod.file.path.length = 29;
+    return event;
+}
+
+// Test 5: CHMOD rule with regex + numeric predicates (OR logic)
+constexpr const char* REGEX_WITH_OR_JSON = R"({
+  "id_to_string": {
+    "0": {"value": "/etc/[a-z]+\\.conf", "string_type": 2},
+    "1": {"value": "/var/[a-z]+\\.cfg", "string_type": 2}
+  },
+  "id_to_predicate": {
+    "0": {"field": "target.file.path", "comparison_type": "regex", "string_idx": 0, "numerical_value": -1, "fieldref": "FIELD_TYPE_NONE"},
+    "1": {"field": "target.file.path", "comparison_type": "regex", "string_idx": 1, "numerical_value": -1, "fieldref": "FIELD_TYPE_NONE"}
+  },
+  "id_to_ip": {},
+  "rules": [
+    {
+      "id": 6005,
+      "description": "Two regex patterns with OR",
+      "action": "BLOCK_EVENT",
+      "applied_events": ["CHMOD"],
+      "tokens": [
+        {"operator_type": "OPERATOR_PREDICATE", "predicate_idx": 0},
+        {"operator_type": "OPERATOR_PREDICATE", "predicate_idx": 1},
+        {"operator_type": "OPERATOR_OR"}
+      ]
+    }
+  ]
+})";
+
+inline event_t create_regex_or_matching_event_first()
+{
+    event_t event = {};
+    event.type = CHMOD;
+    event.time = 1000;
+    event.action = ALLOW_EVENT;
+
+    strncpy(event.data.chmod.file.path.value, "/etc/nginx.conf", PATH_MAX);
+    event.data.chmod.file.path.length = strlen("/etc/nginx.conf");
+
+    return event;
+}
+
+inline event_t create_regex_or_matching_event_second()
+{
+    event_t event = {};
+    event.type = CHMOD;
+    event.time = 1000;
+    event.action = ALLOW_EVENT;
+
+    strncpy(event.data.chmod.file.path.value, "/var/app.cfg", PATH_MAX);
+    event.data.chmod.file.path.length = strlen("/var/app.cfg");
+
+    return event;
+}
+
+inline event_t create_regex_or_non_matching_event()
+{
+    event_t event = {};
+    event.type = CHMOD;
+    event.time = 1000;
+    event.action = ALLOW_EVENT;
+
+    strncpy(event.data.chmod.file.path.value, "/home/test.txt", PATH_MAX);
+    event.data.chmod.file.path.length = strlen("/home/test.txt");
+
     return event;
 }
 

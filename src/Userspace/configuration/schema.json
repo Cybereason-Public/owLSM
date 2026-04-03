@@ -135,15 +135,16 @@
     "definitions": {
         "rule_string_t": {
             "type": "object",
-            "required": ["value", "is_contains"],
+            "required": ["value", "string_type"],
             "additionalProperties": false,
             "properties": {
                 "value": {
                     "type": "string",
                     "maxLength": 32
                 },
-                "is_contains": {
-                    "type": "boolean"
+                "string_type": {
+                    "type": "integer",
+                    "enum": [0, 1, 2]
                 }
             }
         },
@@ -185,7 +186,8 @@
                         "above",
                         "below",
                         "equal_above",
-                        "equal_below"
+                        "equal_below",
+                        "regex"
                     ]
                 },
                 "string_idx": {

@@ -6,7 +6,7 @@ The Rules Generator is a Python tool that converts Sigma-like security rules (wr
 It does it by first parsing and validating the sigma rule, then converting it to an AST and then to prefix.
 It maintains tables to track strings, predicates, ip addresses, etc.
 
-The generator supports complex boolean expressions in detection logic, field comparisons (exact match, contains, starts_with, ends_with), and multiple event types (CHMOD, READ, WRITE, EXEC, FORK, etc.).
+The generator supports complex boolean expressions in detection logic, field comparisons (exact match, contains, starts_with, ends_with, regex), and multiple event types (CHMOD, READ, WRITE, EXEC, FORK, etc.).
 
 ---
 
@@ -21,12 +21,14 @@ RulesGenerator/
 ├── AST.py                 # Abstract Syntax Tree for detection logic
 ├── postfix.py             # Infix to postfix expression conversion
 ├── serializer.py          # JSON serialization
+├── regex_dfa.py           # Regex validation — converts regex to DFA and checks state limits
 ├── constants.py           # Shared constants (must match src/Shared/constants.h)
 ├── create_config.py       # Tool to create/update config files with new rules
 ├── requirements.txt       # Python dependencies
 └── Tests/                 # pytest unit tests
     ├── test_sigma_loader.py
     ├── test_AST.py
+    ├── test_regex_dfa.py
     └── ...
 ```
 

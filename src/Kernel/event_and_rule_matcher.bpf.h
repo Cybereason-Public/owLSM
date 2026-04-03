@@ -192,6 +192,7 @@ statfunc int compare_string(const char *haystack, unsigned char haystack_length,
         case COMPARISON_TYPE_CONTAINS: return string_contains(sctx);
         case COMPARISON_TYPE_STARTS_WITH: return starts_with(sctx);
         case COMPARISON_TYPE_ENDS_WITH: return ends_with(sctx);
+        case COMPARISON_TYPE_REGEX: return regex_dfa_search(sctx);
         default:
             REPORT_ERROR(GENERIC_ERROR, "compare_string unknown comparison type: %d", sctx->comparison_type);
             return FALSE;

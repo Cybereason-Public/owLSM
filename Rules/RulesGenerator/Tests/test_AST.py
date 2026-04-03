@@ -12,7 +12,7 @@ from AST import (
     StringEntry,
     get_string_fields_for_event,
 )
-from constants import MAX_TOTAL_PREDS
+from constants import MAX_TOTAL_PREDS, StringType
 
 
 class TestStringDeduplication:
@@ -41,20 +41,28 @@ class TestStringDeduplication:
 class TestIsContainsUpgrade:
     """Tests for is_contains upgrade behavior."""
     
-    def test_upgrade_false_to_true(self):
+    def test_upgrade_default_to_contains(self):
         ctx = ParsedRulesContext()
-        idx1 = ctx.get_or_add_string("test", is_contains=False)
-        assert ctx.id_to_string[idx1].is_contains == False
-        
-        idx2 = ctx.get_or_add_string("test", is_contains=True)
+        idx1 = ctx.get_or_add_string("test", string_type=StringType.DEFAULT)
+        idx2 = ctx.get_or_add_string("test", string_type=StringType.CONTAINS)
         assert idx1 == idx2
-        assert ctx.id_to_string[idx1].is_contains == True
+        assert len(ctx.id_to_string) == 1
+        assert ctx.id_to_string[idx1].string_type == StringType.CONTAINS
     
-    def test_no_downgrade(self):
+    def test_no_downgrade_contains_to_default(self):
         ctx = ParsedRulesContext()
-        ctx.get_or_add_string("test", is_contains=True)
-        idx = ctx.get_or_add_string("test", is_contains=False)
-        assert ctx.id_to_string[idx].is_contains == True
+        idx1 = ctx.get_or_add_string("test", string_type=StringType.CONTAINS)
+        idx2 = ctx.get_or_add_string("test", string_type=StringType.DEFAULT)
+        assert idx1 == idx2
+        assert len(ctx.id_to_string) == 1
+        assert ctx.id_to_string[idx1].string_type == StringType.CONTAINS
+    
+    def test_regex_is_separate_from_literal(self):
+        ctx = ParsedRulesContext()
+        idx_default = ctx.get_or_add_string("test", string_type=StringType.DEFAULT)
+        idx_regex = ctx.get_or_add_string("test", string_type=StringType.REGEX)
+        assert idx_default != idx_regex
+        assert len(ctx.id_to_string) == 2
 
 
 class TestPredDeduplication:
@@ -421,7 +429,7 @@ class TestModifiers:
         parse_rule_with_pysigma(rule, ctx)
         
         assert ctx.id_to_predicate[0].comparison_type == "contains"
-        assert ctx.id_to_string[0].is_contains == True
+        assert ctx.id_to_string[0].string_type == StringType.CONTAINS
     
     def test_startswith_modifier(self):
         rule = SigmaRule(
@@ -433,7 +441,7 @@ class TestModifiers:
         parse_rule_with_pysigma(rule, ctx)
         
         assert ctx.id_to_predicate[0].comparison_type == "startswith"
-        assert ctx.id_to_string[0].is_contains == False
+        assert ctx.id_to_string[0].string_type == StringType.DEFAULT
     
     def test_endswith_modifier(self):
         rule = SigmaRule(
