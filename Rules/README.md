@@ -4,8 +4,8 @@ Create owLSM config with rules.
 ```bash
 # from the root directory 
 # start the docker
-docker build -t owlsm-ci-ubuntu20 .
-docker run -it --rm -v "$PWD":/workspace -w /workspace owlsm-ci-ubuntu20 bash
+docker pull ghcr.io/cybereason-public/owlsm-ci:latest
+docker run -it --rm -v "$PWD":/workspace -w /workspace ghcr.io/cybereason-public/owlsm-ci:latest bash
 
 # create a venv and install the requirements
 cd Rules/RulesGenerator

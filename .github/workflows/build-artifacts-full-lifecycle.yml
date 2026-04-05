@@ -46,7 +46,7 @@ on:
         default: true
 
 env:
-  DOCKER_IMAGE: owlsm-ci-ubuntu
+  DOCKER_IMAGE: ghcr.io/cybereason-public/owlsm-ci:latest
   # Use inputs if workflow_dispatch, otherwise default to 1.0.0 for push triggers
   VERSION: ${{ github.event.inputs.major || '1' }}.${{ github.event.inputs.minor || '0' }}.${{ github.event.inputs.patch || '0' }}
 
@@ -77,10 +77,10 @@ jobs:
           echo "Branch: $BRANCH_NAME"
           echo "Revision: $BRANCH_REVISION"
 
-      - name: Build Docker image
+      - name: Pull CI Docker image
         run: |
-          echo "Building Docker image: ${{ env.DOCKER_IMAGE }}"
-          docker build -t ${{ env.DOCKER_IMAGE }} .
+          echo "Pulling Docker image: ${{ env.DOCKER_IMAGE }}"
+          docker pull ${{ env.DOCKER_IMAGE }}
 
       # =================================================================
       # Step 3: Run RulesGenerator unit tests inside container

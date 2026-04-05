@@ -53,11 +53,11 @@ owLSM/
 Build inside Docker (required for consistent toolchain):
 
 ```bash
-# Build Docker image (one-time)
-docker build -t owlsm-ci-ubuntu20 .
+# Pull CI image from GHCR (first time or after image updates)
+docker pull ghcr.io/cybereason-public/owlsm-ci:latest
 
 # Start container
-docker run -it --rm -v "$PWD":/workspace -w /workspace owlsm-ci-ubuntu20 bash
+docker run -it --rm -v "$PWD":/workspace -w /workspace ghcr.io/cybereason-public/owlsm-ci:latest bash
 ```
 
 ### Build Commands
