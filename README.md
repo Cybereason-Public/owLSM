@@ -42,11 +42,11 @@ Help us grow and protect the world by giving us a ⭐
 ## How to build
 
 ```bash
-# Build the Docker image (one-time setup):
-docker build -t owlsm-ci-ubuntu20 .
+# Pull the Docker image
+docker pull ghcr.io/cybereason-public/owlsm-ci:latest
 
 # Start the build container
-docker run -it --rm -v "$PWD":/workspace -w /workspace owlsm-ci-ubuntu20 bash
+docker run -it --rm -v "$PWD":/workspace -w /workspace ghcr.io/cybereason-public/owlsm-ci:latest bash
 
 # Build owLSM
 make -j$(nproc)

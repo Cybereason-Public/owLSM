@@ -6,8 +6,8 @@ We use the ***pytest bdd*** as the testing framework
 ```bash
 # from the root directory 
 # start the docker
-docker build -t owlsm-ci-ubuntu20 .
-docker run -it --rm -v "$PWD":/workspace -w /workspace owlsm-ci-ubuntu20 bash
+docker pull ghcr.io/cybereason-public/owlsm-ci:latest
+docker run -it --rm -v "$PWD":/workspace -w /workspace ghcr.io/cybereason-public/owlsm-ci:latest bash
 
 # Build owLSM
 make -j$(nproc)
