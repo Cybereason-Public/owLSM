@@ -36,7 +36,7 @@ else
     LDFLAGS    += -Wl,-z,relro,-z,now -pie
 endif
 
-LDLIBS         := -lbpf -lelf -lz -lzstd -lssl -lcrypto -lsqlite3 -ldw -lbz2
+LDLIBS         := -lbpf -lelf -lz -lzstd -lssl -lcrypto -lsqlite3 -ldw -lbz2 -ldl
 
 # ---- Source Files --------------------------------------------
 # Find all .cpp files recursively, ensuring main.cpp is first

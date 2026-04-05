@@ -57,6 +57,8 @@ void setup(int argc, char *argv[])
     owlsm::Logger::initialize(owlsm::globals::CURRENT_PROCESS_DIR + "/" + owlsm::globals::LOG_FILE_NAME, LOG_LEVEL_DEBUG);
     LOG_INFO("Starting OWLSM. Version: " + std::string(OWLSM_VERSION_STR));
 
+    owlsm::globals::g_owlsm_enterprise_plugin.initialize();
+
     owlsm::CmdParser cmd_parser(argc, argv);
     const std::string& config_path = cmd_parser.getConfigPath();
     if(!config_path.empty())

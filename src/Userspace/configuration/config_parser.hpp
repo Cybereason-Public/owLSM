@@ -22,7 +22,6 @@ public:
     void ClearRules() { m_config.rules_config.clear(); }
 
 private:
-    nlohmann::json createJsonObjectFromFile(const std::string& filepath);
     void validateJsonAgainstSchema(const nlohmann::json& instance, const nlohmann::json& schema_json);
     void parseJsonToConfigObject(const nlohmann::json& j);
     void fromJson(const nlohmann::json& j, FeaturesConfig& o);

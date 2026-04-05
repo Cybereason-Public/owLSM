@@ -1,5 +1,6 @@
 #include "config_parser.hpp"
 #include "configuration/rules_parser.hpp"
+#include "globals/global_objects.hpp"
 
 #include <valijson/schema.hpp>
 #include <valijson/schema_parser.hpp>
@@ -11,22 +12,20 @@ namespace owlsm::config {
 
     ConfigParser::ConfigParser(const std::string& json_path, const std::string& schema_str)
     {
-        nlohmann::json j = createJsonObjectFromFile(json_path);
+        std::ifstream file(json_path);
+        if (!file)
+        {
+            throw std::runtime_error("Failed to open JSON file: " + json_path);
+        }
+        const std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+        const std::string decrypted = owlsm::globals::g_owlsm_enterprise_plugin.decryptConfig(content);
+
+        nlohmann::json j = nlohmann::json::parse(decrypted);
         nlohmann::json schema = nlohmann::json::parse(schema_str);
         validateJsonAgainstSchema(j, schema);
         parseJsonToConfigObject(j);
     }
 
-
-    nlohmann::json ConfigParser::createJsonObjectFromFile(const std::string& filepath)
-    {
-        std::ifstream in(filepath);
-        if (!in)
-            throw std::runtime_error("Failed to open JSON file: " + filepath);
-        nlohmann::json j;
-        in >> j;
-        return j;
-    }
 
     void ConfigParser::validateJsonAgainstSchema(const nlohmann::json& instance, const nlohmann::json& schema_json)
     {

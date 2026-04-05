@@ -13,4 +13,5 @@ namespace owlsm::globals
 
     extern const std::string CURRENT_PROCESS_DIR;
     extern const std::string DB_PATH;
+    extern const std::string OWLSM_ENTERPRISE_PLUGIN_SO_PATH;
 }
