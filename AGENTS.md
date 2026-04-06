@@ -78,6 +78,12 @@ docker run -it --rm -v "$PWD":/workspace -w /workspace owlsm-ci-ubuntu20 bash
 ```bash
 # Exit container first, then run on host (requires root/CAP_BPF)
 sudo ./build/owlsm/bin/owlsm
+
+# With config file
+sudo ./build/owlsm/bin/owlsm -c /path/to/config.json
+
+# With config via stdin
+sudo ./build/owlsm/bin/owlsm --stdin
 ```
 
 ---

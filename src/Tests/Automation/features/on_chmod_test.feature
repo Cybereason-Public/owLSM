@@ -18,6 +18,29 @@ Scenario: allowed_chmod
         | data.chmod.requested_mode | 511                           |
         
 
+Scenario: blocked_chmod_when_config_is_passed_via_stdin
+    Given I stop the owLSM process
+    And The owLSM process is not running
+    And I start the owLSM process with config via stdin
+    And The owLSM process is running
+    And I ensure the file "/tmp/test2" exists
+    When I run the command "/usr/bin/chmod 666 /tmp/test2" sync
+    Then I find the event in output in "30" seconds:
+        | process.ppid                      | <automation_pid>                                            |
+        | action                            | BLOCK_EVENT                                                 |
+        | type                              | CHMOD                                                       |
+        | process.file.path                 | /usr/bin/chmod                                              |
+        | process.cmd                       | /usr/bin/chmod 666 /tmp/test2                               |
+        | data.target.file.path             | /tmp/test2                                                  |
+        | data.chmod.requested_mode         | 438                                                         |
+        | matched_rule_id                   | 4                                                           |
+        | matched_rule_metadata.description | Test rule 4 - CHMOD block with process euid below threshold |
+    Then I stop the owLSM process
+    And The owLSM process is not running
+    And I start the owLSM process
+    And The owLSM process is running
+
+
 Scenario: blocked_chmod
     Given The owLSM process is running
     And I ensure the file "/tmp/test2" exists

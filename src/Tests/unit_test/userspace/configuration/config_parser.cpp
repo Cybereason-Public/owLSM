@@ -2,7 +2,6 @@
 #include "config_parser.hpp"
 #include "configuration/config_parser.hpp"
 #include "json_and_schemas_examples.hpp"
-#include "raii_temp_files.hpp"
 #include "configuration/schema.inc"
 
 #include <stdexcept>
@@ -11,10 +10,10 @@
 class ConfigParserTest : public ::testing::Test 
 {
 public:
-    static nlohmann::json createJsonObjectFromFile(const std::string& filepath)
+    static nlohmann::json createJsonObject(const std::string& json_str)
     {
         auto config_parser = createParser();
-        return config_parser.createJsonObjectFromFile(filepath);
+        return config_parser.createJsonObject(json_str);
     }
 
     static void validateJsonAgainstSchema(const nlohmann::json& json, const nlohmann::json& schema)
@@ -26,60 +25,44 @@ public:
 private:
     static owlsm::config::ConfigParser createParser()
     {
-        owlsm::RaiiTempFile temp_file;
-        temp_file << SHORT_VALID_JSON_3;
-        return owlsm::config::ConfigParser(temp_file.getPath(), std::string(SHORT_VALID_SCHEMA_3));
+        return owlsm::config::ConfigParser(std::string(SHORT_VALID_JSON_3), std::string(SHORT_VALID_SCHEMA_3));
     }
 };
 
-TEST_F(ConfigParserTest, createJsonObjectFromFile_invalid_json) 
+TEST_F(ConfigParserTest, createJsonObject_invalid_json) 
 {
-    owlsm::RaiiTempFile temp_file;
-    temp_file << INVALID_SHORT_JSON_1;
-    EXPECT_ANY_THROW(ConfigParserTest::createJsonObjectFromFile(temp_file.getPath()));
+    EXPECT_ANY_THROW(ConfigParserTest::createJsonObject(std::string(INVALID_SHORT_JSON_1)));
 }
 
-TEST_F(ConfigParserTest, createJsonObjectFromFile_empty_json) 
+TEST_F(ConfigParserTest, createJsonObject_empty_json) 
 {
-    owlsm::RaiiTempFile temp_file;
-    temp_file << EMPTY_JSON_2;
-    EXPECT_ANY_THROW(ConfigParserTest::createJsonObjectFromFile(temp_file.getPath()));
+    EXPECT_ANY_THROW(ConfigParserTest::createJsonObject(std::string(EMPTY_JSON_2)));
 }
 
-TEST_F(ConfigParserTest, createJsonObjectFromFile_valid_json) 
+TEST_F(ConfigParserTest, createJsonObject_valid_json) 
 {
-    owlsm::RaiiTempFile temp_file;
-    temp_file << SHORT_VALID_JSON_3;
-    EXPECT_NO_THROW(ConfigParserTest::createJsonObjectFromFile(temp_file.getPath()));
+    EXPECT_NO_THROW(ConfigParserTest::createJsonObject(std::string(SHORT_VALID_JSON_3)));
 }
 
 TEST_F(ConfigParserTest, validateJsonAgainstSchema_valid) 
 {
-    owlsm::RaiiTempFile temp_file;
-    temp_file << SHORT_VALID_JSON_3;
-    auto json = ConfigParserTest::createJsonObjectFromFile(temp_file.getPath());
-    owlsm::RaiiTempFile schema_file;
-    schema_file << SHORT_VALID_SCHEMA_3;
-    auto schema = ConfigParserTest::createJsonObjectFromFile(schema_file.getPath());
+    auto json = ConfigParserTest::createJsonObject(std::string(SHORT_VALID_JSON_3));
+    auto schema = ConfigParserTest::createJsonObject(std::string(SHORT_VALID_SCHEMA_3));
     EXPECT_NO_THROW(ConfigParserTest::validateJsonAgainstSchema(json, schema));
 }
 
 TEST_F(ConfigParserTest, validateJsonAgainstSchema_invalid) 
 {
-    owlsm::RaiiTempFile temp_file;
-    temp_file << SHORT_VALID_JSON_3;
-    auto json = ConfigParserTest::createJsonObjectFromFile(temp_file.getPath());
-    owlsm::RaiiTempFile schema_file;
-    schema_file << SHORT_INVALID_SCHEMA_3;
-    auto schema = ConfigParserTest::createJsonObjectFromFile(schema_file.getPath());
+    auto json = ConfigParserTest::createJsonObject(std::string(SHORT_VALID_JSON_3));
+    auto schema = ConfigParserTest::createJsonObject(std::string(SHORT_INVALID_SCHEMA_3));
     EXPECT_ANY_THROW(ConfigParserTest::validateJsonAgainstSchema(json, schema));
 }
 
 TEST_F(ConfigParserTest, default_values_are_set) 
 {
-    owlsm::RaiiTempFile temp_file;
-    temp_file << CONFIG_JSON_ONLY_FEATURES_4;
-    owlsm::config::ConfigParser parser(temp_file.getPath(), std::string(REAL_SCHEMA_4));
+    const std::string json_str(CONFIG_JSON_ONLY_FEATURES_4);
+    const std::string schema_str(REAL_SCHEMA_4);
+    owlsm::config::ConfigParser parser(json_str, schema_str);
     auto config = parser.getConfig();
     EXPECT_TRUE(config.features.file_monitoring.enabled);
     EXPECT_TRUE(config.features.file_monitoring.events.unlink);
@@ -102,9 +85,9 @@ TEST_F(ConfigParserTest, default_values_are_set)
 
 TEST_F(ConfigParserTest, real_config_is_parsed_correctly) 
 {
-    owlsm::RaiiTempFile temp_file;
-    temp_file << REAL_JSON_5;
-    owlsm::config::ConfigParser parser(temp_file.getPath(), std::string(REAL_SCHEMA_4));
+    const std::string json_str(REAL_JSON_5);
+    const std::string schema_str(REAL_SCHEMA_4);
+    owlsm::config::ConfigParser parser(json_str, schema_str);
     auto config = parser.getConfig();
     
     // Check features
@@ -177,49 +160,49 @@ TEST_F(ConfigParserTest, real_config_is_parsed_correctly)
 
 TEST_F(ConfigParserTest, string_value_too_long_fails_validation) 
 {
-    owlsm::RaiiTempFile temp_file;
-    temp_file << INVALID_STRING_TOO_LONG_JSON;
-    EXPECT_ANY_THROW(owlsm::config::ConfigParser parser(temp_file.getPath(), std::string(REAL_SCHEMA_4)));
+    const std::string json_str(INVALID_STRING_TOO_LONG_JSON);
+    const std::string schema_str(REAL_SCHEMA_4);
+    EXPECT_ANY_THROW(owlsm::config::ConfigParser parser(json_str, schema_str));
 }
 
 TEST_F(ConfigParserTest, string_type_not_integer_fails_validation) 
 {
-    owlsm::RaiiTempFile temp_file;
-    temp_file << INVALID_STRING_TYPE_NOT_INTEGER_JSON;
-    EXPECT_ANY_THROW(owlsm::config::ConfigParser parser(temp_file.getPath(), std::string(REAL_SCHEMA_4)));
+    const std::string json_str(INVALID_STRING_TYPE_NOT_INTEGER_JSON);
+    const std::string schema_str(REAL_SCHEMA_4);
+    EXPECT_ANY_THROW(owlsm::config::ConfigParser parser(json_str, schema_str));
 }
 
 TEST_F(ConfigParserTest, invalid_field_name_fails_validation) 
 {
-    owlsm::RaiiTempFile temp_file;
-    temp_file << INVALID_FIELD_NAME_JSON;
-    EXPECT_ANY_THROW(owlsm::config::ConfigParser parser(temp_file.getPath(), std::string(REAL_SCHEMA_4)));
+    const std::string json_str(INVALID_FIELD_NAME_JSON);
+    const std::string schema_str(REAL_SCHEMA_4);
+    EXPECT_ANY_THROW(owlsm::config::ConfigParser parser(json_str, schema_str));
 }
 
 TEST_F(ConfigParserTest, both_indices_set_fails_validation) 
 {
-    owlsm::RaiiTempFile temp_file;
-    temp_file << INVALID_BOTH_INDICES_SET_JSON;
-    EXPECT_ANY_THROW(owlsm::config::ConfigParser parser(temp_file.getPath(), std::string(REAL_SCHEMA_4)));
+    const std::string json_str(INVALID_BOTH_INDICES_SET_JSON);
+    const std::string schema_str(REAL_SCHEMA_4);
+    EXPECT_ANY_THROW(owlsm::config::ConfigParser parser(json_str, schema_str));
 }
 
 TEST_F(ConfigParserTest, rule_with_zero_tokens_fails_validation) 
 {
-    owlsm::RaiiTempFile temp_file;
-    temp_file << RULE_WITH_ZERO_TOKENS_JSON;
-    EXPECT_ANY_THROW(owlsm::config::ConfigParser parser(temp_file.getPath(), std::string(REAL_SCHEMA_4)));
+    const std::string json_str(RULE_WITH_ZERO_TOKENS_JSON);
+    const std::string schema_str(REAL_SCHEMA_4);
+    EXPECT_ANY_THROW(owlsm::config::ConfigParser parser(json_str, schema_str));
 }
 
 TEST_F(ConfigParserTest, empty_id_to_predicate_fails_validation) 
 {
-    owlsm::RaiiTempFile temp_file;
-    temp_file << INVALID_EMPTY_ID_TO_PREDICATE_JSON;
-    EXPECT_ANY_THROW(owlsm::config::ConfigParser parser(temp_file.getPath(), std::string(REAL_SCHEMA_4)));
+    const std::string json_str(INVALID_EMPTY_ID_TO_PREDICATE_JSON);
+    const std::string schema_str(REAL_SCHEMA_4);
+    EXPECT_ANY_THROW(owlsm::config::ConfigParser parser(json_str, schema_str));
 }
 
 TEST_F(ConfigParserTest, empty_id_to_string_passes_validation) 
 {
-    owlsm::RaiiTempFile temp_file;
-    temp_file << VALID_EMPTY_ID_TO_STRING_JSON;
-    EXPECT_NO_THROW(owlsm::config::ConfigParser parser(temp_file.getPath(), std::string(REAL_SCHEMA_4)));
+    const std::string json_str(VALID_EMPTY_ID_TO_STRING_JSON);
+    const std::string schema_str(REAL_SCHEMA_4);
+    EXPECT_NO_THROW(owlsm::config::ConfigParser parser(json_str, schema_str));
 }

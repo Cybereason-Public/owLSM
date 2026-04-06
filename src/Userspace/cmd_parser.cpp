@@ -13,7 +13,8 @@ CmdParser::CmdParser(int argc, char** argv)
         cxxopts::Options options(argv[0], "OWLSM - eBPF Security Monitoring");
         
         options.add_options()
-            ("c,config", "Path to configuration file (required. Exactly once)", cxxopts::value<std::string>())
+            ("c,config", "Path to configuration file (cannot use with --stdin)", cxxopts::value<std::string>())
+            ("stdin", "Read configuration from stdin (cannot use with -c)")
             ("e,exclude-pid", "PID to exclude from monitoring (can be specified multiple times)", cxxopts::value<std::vector<unsigned int>>())
             ("h,help", "Show help message");
 
@@ -27,6 +28,15 @@ CmdParser::CmdParser(int argc, char** argv)
         }
 
         const auto config_count = result.count("config");
+        const auto stdin_count = result.count("stdin");
+
+        if (config_count > 0 && stdin_count > 0)
+        {
+            std::cerr << "Error: --stdin and -c/--config cannot be used together.\n";
+            std::cerr << "Use -h for help.\n";
+            std::exit(1);
+        }
+
         if (config_count > 1) 
         {
             std::cerr << "Error: -c/--config <path> is required at most once.\n";
@@ -37,6 +47,8 @@ CmdParser::CmdParser(int argc, char** argv)
         {
             m_config_path = result["config"].as<std::string>();
         }
+
+        m_use_stdin = (stdin_count > 0);
 
         if (result.count("exclude-pid")) 
         {
