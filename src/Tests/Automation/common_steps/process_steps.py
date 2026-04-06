@@ -145,6 +145,13 @@ def I_start_the_owlsm_process():
     start_owlsm_process(f"{system_globals.OWLSM_PATH} -c {system_globals.RESOURCES_PATH / 'config.json'}")
 
 
+@given("I start the owLSM process with config via stdin")
+@when("I start the owLSM process with config via stdin")
+@then("I start the owLSM process with config via stdin")
+def I_start_the_owlsm_process_with_config_via_stdin():
+    start_owlsm_process_with_stdin(str(system_globals.RESOURCES_PATH / 'config.json'))
+
+
 @given(parsers.parse('I start the owLSM process with config file "{config_file}"'))
 @when(parsers.parse('I start the owLSM process with config file "{config_file}"'))
 @then(parsers.parse('I start the owLSM process with config file "{config_file}"'))

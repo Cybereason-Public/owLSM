@@ -10,6 +10,10 @@ from common_steps.db_steps import *
 def test_allowed_chmod():
     pass
 
+@scenario('on_chmod_test.feature', 'blocked_chmod_when_config_is_passed_via_stdin')
+def test_blocked_chmod_when_config_is_passed_via_stdin():
+    pass
+
 @scenario('on_chmod_test.feature', 'blocked_chmod')
 def test_blocked_chmod():
     pass

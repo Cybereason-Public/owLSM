@@ -237,7 +237,7 @@ def wait_for_owlsm_initialization(proc):
     proc.kill()
     assert False, f"owLSM failed to initialize within {timeout}s"
 
-def start_owlsm_process(command: str):
+def start_owlsm_process(command: str, stdin_data: str = None):
     if system_globals.OWLSM_LOGGER_LOG.exists():
         open(system_globals.OWLSM_LOGGER_LOG, 'w').close()
 
@@ -246,8 +246,18 @@ def start_owlsm_process(command: str):
     if proc is None:
         assert False, f"Failed to start owLSM process: {command}"
 
+    if stdin_data is not None:
+        proc.stdin.write(stdin_data)
+        proc.stdin.close()
+
     wait_for_owlsm_initialization(proc)
 
     system_globals.OWLSM_PROCESS_OBJECT = proc
     process_db.remove(proc.pid)
     logger.log_info("owLSM startup completed successfully")
+
+
+def start_owlsm_process_with_stdin(config_path: str):
+    with open(config_path, 'r') as f:
+        config_data = f.read()
+    start_owlsm_process(f"{system_globals.OWLSM_PATH} --stdin", stdin_data=config_data)

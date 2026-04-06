@@ -72,6 +72,10 @@ sudo ./owlsm -c /config/path.json
 
 # run with config and excluded pid's (usually we want to exclude parent processes)
 sudo ./owlsm -c /path/to/config.json -e 123 -e 456
+
+# run owlsm and pass config via stdin (when you don't want to save your config file on the disk)
+# owLSM expects to recive the config in under 10 seconds. 
+sudo ./owlsm --stdin
 ```
 
 > **Note:** owLSM Startup takes **10–50 seconds** depending on the system. This is the eBPF verifier validating all programs before they are loaded into the kernel. Once complete, owLSM is fully active.

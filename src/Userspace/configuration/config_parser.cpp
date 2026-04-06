@@ -5,27 +5,21 @@
 #include <valijson/schema_parser.hpp>
 #include <valijson/validator.hpp>
 #include <valijson/adapters/nlohmann_json_adapter.hpp>
-#include <fstream>
 
 namespace owlsm::config {
 
-    ConfigParser::ConfigParser(const std::string& json_path, const std::string& schema_str)
+    ConfigParser::ConfigParser(const std::string& json_str, const std::string& schema_str)
     {
-        nlohmann::json j = createJsonObjectFromFile(json_path);
+        nlohmann::json j = createJsonObject(json_str);
         nlohmann::json schema = nlohmann::json::parse(schema_str);
         validateJsonAgainstSchema(j, schema);
         parseJsonToConfigObject(j);
     }
 
 
-    nlohmann::json ConfigParser::createJsonObjectFromFile(const std::string& filepath)
+    nlohmann::json ConfigParser::createJsonObject(const std::string& json_str)
     {
-        std::ifstream in(filepath);
-        if (!in)
-            throw std::runtime_error("Failed to open JSON file: " + filepath);
-        nlohmann::json j;
-        in >> j;
-        return j;
+        return nlohmann::json::parse(json_str);
     }
 
     void ConfigParser::validateJsonAgainstSchema(const nlohmann::json& instance, const nlohmann::json& schema_json)

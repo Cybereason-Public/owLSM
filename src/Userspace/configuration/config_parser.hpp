@@ -11,7 +11,7 @@ namespace owlsm::config {
 class ConfigParser
 {
 public:
-    ConfigParser(const std::string& json_path, const std::string& schema_str);
+    ConfigParser(const std::string& json_str, const std::string& schema_str);
     virtual ~ConfigParser() = default;
     ConfigParser(const ConfigParser&) = delete;
     ConfigParser(ConfigParser&&) = delete;
@@ -22,7 +22,7 @@ public:
     void ClearRules() { m_config.rules_config.clear(); }
 
 private:
-    nlohmann::json createJsonObjectFromFile(const std::string& filepath);
+    nlohmann::json createJsonObject(const std::string& json_str);
     void validateJsonAgainstSchema(const nlohmann::json& instance, const nlohmann::json& schema_json);
     void parseJsonToConfigObject(const nlohmann::json& j);
     void fromJson(const nlohmann::json& j, FeaturesConfig& o);

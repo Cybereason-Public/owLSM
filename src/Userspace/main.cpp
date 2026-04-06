@@ -2,6 +2,7 @@
 #include "cmd_parser.hpp"
 #include "logger.hpp"
 #include "configuration/config_parser.hpp"
+#include "configuration/read_config.hpp"
 #include "system_setup.hpp"
 #include "probes_objects/create_probe_objects.hpp"
 #include "globals/global_objects.hpp"
@@ -58,12 +59,25 @@ void setup(int argc, char *argv[])
     LOG_INFO("Starting OWLSM. Version: " + std::string(OWLSM_VERSION_STR));
 
     owlsm::CmdParser cmd_parser(argc, argv);
-    const std::string& config_path = cmd_parser.getConfigPath();
-    if(!config_path.empty())
+    const std::string schema_str(reinterpret_cast<const char*>(g_schema_json), g_schema_json_len);
+
+    std::string config_str;
+    if (cmd_parser.isStdin())
     {
-        owlsm::config::ConfigParser config_parser(config_path, std::string(reinterpret_cast<const char*>(g_schema_json), g_schema_json_len));
+        config_str = owlsm::config::readConfigFromStdin();
+    }
+    else if (!cmd_parser.getConfigPath().empty())
+    {
+        config_str = owlsm::config::readConfigFromFile(cmd_parser.getConfigPath());
+    }
+
+    if (!config_str.empty())
+    {
+        owlsm::config::ConfigParser config_parser(config_str, schema_str);
         owlsm::globals::g_config = config_parser.getConfig();
         config_parser.ClearRules();
+        explicit_bzero(config_str.data(), config_str.size());
+        config_str.clear();
     }
     owlsm::Logger::getInstance().setLogLevel(owlsm::globals::g_config.userspace.log_level);
 
