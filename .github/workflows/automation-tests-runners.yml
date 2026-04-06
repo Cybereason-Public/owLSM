@@ -65,6 +65,7 @@ env:
   TF_VAR_run_id: ${{ github.run_id }}
   TF_VAR_ephemeral_runner: ${{ inputs.ephemeral_runners == '' && 'true' || inputs.ephemeral_runners }}
   TF_WORKING_DIR: terraform
+  TF_STATE_KEY: runners/${{ github.run_id }}/terraform.tfstate
   ALLOWED_FAILED_TESTS: 0
   ALLOWED_SKIPPED_TESTS: 0
 
@@ -106,7 +107,7 @@ jobs:
       # =====================================================================
       - name: Terraform Init
         working-directory: ${{ env.TF_WORKING_DIR }}
-        run: terraform init
+        run: terraform init -backend-config="key=${{ env.TF_STATE_KEY }}"
 
       # =====================================================================
       # Plan & Apply
@@ -325,6 +326,8 @@ jobs:
       inputs.destroy_runners == true &&
       needs.run-automation-tests.result == 'success'
     uses: ./.github/workflows/destroy-runners.yml
+    with:
+      state_key: runners/${{ github.run_id }}/terraform.tfstate
     secrets:
       GH_RUNNER_PAT: ${{ secrets.GH_RUNNER_PAT }}
       SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}

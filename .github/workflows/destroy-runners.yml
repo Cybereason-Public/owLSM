@@ -1,19 +1,33 @@
 name: Destroy Runners
 
 # =============================================================================
-# Destroys OCI runner VMs via Terraform and deregisters offline runners
-# from GitHub. Designed to be triggered manually or called by other workflows
-# for cleanup after automation tests.
+# Destroys OCI runner VMs and deregisters offline runners from GitHub.
+#
+# - workflow_call / workflow_dispatch: Uses Terraform to destroy resources for
+#   a specific run via the state_key input, then deregisters runners.
+# - schedule: Sweeps ALL orphaned runner VMs via OCI API (by display_name
+#   prefix "automation-owlsm-"), purges per-run state files from the bucket,
+#   and deregisters offline runners.
 #
 # OCI credentials are pre-baked in the runner image at /home/ghrunner/.oci/
-# (config file + private API key). Terraform uses them automatically.
+# (config file + private API key). Terraform and OCI CLI use them automatically.
 # =============================================================================
 
 on:
   schedule:
     - cron: '0 0 * * *'
   workflow_dispatch:
+    inputs:
+      state_key:
+        description: 'Terraform state key (e.g. runners/<run_id>/terraform.tfstate)'
+        required: true
+        type: string
   workflow_call:
+    inputs:
+      state_key:
+        description: 'Terraform state key for the run to destroy'
+        required: true
+        type: string
     secrets:
       GH_RUNNER_PAT:
         required: true
@@ -26,16 +40,20 @@ env:
   TF_VAR_github_repo_url: ${{ github.server_url }}/${{ github.repository }}
   TF_VAR_run_id: ${{ github.run_id }}
   TF_WORKING_DIR: terraform
+  OCI_COMPARTMENT_ID: "ocid1.compartment.oc1..aaaaaaaau2xyww3pkol2xoekvelmw6yy2be7wmfjcsmefxejqutuleblq5kq"
+  OCI_STATE_BUCKET: "terraform-state-owlsm"
+  OCI_STATE_NAMESPACE: "id9uy08ld7kh"
 
 jobs:
+  # =====================================================================
+  # Terraform-based destroy for a specific run
+  # =====================================================================
   destroy-runners:
     name: Destroy OCI Runner VMs
+    if: github.event_name != 'schedule'
     runs-on: ["OCI", "owLSM"]
 
     steps:
-      # =====================================================================
-      # Setup
-      # =====================================================================
       - name: Checkout repository
         uses: actions/checkout@v5
 
@@ -45,20 +63,14 @@ jobs:
           terraform_version: "1.14.4"
           terraform_wrapper: false
 
-      # =====================================================================
-      # Terraform Init & Destroy
-      # =====================================================================
       - name: Terraform Init
         working-directory: ${{ env.TF_WORKING_DIR }}
-        run: terraform init
+        run: terraform init -backend-config="key=${{ inputs.state_key }}"
 
       - name: Terraform Destroy
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform destroy -auto-approve
 
-      # =====================================================================
-      # Deregister offline runners from GitHub
-      # =====================================================================
       - name: Deregister offline runners from GitHub
         env:
           GH_TOKEN: ${{ secrets.GH_RUNNER_PAT }}
@@ -67,15 +79,110 @@ jobs:
             "${{ github.repository }}" \
             "owLSM-automation"
 
-      # =====================================================================
-      # Summary
-      # =====================================================================
       - name: Summary
         if: always()
         run: |
           echo "## Destroy Runners Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Action:** Destroy runners and deregister from GitHub" >> $GITHUB_STEP_SUMMARY
+          echo "**Action:** Terraform destroy (state key: ${{ inputs.state_key }})" >> $GITHUB_STEP_SUMMARY
+          echo "**Repository:** ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Run ID:** ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Cleanup workspace
+        if: always()
+        run: |
+          cd ${{ github.workspace }}
+          sudo git clean -ffdx
+          echo "==> Cleanup completed!"
+
+  # =====================================================================
+  # Scheduled cleanup: OCI API sweep (no Terraform needed)
+  # =====================================================================
+  scheduled-cleanup:
+    name: Scheduled Cleanup
+    if: github.event_name == 'schedule'
+    runs-on: ["OCI", "owLSM"]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Install OCI CLI
+        run: |
+          curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh -o install_oci_cli.sh
+          bash install_oci_cli.sh --accept-all-defaults
+          echo "$HOME/bin" >> $GITHUB_PATH
+
+      - name: Terminate orphaned runner VMs via OCI API
+        run: |
+          echo "==> Listing RUNNING instances with display_name prefix 'automation-owlsm-'..."
+          INSTANCES=$(oci compute instance list \
+            --compartment-id "${{ env.OCI_COMPARTMENT_ID }}" \
+            --lifecycle-state RUNNING \
+            --all \
+            --query "data[?starts_with(\"display-name\", 'automation-owlsm-')].{id:id, name:\"display-name\", created:\"time-created\"}" \
+            --output json 2>/dev/null || echo "[]")
+
+          COUNT=$(echo "$INSTANCES" | jq 'length')
+          echo "Found $COUNT orphaned runner instance(s)"
+
+          if [ "$COUNT" -eq 0 ]; then
+            echo "==> No orphaned instances to terminate."
+          else
+            echo "$INSTANCES" | jq -r '.[] | "  \(.name)  (created: \(.created), id: \(.id))"'
+            echo ""
+            echo "$INSTANCES" | jq -r '.[].id' | while read -r OCID; do
+              echo "==> Terminating $OCID..."
+              oci compute instance terminate --instance-id "$OCID" --force \
+                --wait-for-state TERMINATED --max-wait-seconds 300 || true
+            done
+            echo "==> All orphaned instances terminated."
+          fi
+
+      - name: Purge per-run Terraform state files from bucket
+        run: |
+          echo "==> Listing state objects under 'runners/' prefix..."
+          OBJECTS=$(oci os object list \
+            --bucket-name "${{ env.OCI_STATE_BUCKET }}" \
+            --namespace-name "${{ env.OCI_STATE_NAMESPACE }}" \
+            --prefix "runners/" \
+            --fields "name,timeCreated" \
+            --all \
+            --output json 2>/dev/null || echo '{"data":[]}')
+
+          DELETE_LIST=$(echo "$OBJECTS" | jq -r '.data[].name')
+          COUNT=$(echo "$DELETE_LIST" | grep -c . || true)
+          echo "Found $COUNT state object(s) under runners/"
+
+          if [ "$COUNT" -eq 0 ]; then
+            echo "==> No state objects to purge."
+          else
+            echo "$DELETE_LIST" | while read -r OBJ; do
+              echo "==> Deleting: $OBJ"
+              oci os object delete \
+                --bucket-name "${{ env.OCI_STATE_BUCKET }}" \
+                --namespace-name "${{ env.OCI_STATE_NAMESPACE }}" \
+                --object-name "$OBJ" \
+                --force || true
+            done
+            echo "==> State file cleanup complete."
+          fi
+
+      - name: Deregister offline runners from GitHub
+        env:
+          GH_TOKEN: ${{ secrets.GH_RUNNER_PAT }}
+        run: |
+          ${{ env.TF_WORKING_DIR }}/scripts/deregister-runners.sh \
+            "${{ github.repository }}" \
+            "owLSM-automation"
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Scheduled Cleanup Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Action:** OCI API sweep + state purge + runner deregistration" >> $GITHUB_STEP_SUMMARY
           echo "**Repository:** ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
           echo "**Triggered by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
           echo "**Run ID:** ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
