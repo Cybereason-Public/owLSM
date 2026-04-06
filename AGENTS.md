@@ -54,10 +54,10 @@ Build inside Docker (required for consistent toolchain):
 
 ```bash
 # Build Docker image (one-time)
-docker build -t owlsm-ci-ubuntu20 .
+docker build -t owlsm-ci-ubuntu18 .
 
 # Start container
-docker run -it --rm -v "$PWD":/workspace -w /workspace owlsm-ci-ubuntu20 bash
+docker run -it --rm -v "$PWD":/workspace -w /workspace owlsm-ci-ubuntu18 bash
 ```
 
 ### Build Commands

@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:18.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -11,22 +11,19 @@ RUN rm -rf /var/lib/apt/lists/* && \
         curl \
         gnupg \
         software-properties-common && \
-    # Add LLVM's official apt repository for clang-18
-    curl -fsSL https://apt.llvm.org/llvm-snapshot.gpg.key | gpg --dearmor -o /usr/share/keyrings/llvm.gpg && \
-    echo "deb [signed-by=/usr/share/keyrings/llvm.gpg] http://apt.llvm.org/focal/ llvm-toolchain-focal-18 main" > /etc/apt/sources.list.d/llvm.list && \
+    # Add GCC 9 PPA (Ubuntu 18.04 defaults to GCC 7, we need GCC 9 to match Ubuntu 20.04)
+    add-apt-repository ppa:ubuntu-toolchain-r/test && \
     add-apt-repository universe && \
     apt-get update && \
     apt-get install -y --no-install-recommends \
         build-essential \
+        gcc-9 \
+        g++-9 \
+        libstdc++-10-dev \
         git \
         pkg-config \
         xxd \
-        # Clang / LLVM 18
-        clang-18 \
-        clang-tools-18 \
-        llvm-18 \
-        llvm-18-dev \
-        lld-18 \
+        xz-utils \
         # libbpf-dev (for libbpf)
         libelf-dev \
         libdw-dev \
@@ -43,19 +40,37 @@ RUN rm -rf /var/lib/apt/lists/* && \
         # libs for tests
         libgtest-dev \
         googletest \
+        cmake \
         # misc
         make && \
+    # Set GCC 9 as the default gcc/g++
+    update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 100 && \
+    update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 100 && \
     rm -rf /var/lib/apt/lists/*
 
-# Make clang-18 and LLVM tools the default (without version suffix)
-RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 100 && \
-    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-18 100 && \
-    ln -sf /usr/bin/llvm-strip-18 /usr/bin/llvm-strip && \
-    ln -sf /usr/bin/llvm-objcopy-18 /usr/bin/llvm-objcopy && \
-    ln -sf /usr/bin/llvm-objdump-18 /usr/bin/llvm-objdump && \
-    ln -sf /usr/bin/llvm-ar-18 /usr/bin/llvm-ar && \
-    ln -sf /usr/bin/llvm-nm-18 /usr/bin/llvm-nm && \
-    ln -sf /usr/bin/llvm-readelf-18 /usr/bin/llvm-readelf
+# Install LLVM 18 / Clang 18 from upstream Ubuntu 18.04 tarball.
+# apt.llvm.org bionic packages are frozen and currently have unresolved deps on 18.04.
+RUN curl -fL "https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-x86_64-linux-gnu-ubuntu-18.04.tar.xz" -o /tmp/llvm18.tar.xz && \
+    mkdir -p /opt/llvm-18 && \
+    tar -xJf /tmp/llvm18.tar.xz -C /opt/llvm-18 --strip-components=1 && \
+    rm -f /tmp/llvm18.tar.xz && \
+    ln -sf /opt/llvm-18/bin/clang /usr/local/bin/clang && \
+    ln -sf /opt/llvm-18/bin/clang++ /usr/local/bin/clang++ && \
+    ln -sf /opt/llvm-18/bin/clang /usr/local/bin/clang-18 && \
+    ln -sf /opt/llvm-18/bin/clang++ /usr/local/bin/clang++-18 && \
+    ln -sf /opt/llvm-18/bin/llvm-strip /usr/local/bin/llvm-strip && \
+    ln -sf /opt/llvm-18/bin/llvm-objcopy /usr/local/bin/llvm-objcopy && \
+    ln -sf /opt/llvm-18/bin/llvm-objdump /usr/local/bin/llvm-objdump && \
+    ln -sf /opt/llvm-18/bin/llvm-ar /usr/local/bin/llvm-ar && \
+    ln -sf /opt/llvm-18/bin/llvm-nm /usr/local/bin/llvm-nm && \
+    ln -sf /opt/llvm-18/bin/llvm-readelf /usr/local/bin/llvm-readelf
+
+# Build & install Google Test (Ubuntu 18.04's libgtest-dev ships source only)
+RUN cd /usr/src/googletest && \
+    cmake -DCMAKE_CXX_COMPILER=g++-9 . && \
+    make -j"$(nproc)" && \
+    find . -name '*.a' -exec cp {} /usr/lib/ \; && \
+    ldconfig
 
 ENV CC=clang \
     CXX=clang++ \
@@ -84,4 +99,5 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
     ln -sf $(/usr/local/bin/uv python find 3.10) /usr/local/bin/python3 && \
     ln -sf $(/usr/local/bin/uv python find 3.10) /usr/local/bin/python
 
-ENV PATH="/usr/local/bin:$PATH"
+ENV LD_LIBRARY_PATH="/opt/llvm-18/lib:/opt/llvm-18/lib/x86_64-unknown-linux-gnu" \
+    PATH="/opt/llvm-18/bin:/usr/local/bin:$PATH"

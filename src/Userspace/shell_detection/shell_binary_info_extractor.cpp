@@ -5,12 +5,15 @@
 #include <filesystem>
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
+#include <sys/syscall.h>
+#include <linux/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <libelf.h>
 #include <gelf.h>
 #include <elfutils/libdwelf.h>
 #include <cstring>
+#include <cerrno>
 
 namespace owlsm
 {
@@ -57,27 +60,28 @@ ShellType ShellBinaryInfoExtractor::getShellType(const std::string& path)
 
 bool ShellBinaryInfoExtractor::statxInfo(const std::string& path, ShellBinaryInfo& info)
 {
-    struct statx stx;
-    const int result = statx(AT_FDCWD, path.c_str(), 0, 
-                       STATX_INO | STATX_MTIME | STATX_TYPE | STATX_MODE, &stx);
-    
-    if (result != 0)
+    struct statx stx = {};
+    const int statx_result = static_cast<int>(
+        syscall(SYS_statx, AT_FDCWD, path.c_str(), 0,
+                STATX_INO | STATX_MTIME | STATX_TYPE | STATX_MODE, &stx));
+
+    if (statx_result == 0)
     {
-        LOG_ERROR("statx failed for " << path << ": " << strerror(errno));
-        return false;
+        if (!S_ISREG(stx.stx_mode))
+        {
+            return false;
+        }
+
+        info.inode = stx.stx_ino;
+        info.dev = makedev(stx.stx_dev_major, stx.stx_dev_minor);
+        info.last_modified_time = static_cast<unsigned long long>(stx.stx_mtime.tv_sec) * globals::NANOSECONDS_IN_SECOND +
+                                  static_cast<unsigned long long>(stx.stx_mtime.tv_nsec);
+
+        return true;
     }
 
-    if (!S_ISREG(stx.stx_mode))
-    {
-        return false;
-    }
-
-    info.inode = stx.stx_ino;
-    info.dev = makedev(stx.stx_dev_major, stx.stx_dev_minor);
-    info.last_modified_time = static_cast<unsigned long long>(stx.stx_mtime.tv_sec) * globals::NANOSECONDS_IN_SECOND + 
-                              static_cast<unsigned long long>(stx.stx_mtime.tv_nsec);
-
-    return true;
+    LOG_ERROR("statx failed for " << path << ": " << strerror(errno));
+    return false;
 }
 
 bool ShellBinaryInfoExtractor::isBinary(const std::string& path)
