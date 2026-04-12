@@ -350,7 +350,8 @@
             "type": "string",
             "enum": [
                 "JSON",
-                "PROTOBUF"
+                "PROTOBUF",
+                "FLATBUFFERS"
             ]
         }
     }

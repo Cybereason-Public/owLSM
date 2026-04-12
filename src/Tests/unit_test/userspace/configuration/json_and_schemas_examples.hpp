@@ -418,7 +418,8 @@ constexpr std::string_view REAL_SCHEMA_4 = R"(
             "type": "string",
             "enum": [
                 "JSON",
-                "PROTOBUF"
+                "PROTOBUF",
+                "FLATBUFFERS"
             ]
         }
     }

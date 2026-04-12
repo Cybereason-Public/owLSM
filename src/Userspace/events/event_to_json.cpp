@@ -1,4 +1,4 @@
-#include "events/parse_messages.hpp"
+#include "events/event_to_json.hpp"
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -24,7 +24,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(owlsm::config::RuleMetadata, description)
 namespace owlsm::events
 {
 
-std::string ipv4_to_string(uint32_t be_addr) 
+static std::string ipv4_to_string(uint32_t be_addr)
 {
     char buf[INET_ADDRSTRLEN] = {0};
     in_addr a{};
@@ -33,7 +33,7 @@ std::string ipv4_to_string(uint32_t be_addr)
     return buf;
 }
 
-std::string ipv6_to_string(const unsigned int bytes[4]) 
+static std::string ipv6_to_string(const unsigned int bytes[4])
 {
     char buf[INET6_ADDRSTRLEN] = {0};
     in6_addr a6{};
@@ -121,7 +121,7 @@ void to_json(nlohmann::json& j, const NetworkEventData& e)
 
     j = nlohmann::json{
         {"network", {
-            {"direction", to_string(e.direction)},
+            {"direction", ::to_string(e.direction)},
             {"source_ip", source_ip},
             {"destination_ip", destination_ip},
             {"source_port", e.source_port},
@@ -132,12 +132,13 @@ void to_json(nlohmann::json& j, const NetworkEventData& e)
     };
 }
 
-void to_json(nlohmann::json& j, const Event& ev)
+template <>
+void EventToJson<Event>::write_root_event_json(nlohmann::json& j, const Event& ev)
 {
     j = nlohmann::json{
         {"id", ev.id},
-        {"type", to_string(ev.type)},
-        {"action", to_string(ev.action)},
+        {"type", ::to_string(ev.type)},
+        {"action", ::to_string(ev.action)},
         {"matched_rule_id", ev.matched_rule_id},
         {"matched_rule_metadata", ev.matched_rule_metadata},
         {"had_error", ev.had_error_while_handling},
@@ -147,11 +148,12 @@ void to_json(nlohmann::json& j, const Event& ev)
     };
 
     std::visit([&j](const auto& data) {
-        j["data"] = data;
+        to_json(j["data"], data);
     }, ev.data);
 }
 
-void to_json(nlohmann::json& j, const Error& e)
+template <>
+void EventToJson<Error>::write_root_error_json(nlohmann::json& j, const Error& e)
 {
     j = nlohmann::json{
         {"error_code", e.error_code},
@@ -160,14 +162,4 @@ void to_json(nlohmann::json& j, const Error& e)
     };
 }
 
-void to_json(nlohmann::json& j, const std::shared_ptr<Event>& ev)
-{
-    to_json(j, *ev);
-}
-
-void to_json(nlohmann::json& j, const std::shared_ptr<Error>& e)
-{
-    to_json(j, *e);
-}
-
-}
+} // namespace owlsm::events

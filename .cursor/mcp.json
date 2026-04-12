@@ -22,6 +22,9 @@
       "python-lsp": {
         "command": "/root/go/bin/mcp-language-server",
         "args": ["--workspace", "~/owLSM/Rules/RulesGenerator", "--lsp", "pyright-langserver", "--", "--stdio"]
+      },
+        "flatbuffers Docs": {
+        "url": "https://gitmcp.io/google/flatbuffers"
       }
     }
   }

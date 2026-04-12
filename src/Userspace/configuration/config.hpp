@@ -10,7 +10,8 @@ namespace owlsm::config {
 enum class OutputType 
 {
     JSON,
-    PROTOBUF
+    PROTOBUF,
+    FLATBUFFERS
 };
 
 struct FileMonitoringEventsConfig 

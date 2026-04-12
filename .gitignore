@@ -2,6 +2,7 @@
 build/
 *.o
 *.bpf.o
+src/Userspace/configuration/schema.inc
 
 # Python
 __pycache__/
@@ -22,6 +23,9 @@ Thumbs.db
 *.log
 *.sqlite
 src/Tests/Automation/owlsm/*
+src/Tests/Automation/resources/stdio_redirection
+src/Tests/Automation/resources/flatbuffer_reader/flatbuffer_reader
+src/Tests/Automation/resources/related_process
 
 # secrets and environment variables
 .env

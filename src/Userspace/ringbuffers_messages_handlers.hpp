@@ -3,10 +3,10 @@
 #include "bpf_header_includes.h"
 #include "events/sync_enrichment.hpp"
 #include "async_event_work/async_work_distributor.hpp"
-#include "events/parse_messages.hpp"
+#include "events/event_to_json.hpp"
+#include "events/event_to_flatbuffer.hpp"
 #include "logger.hpp"
 
-#include <nlohmann/json.hpp>
 #include "globals/global_objects.hpp"
 #include "globals/global_numbers.hpp"
 
@@ -100,8 +100,15 @@ private:
 
     void consumerWorker()
     {
-        std::string output_buffer;
-        output_buffer.reserve(owlsm::globals::MB * 5);
+        std::unique_ptr<events::IEventParser<MessageType>> serializer;
+        if (owlsm::globals::g_config.userspace.output_type == config::OutputType::FLATBUFFERS)
+        {
+            serializer = std::make_unique<events::EventToFlatbuffer<MessageType>>();
+        }
+        else
+        {
+            serializer = std::make_unique<events::EventToJson<MessageType>>();
+        }
 
         while (m_running)
         {
@@ -121,11 +128,8 @@ private:
 
             convertToMessages();
             enrichMessages();
-
-            output_buffer.clear();
-            buildOutputBuffer(output_buffer);
-            efficientBulkWrite(output_buffer);
-
+            serializer->buildOutputBuffer(m_messages_queue);
+            efficientBulkWrite(serializer->data(), serializer->size());
             distributeMessages();
             m_messages_queue.clear();
             m_thread_queue.clear();
@@ -135,14 +139,13 @@ private:
             std::lock_guard<std::mutex> lock(m_main_queue_mutex);
             m_thread_queue.swap(m_main_queue);
         }
-        
+
         if (!m_thread_queue.empty())
         {
             convertToMessages();
             enrichMessages();
-            output_buffer.clear();
-            buildOutputBuffer(output_buffer);
-            efficientBulkWrite(output_buffer);
+            serializer->buildOutputBuffer(m_messages_queue);
+            efficientBulkWrite(serializer->data(), serializer->size());
             distributeMessages();
             m_messages_queue.clear();
             m_thread_queue.clear();
@@ -176,32 +179,14 @@ private:
         }
     }
 
-    void buildOutputBuffer(std::string& output_buffer)
+    void efficientBulkWrite(const void* data, size_t size)
     {
-        for (const auto& msg : m_messages_queue)
-        {
-            try
-            {
-                nlohmann::json j;
-                owlsm::events::to_json(j, msg);
-                output_buffer += j.dump();
-                output_buffer += '\n';
-            }
-            catch (const std::exception& e)
-            {
-                LOG_ERROR("Failed to serialize message to JSON: " << e.what());
-            }
-        }
-    }
-
-    void efficientBulkWrite(const std::string& output_buffer)
-    {
-        const char* data = output_buffer.data();
-        size_t remaining = output_buffer.size();
+        auto* ptr = static_cast<const char*>(data);
+        size_t remaining = size;
 
         while (remaining > 0)
         {
-            ssize_t written = ::write(m_output_fd, data, remaining);
+            ssize_t written = ::write(m_output_fd, ptr, remaining);
             if (written < 0)
             {
                 if (errno == EINTR)
@@ -211,7 +196,7 @@ private:
                 LOG_ERROR("Failed to write to output file descriptor");
                 break;
             }
-            data += written;
+            ptr += written;
             remaining -= written;
         }
     }

@@ -1,0 +1,226 @@
+// owLSM FlatBuffers Schema — v25.12.19
+// Events and Errors emitted by the owLSM eBPF security monitor.
+// Each message on the wire is size-prefixed (FinishSizePrefixed).
+
+namespace owlsm.fb;
+
+// ── Enums ────────────────────────────────────────────────────
+
+enum EventType : ubyte {
+    EXEC = 0,
+    FORK,
+    EXIT,
+    FILE_CREATE,
+    UNLINK,
+    MKDIR,
+    RMDIR,
+    CHMOD,
+    CHOWN,
+    WRITE,
+    READ,
+    RENAME,
+    NETWORK
+}
+
+enum Action : ubyte {
+    ALLOW_EVENT = 0,
+    BLOCK_EVENT,
+    BLOCK_KILL_PROCESS,
+    BLOCK_KILL_PROCESS_KILL_PARENT,
+    KILL_PROCESS,
+    EXCLUDE_EVENT
+}
+
+enum FileType : ubyte {
+    UNKNOWN_FILE_TYPE = 0,
+    DIRECTORY,
+    SYMLINK,
+    BLOCK_DEVICE,
+    CHAR_DEVICE,
+    REGULAR_FILE,
+    SOCKET,
+    FIFO,
+    NO_FILE
+}
+
+enum ConnectionDirection : ubyte {
+    INCOMING = 0,
+    OUTGOING
+}
+
+// ── Structs (inline, zero-overhead) ──────────────────────────
+
+struct Owner {
+    uid:uint32;
+    gid:uint32;
+}
+
+struct StdioFileDescriptors {
+    stdin:FileType;
+    stdout:FileType;
+    stderr:FileType;
+}
+
+// ── Tables ───────────────────────────────────────────────────
+
+table File {
+    inode:uint64;
+    dev:uint32;
+    path:string;
+    owner:Owner;
+    mode:uint16;
+    type:FileType;
+    suid:ubyte;
+    sgid:ubyte;
+    last_modified_seconds:uint64;
+    nlink:uint32;
+    filename:string;
+}
+
+table Process {
+    pid:uint32;
+    ppid:uint32;
+    ruid:uint32;
+    rgid:uint32;
+    euid:uint32;
+    egid:uint32;
+    suid:uint32;
+    cgroup_id:uint64;
+    start_time:uint64;
+    ptrace_flags:uint32;
+    file:File;
+    cmd:string;
+    stdio_file_descriptors_at_process_creation:StdioFileDescriptors;
+    shell_command:string;
+}
+
+table RuleMetadata {
+    description:string;
+}
+
+// ── Nested structures to match JSON output format ────────────
+
+// Target object: { "target": { "file": {...} } } or { "target": { "process": {...} } }
+table Target {
+    file:File;
+    process:Process;
+}
+
+// Chmod-specific data: { "chmod": { "requested_mode": ... } }
+table ChmodInfo {
+    requested_mode:uint16;
+}
+
+// Chown-specific data: { "chown": { "requested_owner_uid": ..., "requested_owner_gid": ... } }
+table ChownInfo {
+    requested_owner_uid:uint32;
+    requested_owner_gid:uint32;
+}
+
+// Rename-specific data: { "rename": { "source_file": {...}, "destination_file": {...} } }
+table RenameInfo {
+    source_file:File;
+    destination_file:File;
+}
+
+// Network-specific data: { "network": { "direction": ..., ... } }
+table NetworkInfo {
+    direction:ConnectionDirection;
+    source_ip:string;
+    destination_ip:string;
+    source_port:uint16;
+    destination_port:uint16;
+    protocol:ubyte;
+    ip_type:ubyte;
+}
+
+// ── Event-specific data tables ───────────────────────────────
+// These match the JSON output structure in event_to_json.cpp
+
+// Generic file events (FILE_CREATE, UNLINK, MKDIR, RMDIR, READ, WRITE)
+// JSON: { "target": { "file": {...} } }
+table GenericFileEventData {
+    target:Target (required);
+}
+
+// Chown event
+// JSON: { "target": { "file": {...} }, "chown": { "requested_owner_uid": ..., "requested_owner_gid": ... } }
+table ChownEventData {
+    target:Target (required);
+    chown:ChownInfo (required);
+}
+
+// Chmod event
+// JSON: { "target": { "file": {...} }, "chmod": { "requested_mode": ... } }
+table ChmodEventData {
+    target:Target (required);
+    chmod:ChmodInfo (required);
+}
+
+// Exec event
+// JSON: { "target": { "process": {...} } }
+table ExecEventData {
+    target:Target (required);
+}
+
+// Fork event - empty object in JSON
+// JSON: {}
+// Python FlatBuffers requires union members to be tables, not structs
+table ForkEventData {
+}
+
+// Exit event
+// JSON: { "exit_code": ..., "signal": ... }
+// Python FlatBuffers requires union members to be tables, not structs
+table ExitEventData {
+    exit_code:uint32 = 0;
+    signal:uint32 = 0;
+}
+
+// Rename event
+// JSON: { "flags": ..., "rename": { "source_file": {...}, "destination_file": {...} } }
+table RenameEventData {
+    flags:uint32;
+    rename:RenameInfo (required);
+}
+
+// Network event
+// JSON: { "network": { "direction": ..., ... } }
+table NetworkEventData {
+    network:NetworkInfo (required);
+}
+
+union EventData {
+    GenericFileEventData,
+    ChownEventData,
+    ChmodEventData,
+    ExecEventData,
+    ForkEventData,
+    ExitEventData,
+    RenameEventData,
+    NetworkEventData
+}
+
+// ── Root tables ──────────────────────────────────────────────
+
+table Event {
+    id:uint64;
+    type:EventType;
+    action:Action = ALLOW_EVENT;
+    matched_rule_id:uint32 = 0;
+    matched_rule_metadata:RuleMetadata;
+    had_error:ubyte = 0;
+    process:Process (required);
+    parent_process:Process (required);
+    time:uint64;
+    data:EventData;
+}
+
+table Error {
+    error_code:int32;
+    location:string (required);
+    details:string (required);
+    hook_name:string;
+}
+
+root_type Event;

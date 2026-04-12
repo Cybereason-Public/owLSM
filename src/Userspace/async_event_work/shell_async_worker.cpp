@@ -1,5 +1,4 @@
 #include "shell_async_worker.hpp"
-#include "logger.hpp"
 #include "globals/global_objects.hpp"
 #include "log_levels_enum.h"
 #include "rodata_maps_related_structs.h"

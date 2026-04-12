@@ -2,9 +2,11 @@ from pytest_bdd import given, when, then, parsers, scenarios
 from globals.system_related_globals import system_globals
 from Utils.process_utils import *
 from Utils.logger_utils import logger
+import psutil
 import os
 import pwd
 from globals.global_strings import global_strings
+from state_db.file_db import file_db
 
 @given(parsers.parse('I run the command "{command}" sync'))
 @when(parsers.parse('I run the command "{command}" sync'))
@@ -129,7 +131,64 @@ def I_run_the_resource_with_arguments_async_and_save_pid(resource, arguments, sc
         assert False, f"Failed to run resource: {resource} with arguments: {arguments}"
     scenario_context[global_strings.RESOURCE_PID] = proc.pid
     logger.log_info(f"Saved scenario_context[{global_strings.RESOURCE_PID}] is {scenario_context[global_strings.RESOURCE_PID]}")
+
+
+@given(parsers.parse('I run flatbuffer_reader async for "{stream}" stream and save pid'))
+@when(parsers.parse('I run flatbuffer_reader async for "{stream}" stream and save pid'))
+@then(parsers.parse('I run flatbuffer_reader async for "{stream}" stream and save pid'))
+def I_run_flatbuffer_reader_async_for_stream_and_save_pid(stream, scenario_context):
+    stream_lower = stream.strip().lower()
+    if stream_lower == "events":
+        bin_path = system_globals.AUTOMATION_ROOT_DIR / "owLSM_output_events.bin"
+    elif stream_lower == "errors":
+        bin_path = system_globals.AUTOMATION_ROOT_DIR / "owLSM_output_errors.bin"
+    else:
+        assert False, f"Unknown flatbuffer stream '{stream}', expected events or errors"
+
+    log_path = system_globals.OWLSM_OUTPUT_LOG
+    arguments = f"{bin_path} {log_path}"
+    I_run_the_resource_with_arguments_async_and_save_pid("flatbuffer_reader/flatbuffer_reader", arguments, scenario_context)
+
+
+@given("I start the owLSM process with flatbuffers output")
+@when("I start the owLSM process with flatbuffers output")
+@then("I start the owLSM process with flatbuffers output")
+def I_start_the_owlsm_process_with_flatbuffers_output():
+    events_bin = system_globals.AUTOMATION_ROOT_DIR / "owLSM_output_events.bin"
+    errors_bin = system_globals.AUTOMATION_ROOT_DIR / "owLSM_output_errors.bin"
+
+    for p in (events_bin, errors_bin):
+        if p.exists():
+            os.remove(p)
+
+    events_fd = open(events_bin, "wb")
+    errors_fd = open(errors_bin, "wb")
+    file_db.add(events_bin)
+    file_db.add(errors_bin)
     
+
+    config_path = system_globals.RESOURCES_PATH / "flatbuffers_config.json"
+    command = f"{system_globals.OWLSM_PATH} -c {config_path}"
+
+    start_owlsm_process(command, stdout_fd=events_fd, stderr_fd=errors_fd)
+    events_fd.close()
+    errors_fd.close()
+
+
+@given("I check that the async resource process is still running")
+@when("I check that the async resource process is still running")
+@then("I check that the async resource process is still running")
+def I_check_that_the_async_resource_process_is_still_running(scenario_context):
+    pid = scenario_context.get(global_strings.RESOURCE_PID)
+    assert pid is not None, "No resource PID saved in scenario context"
+    if not psutil.pid_exists(pid):
+        assert False, f"Resource process {pid} is not running"
+    proc = psutil.Process(pid)
+    stored_start = process_db.get(pid)
+    if stored_start is not None and abs(proc.create_time() - stored_start) > 3.0:
+        assert False, f"PID {pid} was reused (start time mismatch)"
+    assert proc.is_running(), f"Resource process {pid} is not running"
+
 
 @given("I stop the owLSM process")
 @when("I stop the owLSM process")

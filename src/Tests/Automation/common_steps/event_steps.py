@@ -161,6 +161,43 @@ def is_event_in_output_exactly_times(datatable, duration, scenario_context=None,
         logger.log_error(f"Event not found in output: '{expected}'. Expected: {expected_count} found: {found_count}")
         return False, expected
 
+
+@given(parsers.parse('I ensure that output file consists of at least "{count}" valid error message'))
+@when(parsers.parse('I ensure that output file consists of at least "{count}" valid error message'))
+@then(parsers.parse('I ensure that output file consists of at least "{count}" valid error message'))
+def ensure_output_has_valid_error_messages(count):
+    need = int(count)
+    log_path = system_globals.OWLSM_OUTPUT_LOG
+    assert log_path.exists(), f"Output log does not exist: {log_path}"
+
+    with open(log_path, "r", encoding="utf-8", errors="ignore") as f:
+        lines = f.readlines()
+
+    found = sum(1 for line in lines if _is_valid_error_line(line))
+    assert found >= need, f"Expected at least {need} valid error JSON line(s), found {found}"
+
+
+def _is_valid_error_line(line: str) -> bool:
+    line = line.strip()
+    if not line:
+        return False
+    try:
+        obj = json.loads(line)
+    except json.JSONDecodeError:
+        return False
+    if not isinstance(obj, dict):
+        return False
+    if "type" in obj and "action" in obj:
+        return False
+    if "error_code" not in obj or "location" not in obj or "details" not in obj:
+        return False
+    if not isinstance(obj.get("error_code"), int):
+        return False
+    if not isinstance(obj.get("location"), str) or not isinstance(obj.get("details"), str):
+        return False
+    return True
+
+
 @given(parsers.parse('I remove owLSM output log'))
 @when(parsers.parse('I remove owLSM output log'))
 @then(parsers.parse('I remove owLSM output log'))

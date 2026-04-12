@@ -19,6 +19,7 @@ RUN rm -rf /var/lib/apt/lists/* && \
     apt-get install -y --no-install-recommends \
         build-essential \
         git \
+        unzip \
         pkg-config \
         xxd \
         # Clang / LLVM 18
@@ -83,5 +84,11 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
     /usr/local/bin/uv python install 3.10 && \
     ln -sf $(/usr/local/bin/uv python find 3.10) /usr/local/bin/python3 && \
     ln -sf $(/usr/local/bin/uv python find 3.10) /usr/local/bin/python
+
+# Install flatc (FlatBuffers compiler) v25.12.19
+RUN curl -LO https://github.com/google/flatbuffers/releases/download/v25.12.19/Linux.flatc.binary.clang++-18.zip && \
+    unzip Linux.flatc.binary.clang++-18.zip -d /usr/local/bin/ && \
+    chmod +x /usr/local/bin/flatc && \
+    rm Linux.flatc.binary.clang++-18.zip
 
 ENV PATH="/usr/local/bin:$PATH"

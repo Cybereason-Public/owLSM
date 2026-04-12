@@ -314,11 +314,12 @@ Controls the size of the event buffer. Larger values handle burst traffic better
 <div class="field-meta">
 <p><strong>Required:</strong> false</p>
 <p><strong>Default value:</strong> <code>"JSON"</code></p>
-<p><strong>Options:</strong> <code>"JSON"</code></p>
+<p><strong>Options:</strong> <code>"JSON"</code>, <code>"FLATBUFFERS"</code></p>
 </div>
 
-Output format for events.<br>
-"PROTOBUF" will be supported in the future. 
+Output format for events and errors.<br>
+<code>"JSON"</code> — Newline-delimited JSON (one JSON object per line). Human-readable.<br>
+<code>"FLATBUFFERS"</code> — Size-prefixed FlatBuffers binary. See <a href="{{ '/events/#flatbuffers-output' | relative_url }}">FlatBuffers Output</a> for stream format and schema details.
 </div>
 
 <h3 id="userspace-log_level" class="section-anchor">

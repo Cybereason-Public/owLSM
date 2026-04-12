@@ -293,3 +293,7 @@ def test_placeholder_expand_all_three_fields_match_blocks_chmod():
 @scenario('placeholders.feature', 'placeholder_expand_two_of_three_fields_match_allows_chmod')
 def test_placeholder_expand_two_of_three_fields_match_allows_chmod():
     pass
+
+@scenario('flatbuffer.feature', 'flatbuffer_output_events_and_errors')
+def test_flatbuffer_output_events_and_errors():
+    pass

@@ -100,7 +100,8 @@ USERSPACE_IMPL_SRC := $(USERSPACE_SRC_DIR)/logger.cpp \
                       $(USERSPACE_SRC_DIR)/rules_managment/dfa_builder.cpp \
                       $(USERSPACE_SRC_DIR)/probes_objects/probe_manager.cpp \
                       $(USERSPACE_SRC_DIR)/ringbuffers_messages_handlers.cpp \
-                      $(USERSPACE_SRC_DIR)/events/parse_messages.cpp \
+                      $(USERSPACE_SRC_DIR)/events/event_to_json.cpp \
+                      $(USERSPACE_SRC_DIR)/events/event_to_flatbuffer.cpp \
                       $(USERSPACE_SRC_DIR)/globals/global_objects.cpp \
                       $(USERSPACE_SRC_DIR)/globals/global_strings.cpp \
                       $(USERSPACE_SRC_DIR)/shell_detection/shells_db.cpp \
