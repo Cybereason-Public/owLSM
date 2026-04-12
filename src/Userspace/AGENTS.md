@@ -16,8 +16,15 @@ Userspace/
 ├── ringbuffers_messages_handlers.cpp/.hpp  # Event processing from eBPF
 ├── configuration/                  # Config file handling
 │   └── ...
-├── events/                         # Event type definitions, handlers and enrichment
-│   └── ...
+├── events/                         # Event type definitions, handlers, serializers and enrichment
+│   ├── event.hpp                   # C++ event/error structs
+│   ├── IEvent_parser.hpp           # Abstract serializer interface
+│   ├── event_to_json.hpp/.cpp      # JSON serialization (EventToJson)
+│   ├── event_to_flatbuffer.hpp     # FlatBuffers serialization (EventToFlatbuffer)
+│   ├── sync_enrichment.hpp         # Synchronous event enrichment
+│   └── flatbuffers/                # FlatBuffers schema, generated headers
+│       ├── schema/owlsm_events.fbs
+│       └── include/owlsm_events_generated.h
 ├── globals/                        # Global state management
 │   └── ...
 ├── probes_objects/                 # eBPF program loading (libbpf)
@@ -27,6 +34,7 @@ Userspace/
 │   └── ...
 └── 3rd_party/                      # Vendored dependencies (DO NOT MODIFY CODE IN THESE FILES)
     ├── cxxopts/                    # CLI parsing
+    ├── flatbuffers/                # FlatBuffers runtime headers (v25.12.19)
     ├── magic_enum/                 # Enum reflection
     ├── nlohmann/                   # JSON parsing
     ├── semver/                     # Version handling

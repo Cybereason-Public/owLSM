@@ -1,0 +1,147 @@
+{
+  "features": {
+    "file_monitoring": {
+      "enabled": true,
+      "events": {
+        "chmod": true,
+        "chown": true,
+        "file_create": true,
+        "unlink": true,
+        "rename": true,
+        "write": true,
+        "read": true,
+        "mkdir": true,
+        "rmdir": true
+      }
+    },
+    "network_monitoring": {
+      "enabled": true
+    },
+    "shell_commands_monitoring": {
+      "enabled": true
+    }
+  },
+  "userspace": {
+    "max_events_queue_size": 10000,
+    "output_type": "FLATBUFFERS",
+    "log_level": "LOG_LEVEL_INFO",
+    "set_limits": true
+  },
+  "kernel": {
+    "log_level": "LOG_LEVEL_WARNING"
+  },
+  "rules": {
+    "id_to_string": {
+      "0": {
+        "value": "bin/chmod",
+        "string_type": 0
+      },
+      "1": {
+        "value": "666",
+        "string_type": 1
+      },
+      "2": {
+        "value": "test2",
+        "string_type": 0
+      }
+    },
+    "id_to_predicate": {
+      "0": {
+        "field": "process.pid",
+        "comparison_type": "above",
+        "string_idx": -1,
+        "numerical_value": 100,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "1": {
+        "field": "process.euid",
+        "comparison_type": "below",
+        "string_idx": -1,
+        "numerical_value": 5000,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "2": {
+        "field": "process.file.path",
+        "comparison_type": "endswith",
+        "string_idx": 0,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "3": {
+        "field": "process.cmd",
+        "comparison_type": "contains",
+        "string_idx": 1,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "4": {
+        "field": "target.file.path",
+        "comparison_type": "endswith",
+        "string_idx": 2,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "5": {
+        "field": "chmod.requested_mode",
+        "comparison_type": "equal",
+        "string_idx": -1,
+        "numerical_value": 438,
+        "fieldref": "FIELD_TYPE_NONE"
+      }
+    },
+    "id_to_ip": {},
+    "rules": [
+      {
+        "id": 4,
+        "description": "Test rule 4 - CHMOD block with process euid below threshold",
+        "action": "BLOCK_EVENT",
+        "applied_events": [
+          "CHMOD"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 1
+          },
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 2
+          },
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 3
+          },
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 4
+          },
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 5
+          },
+          {
+            "operator_type": "OPERATOR_AND"
+          },
+          {
+            "operator_type": "OPERATOR_AND"
+          },
+          {
+            "operator_type": "OPERATOR_AND"
+          },
+          {
+            "operator_type": "OPERATOR_AND"
+          },
+          {
+            "operator_type": "OPERATOR_AND"
+          }
+        ],
+        "min_version": "0.0.1",
+        "max_version": "1000.0.22"
+      }
+    ]
+  }
+}

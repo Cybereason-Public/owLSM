@@ -22,6 +22,7 @@ EXCLUDE_LIBS = ["linux-vdso", "ld-linux", "libc.so", "libm.so", "libdl.so", "lib
 LIBRARY_SEARCH_PATHS = ["/usr/lib64", "/usr/lib/x86_64-linux-gnu", "/usr/lib", "/lib/x86_64-linux-gnu", "/lib64", "/lib"]
 
 RESOURCES_SRC = PROJECT_ROOT / "src" / "Userspace" / "resources"
+FLATBUFFERS_SRC = PROJECT_ROOT / "src" / "Userspace" / "events" / "flatbuffers"
 RULES_GENERATOR_SRC = PROJECT_ROOT / "Rules" / "RulesGenerator"
 RULES_GENERATOR_FILES = [
     "AST.py",
@@ -42,12 +43,14 @@ MODES = {
         "output": PROJECT_ROOT / "build" / "owlsm",
         "with_rules_generator": True,
         "with_resources": True,
+        "with_flatbuffers": True,
     },
     "unit_tests": {
         "binary": PROJECT_ROOT / "src" / "Tests" / "unit_test" / "unit_tests",
         "output": PROJECT_ROOT / "build" / "unit_tests",
         "with_rules_generator": False,
         "with_resources": False,
+        "with_flatbuffers": False,
     },
 }
 
@@ -145,6 +148,25 @@ def package(mode_name):
                 print(f"  Copying: {filename}")
             else:
                 print(f"  Warning: {filename} not found in {RULES_GENERATOR_SRC}")
+
+    # Copy FlatBuffers schema, generated headers, and README
+    if mode.get("with_flatbuffers"):
+        fb_dest = output_dir / "flatbuffers"
+        if fb_dest.exists():
+            shutil.rmtree(fb_dest)
+        print("==> Copying FlatBuffers schema and headers...")
+        for subdir in ("schema", "include"):
+            src_dir = FLATBUFFERS_SRC / subdir
+            dst_dir = fb_dest / subdir
+            dst_dir.mkdir(parents=True)
+            for src_file in src_dir.iterdir():
+                if src_file.is_file():
+                    shutil.copy2(src_file, dst_dir / src_file.name)
+                    print(f"  Copying: {subdir}/{src_file.name}")
+        readme = FLATBUFFERS_SRC / "README.md"
+        if readme.is_file():
+            shutil.copy2(readme, fb_dest / "README.md")
+            print("  Copying: README.md")
 
     print(f"==> Packaging complete: {output_dir}")
 

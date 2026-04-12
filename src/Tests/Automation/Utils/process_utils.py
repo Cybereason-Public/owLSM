@@ -237,12 +237,15 @@ def wait_for_owlsm_initialization(proc):
     proc.kill()
     assert False, f"owLSM failed to initialize within {timeout}s"
 
-def start_owlsm_process(command: str, stdin_data: str = None):
+def start_owlsm_process(command: str, stdin_data: str = None, stdout_fd=None, stderr_fd=None):
     if system_globals.OWLSM_LOGGER_LOG.exists():
         open(system_globals.OWLSM_LOGGER_LOG, 'w').close()
 
     system_globals.OWLSM_OUTPUT_LOG_FD = open(system_globals.OWLSM_OUTPUT_LOG, 'w')
-    proc = run_command_async(command, system_globals.OWLSM_OUTPUT_LOG_FD, system_globals.OWLSM_OUTPUT_LOG_FD)
+    stdout_fd = stdout_fd if stdout_fd is not None else system_globals.OWLSM_OUTPUT_LOG_FD
+    stderr_fd = stderr_fd if stderr_fd is not None else system_globals.OWLSM_OUTPUT_LOG_FD
+
+    proc = run_command_async(command, stdout_fd, stderr_fd)
     if proc is None:
         assert False, f"Failed to start owLSM process: {command}"
 

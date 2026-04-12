@@ -9,7 +9,7 @@ permalink: /events/
 
 owLSM produces two types of output: **Events** and **Errors**.<br>
 **Events** - These are the normal output that informs us on whats happening on the system. The events are sent to STDOUT.<br>
-**ERROR** - Error messages that report about errors and issues owLSM kernel component has faced. The errors are sent to STDERR.<br>
+**Erros** - Error messages that report about errors and issues owLSM kernel component has faced. The errors are sent to STDERR.<br>
 Most of the errors aren't critical and just inform us about thing like "failed to get cmd of pid 1778"
 
 ---
@@ -355,6 +355,44 @@ For <code>MKDIR</code> and <code>RMDIR</code>, the file <code>type</code> will b
 <p>Fork events have no additional data fields. The <code>data</code> field is an empty object <code>{}</code>.</p>
 </div>
 </details>
+
+---
+
+## FlatBuffers Output
+
+When `output_type` is set to `"FLATBUFFERS"`, owLSM writes events and errors as **size-prefixed FlatBuffers** instead of JSON.
+
+### Wire Format
+
+Each message on the stream is framed as:
+
+```
+┌─────────────────────┬────────────────────┐┌─────────────────────┬────────────────────┐
+│ 4 bytes prefix      │      N bytes       ││ 4 bytes prefix      │      M bytes       │
+│ indicating message  │ FlatBuffer payload ││ indicating message  │ FlatBuffer payload │
+│ size. Size N        |                    |│ size. Size M        |                    |
+└─────────────────────┴────────────────────┘└─────────────────────┴────────────────────┘
+```
+
+- **Events** are written to **stdout**; **Errors** are written to **stderr**.
+- Read 4 bytes (little-endian `uint32`) to get the payload size, then read exactly that many bytes for the FlatBuffer.
+- Use `GetSizePrefixedRoot<Event>()` or `GetSizePrefixedRoot<Error>()` to access the data with zero-copy reads.
+
+### Schema and Headers
+
+The FlatBuffers schema and pre-generated C++ headers are included in the release package:
+
+```
+build/owlsm/flatbuffers/
+├── README.md
+├── schema/
+│   └── owlsm_events.fbs           # Source-of-truth schema
+└── include/
+    └── owlsm_events_generated.h    # Generated C++ header
+```
+
+Use the `.fbs` schema to generate bindings for any language supported by FlatBuffers (Python, Go, Rust, Java, etc.).
+The same schema applies to both events and errors.
 
 ---
 
