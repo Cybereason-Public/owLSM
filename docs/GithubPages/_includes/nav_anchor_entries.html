@@ -1,0 +1,24 @@
+{%- comment -%}
+  Recursive anchor submenu for Rules / Events (same-page #hash links).
+  Args: include.entries (array), include.base (e.g. "/rules/")
+{%- endcomment -%}
+<ul class="nav-list">
+  {%- for e in include.entries -%}
+  <li class="nav-list-item">
+    {%- if e.sections -%}
+      {%- assign _sub = e.sections | size -%}
+    {%- else -%}
+      {%- assign _sub = 0 -%}
+    {%- endif -%}
+    {%- if _sub >= 1 -%}
+      <button class="nav-list-expander btn-reset" aria-label="{{ e.title }} submenu" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use xlink:href="#svg-arrow-right"></use></svg>
+      </button>
+    {%- endif -%}
+    <a href="{{ include.base | relative_url }}#{{ e.hash }}" class="nav-list-link">{{ e.title }}</a>
+    {%- if _sub >= 1 -%}
+      {%- include nav_anchor_entries.html entries=e.sections base=include.base -%}
+    {%- endif -%}
+  </li>
+  {%- endfor -%}
+</ul>

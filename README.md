@@ -27,7 +27,7 @@ owLSM is an eBPF LSM agent that implements a stateful Sigma rules engine focused
 </p>
 
 <p>
-<b><span style="font-size:1.15em">Why we created this project:</span></b> After years of using projects like Falco, Tetragon, and KubeArmor, we kept running into the same gaps. These solutions offer little to no prevention (enforcement) capabilities. Those that do offer enforcement policies lack basic features like substring matching, full process command line access, and parent termination of malicious processes.<br>
+<b><span style="font-size:1.15em">Why we created this project:</span></b> After years of using projects like Falco, Tetragon, and KubeArmor, we kept running into the same gaps. These solutions offer little to no prevention (enforcement) capabilities. Those that do offer enforcement policies lack basic features like substring matching, regex matching, full process cmd matching, and parent termination of malicious processes.<br>
 We decided to take a completely different approach:<br>
 1) Use the standard Sigma rules structure and support as many Sigma rules features as possible (constantly adding more).<br>
 2) Solve the core limitation of current eBPF LSM projects: they are stateless. Almost all data available in an enforcement rule comes only from the current hook.<br>

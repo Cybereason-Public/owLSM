@@ -9,12 +9,13 @@ permalink: /events/
 
 owLSM produces two types of output: **Events** and **Errors**.<br>
 **Events** - These are the normal output that informs us on whats happening on the system. The events are sent to STDOUT.<br>
-**Erros** - Error messages that report about errors and issues owLSM kernel component has faced. The errors are sent to STDERR.<br>
+**Errors** - Error messages that report about errors and issues owLSM kernel component has faced. The errors are sent to STDERR.<br>
 Most of the errors aren't critical and just inform us about thing like "failed to get cmd of pid 1778"
+
 
 ---
 
-## Event Structure
+## Event Structure {#event-structure}
 
 Every event shares a common top-level structure. The `data` field varies depending on the event `type`.
 
@@ -75,7 +76,7 @@ Every event shares a common top-level structure. The `data` field varies dependi
 | Action | Description |
 |--------|-------------|
 | `ALLOW_EVENT` | Do nothing. Event is sent normally |
-| `BLOCK_EVENT` | Block the syscall/operation |
+| `BLOCK_EVENT` | Block the syscall/event |
 | `BLOCK_KILL_PROCESS` | Block the event and terminate the process |
 | `BLOCK_KILL_PROCESS_KILL_PARENT` | Block the event and terminate the process and its parent |
 | `KILL_PROCESS` | Don't block the event but terminate the process |
@@ -356,11 +357,30 @@ For <code>MKDIR</code> and <code>RMDIR</code>, the file <code>type</code> will b
 </div>
 </details>
 
+## Error Structure
+
+```json
+{
+    "details": "bpf_probe_read_user failed. pid: 1837369",
+    "error_code": -1,
+    "location": "get_cmd_from_task:34"
+}
+```
+
+### Error Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `details` | string | the message that is logged in owLSM kernel componenet |
+| `error_code` | int | code. mostly -1 |
+| `location` | string | `function name`:`line number` |
+
+
 ---
 
-## FlatBuffers Output
+## FlatBuffers output {#flatbuffers-output}
 
-When `output_type` is set to `"FLATBUFFERS"`, owLSM writes events and errors as **size-prefixed FlatBuffers** instead of JSON.
+When <a href="{{ '/configuration/' | relative_url }}#userspace-output_type"><code>output_type</code></a> is set to `"FLATBUFFERS"`, owLSM writes events and errors as **size-prefixed FlatBuffers** instead of JSON. The FlatBuffers structure is identical to the JSON structure. 
 
 ### Wire Format
 
@@ -383,7 +403,7 @@ Each message on the stream is framed as:
 The FlatBuffers schema and pre-generated C++ headers are included in the release package:
 
 ```
-build/owlsm/flatbuffers/
+owlsm/flatbuffers/
 ├── README.md
 ├── schema/
 │   └── owlsm_events.fbs           # Source-of-truth schema
@@ -394,22 +414,4 @@ build/owlsm/flatbuffers/
 Use the `.fbs` schema to generate bindings for any language supported by FlatBuffers (Python, Go, Rust, Java, etc.).
 The same schema applies to both events and errors.
 
----
 
-## Error Structure
-
-```json
-{
-    "details": "bpf_probe_read_user failed. pid: 1837369",
-    "error_code": -1,
-    "location": "get_cmd_from_task:34"
-}
-```
-
-### Error Fields
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `details` | string | the message that is logged in owLSM kernel componenet |
-| `error_code` | int | code. mostly -1 |
-| `location` | string | `function name`:`line number` |

@@ -33,3 +33,6 @@ src/Tests/Automation/resources/related_process
 .env.*.local
 *.pem
 docs/GithubPages/_site/*
+
+# docs
+docs/GithubPages/vendor/bundle/

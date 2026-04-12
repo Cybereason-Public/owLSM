@@ -1,0 +1,41 @@
+# Sidebar anchor jumps for single long pages (Rules, Events). Used by _includes/components/nav/links.html.
+Rules:
+  base: /rules/
+  sections:
+    - title: Rule Examples
+      hash: rule-examples
+    - title: Rule Components
+      hash: rule-components
+    - title: Available Modifiers
+      hash: available-modifiers
+      sections:
+        - title: String modifiers
+          hash: string-modifiers
+        - title: Regex modifier
+          hash: regex-modifier
+        - title: Negation
+          hash: negation-modifier
+        - title: Numeric
+          hash: numeric-modifiers
+        - title: Network
+          hash: network-modifiers
+        - title: Quantifier
+          hash: quantifier-modifier
+        - title: Field reference
+          hash: field-reference-modifier
+        - title: Placeholder expansion
+          hash: placeholder-modifier
+    - title: Available Fields
+      hash: available-fields
+    - title: Enums
+      hash: enums
+    - title: Limitations
+      hash: limitations
+
+Events:
+  base: /events/
+  sections:
+    - title: Event Structure
+      hash: event-structure
+    - title: FlatBuffers
+      hash: flatbuffers-output
