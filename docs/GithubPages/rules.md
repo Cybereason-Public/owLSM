@@ -12,7 +12,10 @@ We are trying to support as many sigma rules features as possible, especially in
 <br>
 In order to fully understand the owLSM rules, we strongly advise to read [sigma-rules-specification detection section](https://github.com/SigmaHQ/sigma-specification/blob/main/specification/sigma-rules-specification.md#detection) first.
 
-## Rule Examples
+
+---
+
+## Rule Examples {#rule-examples}
 
 For more examples, see [`Rules/RuleExamples`](https://github.com/cybereason-labs/owLSM/tree/main/Rules/RuleExamples)  
 
@@ -99,9 +102,11 @@ For more examples, see [`Rules/RuleExamples`](https://github.com/cybereason-labs
   
 </div>
 
+
+
 ---
 
-## Rule Components
+## Rule Components {#rule-components}
 
 <h3 id="rule-id" class="section-anchor">
   <span class="section-path">id</span>
@@ -146,11 +151,11 @@ This is included in the event output when the rule matches.
 Action owLSM will take when the rule matches.<br>
 <br>
 <strong>ALLOW_EVENT</strong> - Do nothing. Event is sent normally.<br>
-<strong>BLOCK_EVENT</strong> - Blocks syscall/operation.<br>
+<strong>BLOCK_EVENT</strong> - Blocks syscall/event.<br>
 <strong>BLOCK_KILL_PROCESS</strong> - Block the event and terminate the process that performed the action.<br>
 <strong>BLOCK_KILL_PROCESS_KILL_PARENT</strong> - Block the event and terminate the process that performed the action and its parent.<br>
 <strong>KILL_PROCESS</strong> - Don't blocked the event but terminate the process that performed the action.<br>
-<strong>EXCLUDE_EVENT</strong> - Don't send the event. Good for reducing unwanted noise.!
+<strong>EXCLUDE_EVENT</strong> - Don't send the event. Good for reducing unwanted noise.
 </div>
 
 <h3 id="rule-events" class="section-anchor">
@@ -164,7 +169,7 @@ Action owLSM will take when the rule matches.<br>
 </div>
 
 Event types this rule applies to.<br>
-A rule can be applied to one or more event types. See `Multi-Event Example` at the top.<br>
+A rule can be applied to one or more event types. See <code>Multi-Event Example</code> at the top.<br>
 <br>
 <strong>EXEC</strong> - rules for exec events.<br>
 <strong>CHMOD</strong> - rules for chmod events.<br>
@@ -180,7 +185,7 @@ A rule can be applied to one or more event types. See `Multi-Event Example` at t
 <br>
 The fields that you use in a rule must correspond to the event types you specified.<br>
 If you specified both CHMOD and CHOWN, you can't use the field chmod.requested_mode as it corresponds only to CHMOD but not to CHOWN.<br>
-This will become more clear after you read the `Available Fields` part.
+This will become more clear after you read the <code>Available Fields</code> part.
 </div>
 
 <h3 id="rule-min-version" class="section-anchor">
@@ -242,9 +247,12 @@ It contains one or more named selections and a condition that combines them.
 </div>
 
 Just like <a href="https://sigmahq.io/docs/basics/rules.html#selections">standard Sigma rules selection</a>, selections define matching criteria.<br>
-Each selection is a named group that organizes detections for readability and filtering.<br><br>
+Each selection is a named group that organizes detections for readability and filtering.
 
-<strong>AND / OR Logic:</strong><br>
+</div>
+
+<h3 class="rule-subheading">AND / OR logic</h3>
+
 Sigma uses YAML structure to represent logical operations:<br>
 • <strong>AND logic:</strong> Multiple fields within a selection (dictionary/object syntax)<br>
 • <strong>OR logic:</strong> Multiple values for a single field (list syntax)<br><br>
@@ -258,8 +266,9 @@ Selection names can be any valid identifier (e.g., <code>selection</code>, <code
         - ".py"
         - ".pl"</code></pre>
 </div>
- <br><br>
-<strong>Keywords (field-less selection):</strong><br>
+
+<h3 class="rule-subheading">Keywords (field-less selection)</h3>
+
 Keywords are a special type of search where you don't specify a field name.<br>
 Using keyword, we can search for a string across all the <strong>event string fields</strong>.<br>
 This is useful for broad searches when we don't want to target a specific field.<br>
@@ -275,12 +284,13 @@ keywords|all:
     - "/etc/shadow"</code></pre>
 </div>
 
-<strong>Keyword limitations:</strong><br>
-• Keywords expand to all string fields, which impacts performance<br>
-• Same wildcard rules apply as string modifiers<br>
-• Cannot be used with field-specific modifiers like <code>cidr</code>
-• Tule token max is reached very easily when using keywords.
-</div>
+<p><strong>Keyword limitations:</strong></p>
+<ul>
+<li>Keywords expand to all string fields, which impacts performance</li>
+<li>Wildcards in keyword values follow the same rules as string modifiers</li>
+<li>Rule token max is reached very easily when using keywords</li>
+<li>Cannot be used with field-specific modifiers like <code>cidr</code></li>
+</ul>
 
 <h3 id="rule-condition" class="section-anchor">
   <span class="section-path">condition</span>
@@ -293,24 +303,36 @@ keywords|all:
 </div>
 
 The condition combines selections using boolean operators.<br>
-This what actually determines the logic of the rule.<br><br>
+This is what actually determines the logic of the rule.
 
-<strong>Operators:</strong><br>
-• <code>and</code> - Both must match<br>
-• <code>or</code> - Either must match<br>
-• <code>not</code> - Negation<br>
-• Parentheses <code>()</code> for grouping<br><br>
+</div>
 
-<strong>Special Conditions:</strong><br>
-• <code>1 of selection_*</code> - Match any one selection with that prefix<br>
-• <code>all of selection_*</code> - Match all selections with that prefix<br>
-• <code>X of them</code> - Match at least X of all defined selections<br>
-• <code>X of selection_*</code> - Match at least X selections with that prefix (e.g., <code>2 of selection_*</code>)<br><br>
+<h4 class="rule-subheading">Operators</h4>
 
-<strong>Limitations:</strong><br>
-• Maximum 128 tokens per rule expression (<code>MAX_TOKENS_PER_RULE</code>)<br><br>
+<ul>
+<li><code>and</code> — Both must match</li>
+<li><code>or</code> — Either must match</li>
+<li><code>not</code> — Negation</li>
+<li>Parentheses <code>()</code> for grouping</li>
+</ul>
 
-<strong>Examples:</strong>
+<h4 class="rule-subheading">Special conditions</h4>
+
+<ul>
+<li><code>1 of selection_*</code> — Match any one selection with that prefix</li>
+<li><code>all of selection_*</code> — Match all selections with that prefix</li>
+<li><code>X of them</code> — Match at least X of all defined selections</li>
+<li><code>X of selection_*</code> — Match at least X selections with that prefix (e.g., <code>2 of selection_*</code>)</li>
+</ul>
+
+<h4 class="rule-subheading">Limitations</h4>
+
+<ul>
+<li>Maximum 128 tokens per rule expression (<code>MAX_TOKENS_PER_RULE</code>)</li>
+</ul>
+
+<h4 class="rule-subheading">Examples:</h4>
+
 <div class="interactive-code">
 <pre><code># Simple
 condition: selection
@@ -329,30 +351,32 @@ condition: 2 of them
 condition: 1 of selection_*
 condition: 3 of selection_suspicious_*</code></pre>
 </div>
-</div>
+
+### Other Sigma rule components {#other-sigma-rule-components}
+
+You may include additional Sigma rule components (e.g., `title`, `status`, `author`, `logsource`, etc). owLSM ignores keys it does not use when loading rules.
+
+
 
 ---
 
-## Available Modifiers
+## Available Modifiers {#available-modifiers}
 
 Modifiers specify how field values are compared.
 
-### String Modifiers
+## String Modifiers {#string-modifiers}
 
 | Modifier | Syntax | Description |
 |----------|--------|-------------|
 | `exactmatch` | `field: "value"` | Exact string match (default) |
-| `contains` | `field\|contains: "value"` | Substring match |
-| `startswith` | `field\|startswith: "value"` | Prefix match |
-| `endswith` | `field\|endswith: "value"` | Suffix match |
-| `re` | `field\|re: "pattern"` | Regex match |
+| `contains` | `field|contains: "value"` | Substring match |
+| `startswith` | `field|startswith: "value"` | Prefix match |
+| `endswith` | `field|endswith: "value"` | Suffix match |
+| `re` | `field|re: "pattern"` | Regex match |
 
-**Limitations:** 
+**Limitations:** Rule string values are capped at 32 characters.
 
-- Rule string values are capped at 32 characters.
-- Rule regex expressions are capped at 32 states. 
-
-### Regex Modifier (`re`)
+## Regex Modifier (`re`) {#regex-modifier}
 
 **Supported regex features:**
 
@@ -364,7 +388,7 @@ Modifiers specify how field values are compared.
 | Character classes | `\d`, `\w`, `\s` | `"\\d+"` |
 | Negated classes | `\D`, `\W`, `\S` | `"\\D+"` |
 | Dot (printable ASCII) | `.` | `"a.c"` |
-| Alternation | `a\|b` | `"cat\|dog"` |
+| Alternation | `a|b` | `"cat|dog"` |
 | Grouping | `(...)` | `"(ab)+"` |
 | Repetition | `*`, `+`, `?` | `"ab*c"`, `"a+"` |
 | Bounded repetition | `{n}`, `{n,m}`, `{n,}` | `"a{2,4}"` |
@@ -372,10 +396,11 @@ Modifiers specify how field values are compared.
 | Case insensitive | `(?i)` | `"(?i)hello"` |
 | Escape sequences | `\n`, `\t`, `\\`, `\.` | `"a\\.b"` |
 
-**Regex DFA state limit:** Regex patterns are compiled to Deterministic Finite Automata (DFAs) for efficient O(n) matching in the kernel. Each DFA is limited to **32 states**. Simple patterns (literals, short alternations, character classes) use only a few states. Complex patterns with many branches or long literals may exceed this limit — if so, simplify the pattern.
+**Regex state limit:** Regex patterns are compiled to Deterministic Finite Automata (DFAs) for efficient O(n) matching in the kernel. Each DFA is limited to **32 states**. Complex patterns with many branches or long literals may exceed this limit — if so, simplify the pattern. However, you are unlikely to reach this limit.
 
 <div class="interactive-code">
-<pre><code>detection:
+<pre><code> # Regex examples
+detection:
     sel_config_files:
         target.file.path|re: "/etc/[a-z]+\\.conf"
     sel_scripts:
@@ -383,7 +408,8 @@ Modifiers specify how field values are compared.
     condition: sel_config_files and sel_scripts</code></pre>
 </div><br>
 
-### Negation Modifier
+
+## Negation Modifier {#negation-modifier}
 
 | Modifier | Syntax | Description |
 |----------|--------|-------------|
@@ -400,7 +426,8 @@ Modifiers specify how field values are compared.
     condition: sel_not_target and sel_not_root</code></pre>
 </div>
 
-### Numeric Modifiers
+
+## Numeric Modifiers {#numeric-modifiers}
 
 | Modifier | Syntax | Description |
 |----------|--------|-------------|
@@ -410,13 +437,15 @@ Modifiers specify how field values are compared.
 | `equal_above` / `gte` | `field|gte: value` | Greater than or equal |
 | `equal_below` / `lte` | `field|lte: value` | Less than or equal |
 
-### Network Modifiers
+
+## Network Modifiers {#network-modifiers}
 
 | Modifier | Syntax | Description |
 |----------|--------|-------------|
 | `cidr` | `field|cidr: "10.0.0.0/8"` | CIDR network match for IP addresses |
 
-### Quantifier Modifier
+
+## Quantifier Modifier {#quantifier-modifier}
 
 | Modifier | Syntax | Description |
 |----------|--------|-------------|
@@ -434,7 +463,8 @@ Can be combined with string modifiers like `contains`, `startswith`, `endswith`.
     condition: sel</code></pre>
 </div>
 
-### Field Reference Modifier
+
+## Field Reference Modifier {#field-reference-modifier}
 
 | Modifier | Syntax | Description |
 |----------|--------|-------------|
@@ -458,7 +488,8 @@ Both fields must be the same type (both string, both numeric, or both enum).<br>
     condition: sel_filename and sel_same_uid</code></pre>
 </div>
 
-### Placeholder Expansion Modifier
+
+## Placeholder Expansion Modifier {#placeholder-modifier}
 
 | Modifier | Syntax | Description |
 |----------|--------|-------------|
@@ -491,9 +522,11 @@ shells:
 
 Can be combined with string modifiers and the `all` quantifier.<br>
 
+
+
 ---
 
-## Available Fields
+## Available Fields {#available-fields}
 
 Fields are the rule attributes that match against event attributes.<br>
 Each field has a type (`string`, `numeric`, `ip`, or `enum`) that determines which modifiers can be used.<br>
@@ -518,7 +551,7 @@ Some fields are available for all events, while others are specific to certain e
 <tr><td><code>process.suid</code></td><td>numeric</td><td>SUID</td></tr>
 <tr><td><code>process.ptrace_flags</code></td><td>numeric</td><td>Ptrace flags</td></tr>
 <tr><td><code>process.cmd</code></td><td>string</td><td>Command line arguments</td></tr>
-<tr><td><code>process.shell_command</code></td><td>string</td><td><strong>(Beta)</strong> Shell command typed in an interactive session. See <a href="/owLSM/architecture/shell-commands/">Shell Commands</a></td></tr>
+<tr><td><code>process.shell_command</code></td><td>string</td><td><strong>(Beta)</strong> Shell command typed in an interactive session. See <a href="{{ '/architecture/shell-commands/' | relative_url }}">Shell Commands</a></td></tr>
 <tr><td><code>process.file.path</code></td><td>string</td><td>Executable full path</td></tr>
 <tr><td><code>process.file.filename</code></td><td>string</td><td>Executable filename</td></tr>
 <tr><td><code>process.file.owner.uid</code></td><td>numeric</td><td>Executable owner UID</td></tr>
@@ -552,7 +585,7 @@ Some fields are available for all events, while others are specific to certain e
 <tr><td><code>parent_process.suid</code></td><td>numeric</td><td>SUID</td></tr>
 <tr><td><code>parent_process.ptrace_flags</code></td><td>numeric</td><td>Ptrace flags</td></tr>
 <tr><td><code>parent_process.cmd</code></td><td>string</td><td>Command line arguments</td></tr>
-<tr><td><code>parent_process.shell_command</code></td><td>string</td><td><strong>(Beta)</strong> Shell command typed in an interactive session. See <a href="/owLSM/architecture/shell-commands/">Shell Commands</a></td></tr>
+<tr><td><code>parent_process.shell_command</code></td><td>string</td><td><strong>(Beta)</strong> Shell command typed in an interactive session. See <a href="{{ '/architecture/shell-commands/' | relative_url }}">Shell Commands</a></td></tr>
 <tr><td><code>parent_process.file.path</code></td><td>string</td><td>Executable full path</td></tr>
 <tr><td><code>parent_process.file.filename</code></td><td>string</td><td>Executable filename</td></tr>
 <tr><td><code>parent_process.file.owner.uid</code></td><td>numeric</td><td>Executable owner UID</td></tr>
@@ -610,7 +643,7 @@ Some fields are available for all events, while others are specific to certain e
 <tr><td><code>target.process.suid</code></td><td>numeric</td><td>SUID</td></tr>
 <tr><td><code>target.process.ptrace_flags</code></td><td>numeric</td><td>Ptrace flags</td></tr>
 <tr><td><code>target.process.cmd</code></td><td>string</td><td>Command line arguments</td></tr>
-<tr><td><code>target.process.shell_command</code></td><td>string</td><td><strong>(Beta)</strong> Shell command typed in an interactive session. See <a href="/owLSM/architecture/shell-commands/">Shell Commands</a></td></tr>
+<tr><td><code>target.process.shell_command</code></td><td>string</td><td><strong>(Beta)</strong> Shell command typed in an interactive session. See <a href="{{ '/architecture/shell-commands/' | relative_url }}">Shell Commands</a></td></tr>
 <tr><td><code>target.process.file.path</code></td><td>string</td><td>Executable full path</td></tr>
 <tr><td><code>target.process.file.filename</code></td><td>string</td><td>Executable filename</td></tr>
 <tr><td><code>target.process.file.owner.uid</code></td><td>numeric</td><td>Executable owner UID</td></tr>
@@ -696,7 +729,10 @@ Some fields are available for all events, while others are specific to certain e
 
 ---
 
-## Enums
+
+---
+
+## Enums {#enums}
 
 <h3 id="enum-file-type" class="section-anchor">
   <span class="section-path">FILE_TYPE</span>
@@ -735,7 +771,10 @@ Some fields are available for all events, while others are specific to certain e
 
 ---
 
-## Limitations
+
+---
+
+## Limitations {#limitations}
 
 | Constant | Value | Description |
 |----------|-------|-------------|
@@ -748,4 +787,4 @@ Some fields are available for all events, while others are specific to certain e
 > **Case Sensitivity** — Everything in owLSM rules is case sensitive!
 
 {: .note }
-> **Other Sigma Keys** — Standard Sigma keys such as `title`, `logsource`, etc are allowed in owLSM rules but are ignored.
+> **Other Sigma keys** — See [Other Sigma rule components](#other-sigma-rule-components).

@@ -63,7 +63,7 @@ See [How to generate a config](https://github.com/cybereason-labs/owLSM/blob/mai
 <p><strong>Default value:</strong> All monitoring features are enabled by default</p>
 </div>
 Control what security features are enabled.<br><br>
-<strong>Features that are always enabled:<strong> exec monitoring, fork monitoring, and process exit monitoring.
+<strong>Features that are always enabled:</strong> exec monitoring, fork monitoring, and process exit monitoring.
 </div>
 
 <h3 id="features-file_monitoring" class="section-anchor">
@@ -319,7 +319,7 @@ Controls the size of the event buffer. Larger values handle burst traffic better
 
 Output format for events and errors.<br>
 <code>"JSON"</code> — Newline-delimited JSON (one JSON object per line). Human-readable.<br>
-<code>"FLATBUFFERS"</code> — Size-prefixed FlatBuffers binary. See <a href="{{ '/events/#flatbuffers-output' | relative_url }}">FlatBuffers Output</a> for stream format and schema details.
+<code>"FLATBUFFERS"</code> — Size-prefixed FlatBuffers binary. See <a href="{{ '/events/' | relative_url }}#flatbuffers-output">FlatBuffers output</a> for stream format and schema details.
 </div>
 
 <h3 id="userspace-log_level" class="section-anchor">
