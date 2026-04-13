@@ -120,7 +120,7 @@ bool ShellBinaryInfoExtractor::getBuildId(const std::string& path, ShellBinaryIn
     if (!elf)
     {
         close(fd);
-        LOG_ERROR("elf_begin failed for " << path);
+        LOG_ERROR("elf_begin failed for '" << path << "'");
         return false;
     }
 
