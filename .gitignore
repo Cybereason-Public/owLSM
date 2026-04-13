@@ -35,4 +35,5 @@ src/Tests/Automation/resources/related_process
 docs/GithubPages/_site/*
 
 # docs
-docs/GithubPages/vendor/bundle/
+docs/GithubPages/vendor/bundle/*
+docs/GithubPages/.bundle/*
