@@ -518,7 +518,7 @@ static __always_inline int unwrapToCommand(void **node, int *out_type,
      
      // Peel off wrapper layers (NNOT, NREDIR, NBACKGND, NSUBSHELL) in any
      // order and nesting depth, up to 8 layers, to reach the real command.
-     for (int i = 0; i < 8; i++)
+     for (int i = 0; i < 4; i++)
      {
          if (type == DASH_NNOT)
          {

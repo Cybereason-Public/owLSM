@@ -11,7 +11,7 @@ CONSTANTS_H    := $(SHARED_DIR)/constants.h
 CONSTANTS_JSON := $(SHARED_DIR)/constants.json
 
 # ---- BPF Compilation Flags (fixed, no mode variations) -------
-BPF_CPPFLAGS   := -D__TARGET_ARCH_$(shell uname -m | sed 's/x86_64/x86/') \
+BPF_CPPFLAGS   := -D__TARGET_ARCH_$(shell uname -m | sed 's/x86_64/x86/' | sed 's/aarch64/arm64/') \
                   -D__BPF_KERNEL__ \
                   -I$(CURDIR) \
                   -I$(CURDIR)/Programs/syscall_monitoring \
