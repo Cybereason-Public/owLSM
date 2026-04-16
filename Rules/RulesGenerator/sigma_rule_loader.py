@@ -23,6 +23,7 @@ from constants import (
     COMPARISON_TYPE_REGEX,
 )
 from regex_dfa import validate_regex_or_raise
+from field_mapping import apply_field_mapping_to_detection
 
 # Derive field sets from the single source of truth (constants.json)
 ALL_FIELD_TYPES: Dict[str, str] = RULE_FIELD_TYPES
@@ -706,8 +707,12 @@ def load_rule_file(file_path: str) -> Dict[str, Any]:
         raise Exception(f"Parse error in '{file_path}': IO error: {e}")
 
 
-def load_sigma_rules(directory: str, placeholders: Optional[Dict[str, List]] = None,
-                     placeholder_file: Optional[str] = None) -> List[SigmaRule]:
+def load_sigma_rules(
+    directory: str,
+    placeholders: Optional[Dict[str, List]] = None,
+    placeholder_file: Optional[str] = None,
+    field_mapping: Optional[Dict[str, str]] = None,
+) -> List[SigmaRule]:
     if not os.path.isdir(directory):
         raise Exception(f"Directory does not exist: {directory}")
     
@@ -725,6 +730,9 @@ def load_sigma_rules(directory: str, placeholders: Optional[Dict[str, List]] = N
     
     for file_path in yml_files:
         rule_data = load_rule_file(file_path)
+
+        if field_mapping and "detection" in rule_data and isinstance(rule_data["detection"], dict):
+            apply_field_mapping_to_detection(rule_data["detection"], field_mapping)
 
         if "detection" in rule_data:
             rule_data["detection"] = expand_detection_placeholders(

@@ -788,3 +788,25 @@ Some fields are available for all events, while others are specific to certain e
 
 {: .note }
 > **Other Sigma keys** — See [Other Sigma rule components](#other-sigma-rule-components).
+
+---
+
+## Field mapping {#field-mapping}
+If you want to import Sigma rules and use them in owLSM, you need to make minor adaptations to your rules.   
+The hardest part is aligning the rule field names to what owLSM expects. For example, SigmaHQ uses `ParentCommandLine` while owLSM uses `parent_process.cmd`.  
+Instead of doing it manually, you can create a YAML file (outside of your rules directory) and use it as a dictionary that maps your field names to owLSM field names.  
+The file content is very straightforward, for example `field_mapping.yml`:
+
+```yaml
+ImagePath: process.file.path
+ParentCommandLine: parent_process.cmd
+```
+
+Then pass that file to the [rules generator](https://github.com/Cybereason-Public/owLSM/blob/main/Rules/README.md):
+
+```bash
+python create_config.py -m field_mapping.yml -d /path/to/rules -c base_config.json -o full_config.json
+```
+
+This translates in memory all of the fields, including `fieldref`, `keywords`, etc'
+Mapping is **case-sensitive**.

@@ -31,6 +31,8 @@ Rules:
       hash: enums
     - title: Limitations
       hash: limitations
+    - title: Field mapping
+      hash: field-mapping
 
 Events:
   base: /events/
