@@ -130,7 +130,7 @@ def I_run_the_resource_with_arguments_async_and_save_pid(resource, arguments, sc
     if proc is None:
         assert False, f"Failed to run resource: {resource} with arguments: {arguments}"
     scenario_context[global_strings.RESOURCE_PID] = proc.pid
-    logger.log_info(f"Saved scenario_context[{global_strings.RESOURCE_PID}] is {scenario_context[global_strings.RESOURCE_PID]}")
+    logger.log_info(f"Saved scenario_context[{global_strings.RESOURCE_PID}] is: {scenario_context[global_strings.RESOURCE_PID]}")
 
 
 @given(parsers.parse('I run flatbuffer_reader async for "{stream}" stream and save pid'))
