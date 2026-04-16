@@ -76,7 +76,7 @@ docker run -it --rm -v "$PWD":/workspace -w /workspace ghcr.io/cybereason-public
 ### Running
 
 ```bash
-# Exit container first, then run on host (requires root/CAP_BPF)
+# Exit container first then run on host (requires root/CAP_BPF)
 sudo ./build/owlsm/bin/owlsm
 
 # With config file
