@@ -41,11 +41,17 @@ Examples:
         default=None,
         help='YAML file with placeholder values for the |expand modifier'
     )
-    
+
+    parser.add_argument(
+        '-m', '--mapping-file',
+        default=None,
+        help='YAML file mapping external field names to owLSM field names (passed to main.py)'
+    )
+
     return parser.parse_args()
 
 
-def generate_rules_json(rules_directory, output_path, placeholder_file=None):
+def generate_rules_json(rules_directory, output_path, placeholder_file=None, mapping_file=None):
     print(f"Generating rules from directory: {rules_directory}")
     script_dir = Path(__file__).parent
     main_py = script_dir / 'main.py'
@@ -56,6 +62,8 @@ def generate_rules_json(rules_directory, output_path, placeholder_file=None):
     cmd = [sys.executable, str(main_py), rules_directory, output_path]
     if placeholder_file:
         cmd.extend(['-p', placeholder_file])
+    if mapping_file:
+        cmd.extend(['-m', mapping_file])
 
     try:
         result = subprocess.run(
@@ -127,7 +135,12 @@ def main():
         print("=" * 70)
         
         rules_json_path = Path(args.rules_directory).parent / 'rules.json'
-        generate_rules_json(args.rules_directory, str(rules_json_path), args.placeholders)
+        generate_rules_json(
+            args.rules_directory,
+            str(rules_json_path),
+            args.placeholders,
+            args.mapping_file,
+        )
         print()
         
         print("=" * 70)

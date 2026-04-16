@@ -35,6 +35,22 @@ sudo /path/to/owlsm -c /path/to/full_config.json
 
 > **Important:** Every time you add, remove, or modify Sigma rules, you must regenerate the full config file by re-running `create_config.py`. You cannot append or edit rules directly in the generated config — it must be rebuilt from your rule files each time.
 
+#### Field mapping
+
+If your sigma rules use non-owLSM field names, pass a mapping file so the rules generator translates the your field names to owLSM field names. See **[field mapping](https://cybereason-public.github.io/owLSM/rules/#field-mapping)** in the docs.
+
+```bash
+python create_config.py -d ../RuleExamples -c base_config.json -o full_config.json -m field_mapping.yml
+```
+
+#### Placeholder expansion
+
+Rules can use the `|expand` modifier with `%placeholders%` resolved from a YAML definitions file at build time. See **[placeholder expansion](https://cybereason-public.github.io/owLSM/rules/#placeholder-modifier)** in the docs.
+
+```bash
+python create_config.py -d ../RuleExamples -c base_config.json -o full_config.json -p placeholders.yml
+```
+
 ## Rule Format
 Rules are written in YAML format based on Sigma syntax. See `RuleExamples/` for examples.
 

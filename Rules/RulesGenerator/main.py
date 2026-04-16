@@ -2,6 +2,7 @@
 import argparse
 import sys
 from sigma_rule_loader import load_sigma_rules
+from field_mapping import load_field_mapping_file
 from AST import parse_rules
 from postfix import convert_to_postfix
 from serializer import write_json_file, to_json_string
@@ -38,6 +39,12 @@ Examples:
         help='YAML file with placeholder values for the |expand modifier'
     )
 
+    parser.add_argument(
+        '-m', '--mapping-file',
+        default=None,
+        help='YAML file mapping external field names to owLSM field names (source: destination)'
+    )
+
     return parser.parse_args()
 
 
@@ -51,10 +58,19 @@ def main():
             placeholders = load_placeholders(args.placeholders)
             print(f"  Loaded {len(placeholders)} placeholder definitions", file=sys.stderr)
 
+        field_mapping = None
+        if args.mapping_file:
+            print(f"Loading field mapping from: {args.mapping_file}", file=sys.stderr)
+            field_mapping = load_field_mapping_file(args.mapping_file)
+            print(f"  Loaded {len(field_mapping)} field alias(es)", file=sys.stderr)
+
         print("Step 1-2: Loading and validating rules...", file=sys.stderr)
-        rules = load_sigma_rules(args.rules_directory,
-                                 placeholders=placeholders,
-                                 placeholder_file=args.placeholders)
+        rules = load_sigma_rules(
+            args.rules_directory,
+            placeholders=placeholders,
+            placeholder_file=args.placeholders,
+            field_mapping=field_mapping,
+        )
         print(f"  Loaded {len(rules)} rules", file=sys.stderr)
 
         print("Step 3: Parsing detection sections (AST)...", file=sys.stderr)
