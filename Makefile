@@ -101,3 +101,5 @@ help:
 	@echo "  make tarball VERSION=2.0.0    # Release tarball"
 	@echo "  make test -j\$$(nproc)         # Build + package unit tests"
 	@echo "  make automation -j\$$(nproc)   # Build + setup automation"
+
+# Test commit
