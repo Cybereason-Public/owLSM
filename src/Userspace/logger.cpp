@@ -184,10 +184,10 @@ void Logger::shutdown()
     if (instance.m_logger) 
     {
         instance.m_logger->flush();
+        ::spdlog::drop("owlsm_logger");
         instance.m_logger.reset();
     }
-    
-    ::spdlog::shutdown();
+    instance.m_initialized = false;
 }
 
 Logger::~Logger() 
@@ -197,6 +197,7 @@ Logger::~Logger()
         m_logger->flush();
         m_logger.reset();
     }
+    ::spdlog::shutdown();
 }
 
 }
