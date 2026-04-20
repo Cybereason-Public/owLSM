@@ -99,6 +99,7 @@ namespace owlsm::config {
         get_if_present(j, "set_limits", o.set_limits);
         if (auto it = j.find("output_type"); it != j.end()) {o.output_type = get_enum<OutputType>(*it);}
         if (auto it = j.find("log_level"); it != j.end()) {o.log_level = get_enum<log_level>(*it);}
+        get_if_present(j, "log_location", o.log_location);
     }
 
     void ConfigParser::fromJson(const nlohmann::json& j, KernelConfig& o)

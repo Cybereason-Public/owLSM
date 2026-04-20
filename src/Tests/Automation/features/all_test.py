@@ -190,6 +190,10 @@ def test_read_event_disabled_in_config():
 def test_owLSM_log_contains_starting_message():
     pass
 
+@scenario('logger_test.feature', 'owLSM_log_location_config')
+def test_owLSM_log_location_config():
+    pass
+
 @scenario('keywords_rules.feature', 'keyword_with_all_modifier')
 def test_keyword_with_all_modifier():
     pass
