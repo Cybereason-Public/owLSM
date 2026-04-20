@@ -38,7 +38,7 @@ private:
     ~Logger();
     static ::spdlog::level::level_enum toSpdlogLevel(enum log_level level);
     static bool pathsReferToSameLogFile(const std::filesystem::path& a, const std::filesystem::path& b);
-    static void maybeInitAsyncThreadPool();
+    void maybeInitAsyncThreadPool();
     void openLogger(const std::string& log_path, ::spdlog::level::level_enum level, bool async);
 
     std::shared_ptr<::spdlog::logger> m_logger;
