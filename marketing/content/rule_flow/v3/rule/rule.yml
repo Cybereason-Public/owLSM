@@ -1,0 +1,21 @@
+id: 42
+description: "Block unauthorized /etc/passwd modifications"
+action: "BLOCK_EVENT"
+events:
+    - WRITE
+detection:
+    
+    selection_passwd:
+        target.file.path|contains: "/etc/passwd"
+    selection_suspicious_uid:
+        process.euid|gt: 0
+    selection_suspicious_binaries:
+        process.file.path|endswith:
+            - "ash"
+            - "echo"
+    filter_whitelisted_binaries:
+        process.file.path|startswith:
+            - "/usr/bin/apt"
+            - "/usr/bin/yum"
+            - "/usr/sbin/useradd"
+    condition: selection_passwd and (selection_suspicious_binaries or (selection_suspicious_uid and not filter_whitelisted_binaries))

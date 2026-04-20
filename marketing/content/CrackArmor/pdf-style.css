@@ -1,0 +1,159 @@
+/* Wide margins - minimize whitespace */
+body {
+    max-width: 100%;
+    margin: 0;
+    padding: 10px 20px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 11pt;
+    line-height: 1.4;
+}
+
+/* Code blocks with visible boxes */
+pre {
+    background-color: #f4f4f4;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px;
+    overflow-x: hidden;
+    font-family: "Consolas", "Monaco", "Courier New", monospace;
+    font-size: 9pt;
+    line-height: 1.3;
+    text-align: left;
+    margin-left: 0;
+    margin-right: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+code {
+    background-color: #f4f4f4;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    padding: 0px 0px 0px 0px;
+    font-family: "Consolas", "Monaco", "Courier New", monospace;
+    font-size: 9pt;
+    text-align: left;
+}
+
+/* Inline code inside pre shouldn't have extra styling */
+pre code {
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+/* ======================================================
+   CRITICAL: Override Pandoc's sourceCode styling
+   Pandoc adds padding-left: 5em and text-indent: -5em 
+   to spans for line number support - we must override!
+   ====================================================== */
+div.sourceCode {
+    margin: 1em 0 !important;
+}
+
+pre.sourceCode {
+    padding: 8px !important;
+}
+
+pre > code.sourceCode {
+    padding: 0 !important;
+    margin: 0 !important;
+    white-space: pre-wrap !important;
+    word-wrap: break-word !important;
+    position: static !important;
+}
+
+pre > code.sourceCode > span {
+    padding-left: 0 !important;
+    text-indent: 0 !important;
+    margin-left: 0 !important;
+    display: inline !important;
+    line-height: 1.3 !important;
+}
+
+/* Hide the anchor links pandoc adds to each line */
+pre > code.sourceCode > span > a:first-child {
+    display: none !important;
+}
+
+/* Override print media styles too */
+@media print {
+    pre > code.sourceCode > span {
+        padding-left: 0 !important;
+        text-indent: 0 !important;
+    }
+}
+
+/* Tables */
+table {
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-size: 10pt;
+}
+
+th, td {
+    border: 1px solid #ccc;
+    padding: 6px 10px;
+    text-align: left;
+}
+
+th {
+    background-color: #f0f0f0;
+    font-weight: bold;
+}
+
+/* Flex container for side-by-side tables */
+div[style*="display: flex"] {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 15px !important;
+}
+
+/* Headers */
+h1 {
+    font-size: 18pt;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+h2 {
+    font-size: 14pt;
+    margin-top: 18px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 4px;
+}
+
+h3 {
+    font-size: 12pt;
+    margin-top: 14px;
+    margin-bottom: 6px;
+}
+
+/* Images - respect dimensions */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Paragraphs */
+p {
+    margin: 8px 0;
+}
+
+/* Lists */
+ul, ol {
+    margin: 8px 0;
+    padding-left: 25px;
+}
+
+li {
+    margin: 4px 0;
+}
+
+/* Horizontal rules */
+hr {
+    border: none;
+    border-top: 1px solid #ccc;
+    margin: 15px 0;
+}

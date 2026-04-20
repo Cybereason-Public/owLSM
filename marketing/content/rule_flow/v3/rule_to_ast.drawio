@@ -1,0 +1,173 @@
+<mxfile host="app.diagrams.net" modified="2026-03-16" agent="owLSM" version="24.0" type="device">
+  <diagram id="rule-to-ast" name="Rule to AST">
+    <mxGraphModel dx="1800" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1920" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- Title -->
+        <mxCell id="title" value="&lt;b&gt;Diagram 1: Sigma Rule → AST&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=22;fontColor=#1a1a2e;" vertex="1" parent="1">
+          <mxGeometry x="700" y="20" width="400" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- Left side: Sigma Rule -->
+        <mxCell id="rule_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666;arcSize=5;" vertex="1" parent="1">
+          <mxGeometry x="40" y="100" width="420" height="480" as="geometry"/>
+        </mxCell>
+        <mxCell id="rule_title" value="&lt;b&gt;Sigma Rule (condition)&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=14;fontColor=#333;" vertex="1" parent="1">
+          <mxGeometry x="140" y="110" width="220" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="rule_code" value="&lt;font face=&quot;monospace&quot; style=&quot;font-size:11px&quot;&gt;condition:&lt;br&gt;  selection_passwd and (&lt;br&gt;    selection_suspicious_binaries or (&lt;br&gt;      selection_suspicious_uid and&lt;br&gt;      not filter_whitelisted_binaries&lt;br&gt;    )&lt;br&gt;  )&lt;br&gt;&lt;br&gt;where:&lt;br&gt;&lt;br&gt;selection_passwd:&lt;br&gt;  target.file.path|contains: &quot;/etc/passwd&quot;&lt;br&gt;&lt;br&gt;selection_suspicious_binaries:&lt;br&gt;  process.file.path|endswith:&lt;br&gt;    - &quot;ash&quot;&lt;br&gt;    - &quot;echo&quot;&lt;br&gt;&lt;br&gt;selection_suspicious_uid:&lt;br&gt;  process.euid|above: 0&lt;br&gt;&lt;br&gt;filter_whitelisted_binaries:&lt;br&gt;  process.file.path|startswith:&lt;br&gt;    - &quot;/usr/bin/apt&quot;&lt;br&gt;    - &quot;/usr/bin/yum&quot;&lt;br&gt;    - &quot;/usr/sbin/useradd&quot;&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;fontSize=11;fontColor=#333;" vertex="1" parent="1">
+          <mxGeometry x="55" y="150" width="390" height="410" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrow -->
+        <mxCell id="arrow1" value="" style="shape=flexArrow;endArrow=classic;html=1;strokeWidth=2;fillColor=#666;strokeColor=#666;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="480" y="340" as="sourcePoint"/>
+            <mxPoint x="560" y="340" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arrow_label" value="&lt;b&gt;pySigma&lt;br&gt;Backend&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontColor=#666;" vertex="1" parent="1">
+          <mxGeometry x="475" y="285" width="70" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- Right side: AST -->
+        <mxCell id="ast_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#4caf50;arcSize=5;" vertex="1" parent="1">
+          <mxGeometry x="580" y="100" width="900" height="580" as="geometry"/>
+        </mxCell>
+        <mxCell id="ast_title" value="&lt;b&gt;Abstract Syntax Tree (AST)&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=14;fontColor=#333;" vertex="1" parent="1">
+          <mxGeometry x="930" y="110" width="200" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- Root AND node -->
+        <mxCell id="root_and" value="&lt;b&gt;AND&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#2196f3;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="980" y="160" width="60" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- P0 node (selection_passwd) - left child of root AND -->
+        <mxCell id="p0" value="&lt;b&gt;P0&lt;/b&gt;&lt;hr&gt;&lt;font style=&quot;font-size:9px&quot;&gt;target.file.path&lt;br&gt;CONTAINS&lt;br&gt;&quot;/etc/passwd&quot;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#388e3c;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="700" y="250" width="100" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_root_p0" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#666;" edge="1" source="root_and" target="p0" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Main OR node - right child of root AND -->
+        <mxCell id="main_or" value="&lt;b&gt;OR&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#ff9800;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1150" y="250" width="60" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_root_or" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#666;" edge="1" source="root_and" target="main_or" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Left OR (selection_suspicious_binaries) -->
+        <mxCell id="binaries_or" value="&lt;b&gt;OR&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#ff9800;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="350" width="50" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_mainor_binor" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#666;" edge="1" source="main_or" target="binaries_or" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Right AND (selection_suspicious_uid AND NOT filter) -->
+        <mxCell id="right_and" value="&lt;b&gt;AND&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#2196f3;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1280" y="350" width="50" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_mainor_rightand" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#666;" edge="1" source="main_or" target="right_and" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- P1 and P2 under binaries OR -->
+        <mxCell id="p1" value="&lt;b&gt;P1&lt;/b&gt;&lt;hr&gt;&lt;font style=&quot;font-size:9px&quot;&gt;process.file.path&lt;br&gt;ENDS_WITH&lt;br&gt;&quot;ash&quot;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#388e3c;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="900" y="430" width="100" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="p2" value="&lt;b&gt;P2&lt;/b&gt;&lt;hr&gt;&lt;font style=&quot;font-size:9px&quot;&gt;process.file.path&lt;br&gt;ENDS_WITH&lt;br&gt;&quot;echo&quot;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#388e3c;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="430" width="100" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_binor_p1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#666;" edge="1" source="binaries_or" target="p1" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_binor_p2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#666;" edge="1" source="binaries_or" target="p2" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- P3 node (selection_suspicious_uid) -->
+        <mxCell id="p3" value="&lt;b&gt;P3&lt;/b&gt;&lt;hr&gt;&lt;font style=&quot;font-size:9px&quot;&gt;process.euid&lt;br&gt;ABOVE&lt;br&gt;0&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#388e3c;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="430" width="100" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rightand_p3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#666;" edge="1" source="right_and" target="p3" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- NOT node -->
+        <mxCell id="not_node" value="&lt;b&gt;NOT&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffcdd2;strokeColor=#f44336;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1350" y="430" width="50" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_rightand_not" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#666;" edge="1" source="right_and" target="not_node" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- OR node for filter -->
+        <mxCell id="filter_or" value="&lt;b&gt;OR&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#ff9800;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1350" y="510" width="50" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_not_or" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#666;" edge="1" source="not_node" target="filter_or" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- P4, P5, P6 under filter OR -->
+        <mxCell id="p4" value="&lt;b&gt;P4&lt;/b&gt;&lt;hr&gt;&lt;font style=&quot;font-size:9px&quot;&gt;process.file.path&lt;br&gt;STARTS_WITH&lt;br&gt;&quot;/usr/bin/apt&quot;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#388e3c;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="590" width="100" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="p5" value="&lt;b&gt;P5&lt;/b&gt;&lt;hr&gt;&lt;font style=&quot;font-size:9px&quot;&gt;process.file.path&lt;br&gt;STARTS_WITH&lt;br&gt;&quot;/usr/bin/yum&quot;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#388e3c;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1300" y="590" width="100" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="p6" value="&lt;b&gt;P6&lt;/b&gt;&lt;hr&gt;&lt;font style=&quot;font-size:9px&quot;&gt;process.file.path&lt;br&gt;STARTS_WITH&lt;br&gt;&quot;/usr/sbin/useradd&quot;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#388e3c;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="590" width="110" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_or_p4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#666;" edge="1" source="filter_or" target="p4" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_or_p5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#666;" edge="1" source="filter_or" target="p5" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="edge_or_p6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#666;" edge="1" source="filter_or" target="p6" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Legend -->
+        <mxCell id="legend_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fafafa;strokeColor=#999;arcSize=10;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="600" width="420" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend_title" value="&lt;b&gt;Legend&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="55" y="605" width="60" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend_pred" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#388e3c;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="55" y="630" width="20" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend_pred_text" value="Predicate (leaf)" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="80" y="630" width="80" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend_and" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#2196f3;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="170" y="630" width="20" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend_and_text" value="AND" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="195" y="630" width="40" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend_or" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#ff9800;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="245" y="630" width="20" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend_or_text" value="OR" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="270" y="630" width="30" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend_not" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffcdd2;strokeColor=#f44336;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="310" y="630" width="20" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend_not_text" value="NOT" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="335" y="630" width="40" height="20" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

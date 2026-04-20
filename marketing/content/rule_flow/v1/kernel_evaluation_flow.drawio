@@ -1,0 +1,242 @@
+<mxfile host="app.diagrams.net" modified="2026-03-16" agent="owLSM" version="24.0" type="device">
+  <diagram id="kernel-evaluation-flow" name="Kernel Evaluation Flow">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- Title -->
+        <mxCell id="title" value="&lt;b&gt;Kernel Rule Evaluation Flow&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=20;fontColor=#1a1a2e;" vertex="1" parent="1">
+          <mxGeometry x="480" y="15" width="400" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- Syscall trigger -->
+        <mxCell id="syscall" value="&lt;b&gt;Syscall Fires&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;e.g., READ(&quot;/home/user/.ssh/id_rsa&quot;)&lt;br&gt;by process &quot;curl&quot;&lt;/font&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;size=20;" vertex="1" parent="1">
+          <mxGeometry x="520" y="70" width="320" height="70" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrow -->
+        <mxCell id="a1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#666;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="syscall" target="populate" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Populate event struct -->
+        <mxCell id="populate" value="&lt;b&gt;1. Populate event_t&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;process info, target file, parent process,&lt;br&gt;event-specific data (path, mode, port...)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;arcSize=15;" vertex="1" parent="1">
+          <mxGeometry x="530" y="170" width="300" height="65" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrow -->
+        <mxCell id="a2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#666;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="populate" target="iterate" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Iterate rules -->
+        <mxCell id="iterate" value="&lt;b&gt;2. Iterate read_rules&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;bpf_for_each_map_elem(&amp;read_rules, callback, &amp;event)&lt;br&gt;Rules sorted by ID (lowest first)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;arcSize=15;" vertex="1" parent="1">
+          <mxGeometry x="530" y="265" width="300" height="65" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrow to evaluation loop -->
+        <mxCell id="a3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#666;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="iterate" target="evalbox" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Evaluation box (container) -->
+        <mxCell id="evalbox" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999;arcSize=5;dashed=1;dashPattern=5 3;" vertex="1" parent="1">
+          <mxGeometry x="310" y="365" width="740" height="310" as="geometry"/>
+        </mxCell>
+        <mxCell id="evalbox_title" value="&lt;b&gt;3. For Each Rule — Postfix Stack Evaluation&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=13;fontColor=#333;" vertex="1" parent="1">
+          <mxGeometry x="470" y="370" width="420" height="25" as="geometry"/>
+        </mxCell>
+
+        <!-- Read token -->
+        <mxCell id="readtoken" value="&lt;b&gt;Read next&lt;br&gt;token&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="330" y="410" width="100" height="55" as="geometry"/>
+        </mxCell>
+
+        <!-- Decision diamond -->
+        <mxCell id="decision" value="&lt;b&gt;Token&lt;br&gt;type?&lt;/b&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="487" y="400" width="100" height="75" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrow from readtoken to decision -->
+        <mxCell id="a_rd" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1.5;strokeColor=#666;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="readtoken" target="decision" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- PREDICATE path -->
+        <mxCell id="pred_path" value="PREDICATE" style="text;html=1;align=center;verticalAlign=middle;fontSize=9;fontColor=#666;" vertex="1" parent="1">
+          <mxGeometry x="590" y="395" width="70" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_pred" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1.5;strokeColor=#666;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="decision" target="pushpred" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="pushpred" value="&lt;b&gt;Push to&lt;br&gt;stack&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;(defer eval)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="640" y="410" width="90" height="55" as="geometry"/>
+        </mxCell>
+
+        <!-- AND/OR/NOT path -->
+        <mxCell id="op_path" value="AND / OR / NOT" style="text;html=1;align=center;verticalAlign=middle;fontSize=9;fontColor=#666;" vertex="1" parent="1">
+          <mxGeometry x="497" y="480" width="90" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_op" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1.5;strokeColor=#666;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="decision" target="popeval" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="popeval" value="&lt;b&gt;Pop operand(s)&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Evaluate with&lt;br&gt;short-circuit logic&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="487" y="505" width="110" height="55" as="geometry"/>
+        </mxCell>
+
+        <!-- Predicate evaluation detail -->
+        <mxCell id="a_eval" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1.5;strokeColor=#666;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="popeval" target="evaldetail" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="evaldetail" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#bbb;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="330" y="580" width="700" height="75" as="geometry"/>
+        </mxCell>
+        <mxCell id="eval_title" value="&lt;b&gt;Predicate Evaluation&lt;/b&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontColor=#333;" vertex="1" parent="1">
+          <mxGeometry x="340" y="582" width="140" height="20" as="geometry"/>
+        </mxCell>
+
+        <!-- Cache check -->
+        <mxCell id="cache" value="&lt;b&gt;Cache&lt;br&gt;Check&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="345" y="607" width="65" height="38" as="geometry"/>
+        </mxCell>
+
+        <!-- String compare -->
+        <mxCell id="strcmp" value="&lt;b&gt;String&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;exact / starts_with&lt;br&gt;ends_with / contains&lt;br&gt;(KMP DFA)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="430" y="603" width="110" height="45" as="geometry"/>
+        </mxCell>
+
+        <!-- Numeric compare -->
+        <mxCell id="numcmp" value="&lt;b&gt;Numeric&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;==, &gt;, &lt;, &gt;=, &lt;=&lt;br&gt;(PIDs, UIDs, ports...)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="560" y="603" width="110" height="45" as="geometry"/>
+        </mxCell>
+
+        <!-- IP compare -->
+        <mxCell id="ipcmp" value="&lt;b&gt;IP/CIDR&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:8px&quot;&gt;Bitwise AND mask&lt;br&gt;IPv4 &amp; IPv6&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="690" y="603" width="100" height="45" as="geometry"/>
+        </mxCell>
+
+        <!-- Cache store -->
+        <mxCell id="cachestore" value="&lt;b&gt;Cache&lt;br&gt;Store&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="810" y="607" width="65" height="38" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrows between eval elements -->
+        <mxCell id="ae1" style="rounded=1;strokeWidth=1;strokeColor=#999;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="cache" target="strcmp" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ae1l" value="miss" style="text;html=1;fontSize=8;fontColor=#999;" vertex="1" parent="1">
+          <mxGeometry x="413" y="612" width="25" height="12" as="geometry"/>
+        </mxCell>
+        <mxCell id="ae2" style="rounded=1;strokeWidth=1;strokeColor=#999;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="strcmp" target="numcmp" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ae3" style="rounded=1;strokeWidth=1;strokeColor=#999;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="numcmp" target="ipcmp" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="ae4" style="rounded=1;strokeWidth=1;strokeColor=#999;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="ipcmp" target="cachestore" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Push result back -->
+        <mxCell id="pushresult" value="&lt;b&gt;Push result&lt;br&gt;to stack&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="775" y="500" width="90" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_pushres" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1.5;strokeColor=#666;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="popeval" target="pushresult" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Loop back arrow -->
+        <mxCell id="a_loop1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1.5;strokeColor=#666;dashed=1;exitX=1;exitY=0.5;entryX=1;entryY=0.5;" edge="1" source="pushpred" target="readtoken" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="760" y="438"/>
+              <mxPoint x="760" y="385"/>
+              <mxPoint x="320" y="385"/>
+              <mxPoint x="320" y="438"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="looplabel" value="&lt;font style=&quot;font-size:9px&quot;&gt;more tokens&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;fontColor=#888;" vertex="1" parent="1">
+          <mxGeometry x="315" y="375" width="70" height="15" as="geometry"/>
+        </mxCell>
+
+        <!-- Arrow to final check -->
+        <mxCell id="a4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#666;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="evalbox" target="matchcheck" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Match check -->
+        <mxCell id="matchcheck" value="&lt;b&gt;4. Stack result == TRUE?&lt;/b&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="580" y="700" width="200" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- Yes path -->
+        <mxCell id="yes_label" value="&lt;b&gt;YES&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#2d6a4f;" vertex="1" parent="1">
+          <mxGeometry x="790" y="720" width="35" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#2d6a4f;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="matchcheck" target="action" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Action enforcement -->
+        <mxCell id="action" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="830" y="700" width="210" height="145" as="geometry"/>
+        </mxCell>
+        <mxCell id="action_title" value="&lt;b&gt;5. Enforce Action&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=12;fontColor=#333;" vertex="1" parent="1">
+          <mxGeometry x="870" y="705" width="130" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="act_allow" value="ALLOW_EVENT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="840" y="730" width="90" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="act_block" value="BLOCK_EVENT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="940" y="730" width="90" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="act_kill" value="BLOCK_KILL_PROCESS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="840" y="762" width="90" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="act_exclude" value="EXCLUDE_EVENT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="940" y="762" width="90" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="act_killp" value="KILL_PROCESS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="840" y="800" width="90" height="30" as="geometry"/>
+        </mxCell>
+        <mxCell id="act_killpp" value="BLOCK_KILL_PARENT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="940" y="800" width="90" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- No path -->
+        <mxCell id="no_label" value="&lt;b&gt;NO&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontColor=#c1121f;" vertex="1" parent="1">
+          <mxGeometry x="570" y="790" width="30" height="15" as="geometry"/>
+        </mxCell>
+        <mxCell id="a_no" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#c1121f;exitX=0;exitY=1;entryX=0;entryY=0.5;dashed=1;" edge="1" source="matchcheck" target="nextrule" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="580" y="810"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="nextrule" value="&lt;font style=&quot;font-size:10px&quot;&gt;Next rule&lt;br&gt;(or ALLOW if&lt;br&gt;no match)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="610" y="795" width="90" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- Side note: first match wins -->
+        <mxCell id="fmw_note" value="&lt;b&gt;First-Match-Wins:&lt;/b&gt; Evaluation stops at the first matching rule.&lt;br&gt;Lower rule ID = higher priority." style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontColor=#555;fillColor=#fff;strokeColor=#ccc;rounded=1;spacingLeft=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="720" width="250" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- Side note: per-event maps -->
+        <mxCell id="pem_note" value="&lt;b&gt;Per-Event-Type Maps:&lt;/b&gt;&lt;br&gt;READ events only check read_rules.&lt;br&gt;EXEC events only check exec_rules.&lt;br&gt;Irrelevant rules are never touched." style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontColor=#555;fillColor=#fff;strokeColor=#ccc;rounded=1;spacingLeft=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="300" width="240" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- Side note: predicate cache -->
+        <mxCell id="pc_note" value="&lt;b&gt;Predicate Cache:&lt;/b&gt;&lt;br&gt;Uses event timestamp as generation key.&lt;br&gt;Same predicate across multiple rules&lt;br&gt;is evaluated only once per event." style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontColor=#555;fillColor=#fff;strokeColor=#ccc;rounded=1;spacingLeft=6;" vertex="1" parent="1">
+          <mxGeometry x="40" y="500" width="240" height="60" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
+</mxfile>

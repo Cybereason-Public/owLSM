@@ -1,0 +1,210 @@
+<mxfile host="app.diagrams.net" modified="2026-03-16" agent="owLSM" version="24.0" type="device">
+  <diagram id="end-to-end-pipeline" name="End-to-End Rule Pipeline">
+    <mxGraphModel dx="1400" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="700" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- Title -->
+        <mxCell id="title" value="&lt;b&gt;owLSM Rule Pipeline: End-to-End Overview&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=20;fontColor=#1a1a2e;" vertex="1" parent="1">
+          <mxGeometry x="400" y="15" width="500" height="35" as="geometry"/>
+        </mxCell>
+
+        <!-- Stage 1 Container -->
+        <mxCell id="s1_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;arcSize=5;opacity=30;" vertex="1" parent="1">
+          <mxGeometry x="30" y="70" width="450" height="580" as="geometry"/>
+        </mxCell>
+        <mxCell id="s1_title" value="&lt;b&gt;Stage 1: Rules Generator (Python)&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=14;fontColor=#8a6d3b;" vertex="1" parent="1">
+          <mxGeometry x="80" y="80" width="350" height="25" as="geometry"/>
+        </mxCell>
+
+        <!-- YAML -->
+        <mxCell id="yaml" value="&lt;b&gt;YAML Rules&lt;/b&gt;&lt;br&gt;&lt;font size=&quot;1&quot;&gt;id, action, events,&lt;br&gt;detection (selections + condition)&lt;/font&gt;" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=0.15;fillColor=#fff;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="155" y="115" width="200" height="65" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="a1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#8a6d3b;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="yaml" target="s1_validate" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="s1_validate" value="&lt;b&gt;Validate Schema&lt;/b&gt;&lt;br&gt;&lt;font size=&quot;1&quot;&gt;fields, modifiers, events, types&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="175" y="200" width="160" height="45" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="a2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#8a6d3b;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="s1_validate" target="s1_ast" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="s1_ast" value="&lt;b&gt;Parse AST (pySigma)&lt;/b&gt;&lt;br&gt;&lt;font size=&quot;1&quot;&gt;Custom OwlsmBackend builds&lt;br&gt;predicates + expression tree&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="163" y="265" width="185" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- Tables -->
+        <mxCell id="a2b" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1.5;strokeColor=#8a6d3b;exitX=0;exitY=0.5;entryX=0.5;entryY=0;" edge="1" source="s1_ast" target="s1_tables" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="100" y="290"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s1_tables" value="&lt;b&gt;Lookup Tables&lt;/b&gt;&lt;br&gt;&lt;font size=&quot;1&quot;&gt;id_to_string&lt;br&gt;id_to_predicate&lt;br&gt;id_to_ip&lt;br&gt;(deduplicated)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="45" y="340" width="115" height="80" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="a3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#8a6d3b;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="s1_ast" target="s1_postfix" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="s1_postfix" value="&lt;b&gt;Convert to Postfix (RPN)&lt;/b&gt;&lt;br&gt;&lt;font size=&quot;1&quot;&gt;Recursive AST traversal →&lt;br&gt;linear token array&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="168" y="345" width="175" height="50" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="a4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#8a6d3b;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="s1_postfix" target="s1_serialize" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="s1_serialize" value="&lt;b&gt;Serialize to JSON&lt;/b&gt;&lt;br&gt;&lt;font size=&quot;1&quot;&gt;Tables + token arrays&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="190" y="420" width="130" height="40" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="s1_tables_down" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1.5;strokeColor=#8a6d3b;exitX=0.5;exitY=1;entryX=0;entryY=0.5;dashed=1;" edge="1" source="s1_tables" target="s1_serialize" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="103" y="440"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <mxCell id="json_out" value="&lt;b&gt;config.json&lt;/b&gt;" style="shape=document;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=0.15;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="195" y="490" width="120" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="a5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#8a6d3b;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="s1_serialize" target="json_out" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Stage 2 Container -->
+        <mxCell id="s2_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;arcSize=5;opacity=30;" vertex="1" parent="1">
+          <mxGeometry x="510" y="70" width="320" height="580" as="geometry"/>
+        </mxCell>
+        <mxCell id="s2_title" value="&lt;b&gt;Stage 2: Userspace (C++)&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=14;fontColor=#3b5998;" vertex="1" parent="1">
+          <mxGeometry x="560" y="80" width="220" height="25" as="geometry"/>
+        </mxCell>
+
+        <!-- Cross-stage arrow -->
+        <mxCell id="cross1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=3;strokeColor=#333;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="json_out" target="s2_deserialize" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="s2_deserialize" value="&lt;b&gt;Deserialize JSON&lt;/b&gt;&lt;br&gt;&lt;font size=&quot;1&quot;&gt;Schema validation (Valijson)&lt;br&gt;Parse to C++ structs&lt;br&gt;IP string → binary&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="545" y="210" width="190" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="a6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#3b5998;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="s2_deserialize" target="s2_dfa" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="s2_dfa" value="&lt;b&gt;Build KMP DFAs&lt;/b&gt;&lt;br&gt;&lt;font size=&quot;1&quot;&gt;For each &quot;contains&quot; string:&lt;br&gt;Failure function →&lt;br&gt;Full DFA transition table&lt;br&gt;(state × 256 entries)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="550" y="300" width="180" height="75" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="a7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#3b5998;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="s2_dfa" target="s2_maps" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="s2_maps" value="&lt;b&gt;Populate BPF Maps&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#6c8ebf;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="575" y="405" width="130" height="35" as="geometry"/>
+        </mxCell>
+
+        <!-- BPF map list -->
+        <mxCell id="map1" value="predicates_map" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="525" y="455" width="105" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="map2" value="rules_strings_map" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="640" y="455" width="115" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="map3" value="idx_to_DFA_map" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="525" y="490" width="105" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="map4" value="rules_ips_map" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="640" y="490" width="115" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="map5" value="{event}_rules" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="560" y="525" width="160" height="25" as="geometry"/>
+        </mxCell>
+        <mxCell id="map5_desc" value="&lt;font size=&quot;1&quot;&gt;read_rules, exec_rules, write_rules ...&lt;br&gt;(per-event-type, sorted by rule ID)&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=top;fontColor=#888;" vertex="1" parent="1">
+          <mxGeometry x="545" y="553" width="190" height="25" as="geometry"/>
+        </mxCell>
+
+        <!-- Stage 3 Container -->
+        <mxCell id="s3_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;arcSize=5;opacity=20;" vertex="1" parent="1">
+          <mxGeometry x="860" y="70" width="320" height="580" as="geometry"/>
+        </mxCell>
+        <mxCell id="s3_title" value="&lt;b&gt;Stage 3: Kernel (eBPF)&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=14;fontColor=#c1121f;" vertex="1" parent="1">
+          <mxGeometry x="910" y="80" width="220" height="25" as="geometry"/>
+        </mxCell>
+
+        <!-- Cross-stage arrow -->
+        <mxCell id="cross2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=3;strokeColor=#333;exitX=1;exitY=0.5;entryX=0;entryY=0.5;" edge="1" source="s2_maps" target="s3_event" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="s3_syscall" value="&lt;b&gt;Syscall Hook&lt;/b&gt;&lt;br&gt;&lt;font size=&quot;1&quot;&gt;LSM / fentry&lt;/font&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#fff;strokeColor=#b85450;fontSize=10;size=15;" vertex="1" parent="1">
+          <mxGeometry x="930" y="115" width="160" height="45" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="a8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#c1121f;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="s3_syscall" target="s3_event" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="s3_event" value="&lt;b&gt;Populate event_t&lt;/b&gt;&lt;br&gt;&lt;font size=&quot;1&quot;&gt;process, target, parent&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="945" y="185" width="130" height="40" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="a9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#c1121f;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="s3_event" target="s3_iterate" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="s3_iterate" value="&lt;b&gt;Iterate event rules&lt;/b&gt;&lt;br&gt;&lt;font size=&quot;1&quot;&gt;bpf_for_each_map_elem&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="940" y="250" width="140" height="40" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="a10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#c1121f;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="s3_iterate" target="s3_stack" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="s3_stack" value="&lt;b&gt;Stack-Based Postfix&lt;br&gt;Evaluation&lt;/b&gt;&lt;br&gt;&lt;font size=&quot;1&quot;&gt;Push predicates, pop for&lt;br&gt;AND/OR/NOT operators&lt;br&gt;Short-circuit logic&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="920" y="315" width="180" height="75" as="geometry"/>
+        </mxCell>
+
+        <!-- Predicate eval sub-items -->
+        <mxCell id="a11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#c1121f;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="s3_stack" target="s3_predeval" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="s3_predeval" value="&lt;b&gt;Predicate Evaluation&lt;/b&gt;&lt;br&gt;&lt;font size=&quot;1&quot;&gt;Cache → String (KMP DFA) /&lt;br&gt;Numeric / IP CIDR → Cache&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff;strokeColor=#b85450;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="925" y="415" width="170" height="55" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="a12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#c1121f;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="s3_predeval" target="s3_match" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="s3_match" value="&lt;b&gt;Match?&lt;/b&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="970" y="495" width="80" height="55" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="a13" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#2d6a4f;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" source="s3_match" target="s3_action" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="yes" value="&lt;b&gt;YES&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;fontSize=9;fontColor=#2d6a4f;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="540" width="30" height="15" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="s3_action" value="&lt;b&gt;Enforce Action&lt;/b&gt;&lt;br&gt;&lt;font size=&quot;1&quot;&gt;ALLOW / BLOCK / KILL&lt;br&gt;First-match-wins&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="935" y="575" width="150" height="50" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -22,6 +22,12 @@
       "python-lsp": {
         "command": "/root/go/bin/mcp-language-server",
         "args": ["--workspace", "/home/ariels/owLSM/Rules/RulesGenerator", "--lsp", "pyright-langserver", "--", "--stdio"]
-      }
+      },
+      "owLSM Docs": {
+      "url": "https://gitmcp.io/Cybereason-Public/owLSM"
+    },
+    "tetragon Docs": {
+      "url": "https://gitmcp.io/cilium/tetragon"
+    }
     }
   }

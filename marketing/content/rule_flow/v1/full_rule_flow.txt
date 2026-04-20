@@ -1,0 +1,166 @@
+I want you to create a technical blog on the full flow of sigma rules (yaml) conversion into json and eventually being evaluated in the kernel.
+The technical blog can't be more then 450 lines (if shorter better)
+It should explain the full flow. Things we are going to skip in the flow are: new, x of, keyword, fieldref.
+
+It should have a drawio graph picture, explaining the RuleGenerator part, and another one explaining the kernel part.
+The flow below is very detailed and long. In the blog take only the most intresting and important things for the blog, but make sure the blog still makes sense. 
+The flow below may not be completey correct. use docs/GithubPages/architecture/rule-evaluation.md and read the relevant code, in order to check the details and the real flow. 
+Write the blog in a new file as markdown.
+If you think more graphs and pictures are needed in order to better visualize and explain the flow, go ahead and create them.
+I want the blog how impressive the work we did is. Use official algorithm and mechanism names. Make it technical and intresting. 
+
+
+# If I remember correctly the full flow is:
+## RuleGenerator:
+1. take rule condition
+2. expand parenthesis and words like "and", "or", "not"
+3. convert to AST 
+4. walk AST and create the id_to_string, id_to_ip and id_to_predicate tables. 
+5. convert to postfix
+6. convert to tokens
+7. sirealize as json
+
+## Userspace (C++ code)
+8. Deserialze the json into structs.
+    + for ip's we had to convert it to numeric representation
+    + for strings we needed to do: length, is contains and if yes create DFA
+
+9. Populate the bpf maps.
+    + rule maps: so each event type will only be checked by its relevant rules. 
+    + string map, dfa map, ip map, etc'
+
+## In kernel: After populating event struct
+10. iterate over the rules of the event type. using bpf_for_each_map_elem
+11. push rule tokens into self implemented stack
+12. Start a two stack evaluation of the tokens (representing the postfix rule). 
+    - For each token in the rule, check if its a predicate and it yes:
+        + Check if we already proccessed it against the current event, using the predicate cache
+        + Do the comparison operation (string compare, ip compare or numeric)
+        + save the result in the cache
+13. Based on the two stack evaluation, determine if the event matches the rule. If yes, return the rule id and its action.
+
+
+
+==================================================================================================================================
+Here are points I have about what you wrote.
+Create a new version in marketing/content/rule_flow/v2
+
+1) This needs to not speak about owLSM itself. Just about what we did. 
+Its something that im going to post about in Reddit, so I can't advertise the owLSM project. 
+
+2) The introduction should be shorter.
+talk about the issue of converting complex sigma rules written in YAML into something that eBPF LSM can use in order to decide to enforce an event. 
+Exaplin very shortly how complex sigma rules be.
+- I like how you talked about the verifier.
+
+3) I don't like the The Three-Stage Pipeline section. It makes it look more simple then it is. I want people to immediately understand that this is a complex task. 
+
+4) The example you gave makes no sense. use an example that makes sense and that the reader can understand its value.
+In the example use string values, numbers values and parenthesis and words like "and", "or", "not".
+- maybe speak about write attempts to /etc/passwd.
+
+5) Don't speak about things like Schema Validation.
+I want to focus on the algorithm chain mainly. Make the story serrounding the algorithm chain. 
+
+6) AST Construction via pySigma
+Add a picture showing the rule, an arrow and the AST (with the correct nodes)
+
+
+7) Rewirte the rest of the blog, based on the above comments. 
+
+
+=====================================================================================================================
+Much better. Few more points.
+Create a new md file in marketing/content/rule_flow/v3
+When I say pictures, I mean drawio files. I will later convert them into png files. So create the drawio file, and link it in the md file. I will replace this later. 
+
+1) The "description: "Block unauthorized /etc/passwd modifications"" still doesnt make complete sense.
+Maybe more something like this:
+```yaml
+# More sigma metadata ...
+
+description: "Block unauthorized /etc/passwd modifications"
+action: "BLOCK_EVENT"
+events:
+    - WRITE
+detection:
+    
+    selection_passwd:
+        target.file.path|contains: "/etc/passwd"
+    selection_suspicious_uid:
+        process.euid|above: 0
+    selection_suspicious_binaries:
+        process.file.path|endswith:
+            - "ash"
+            - "echo"
+    filter_whitelisted_binaries:
+        process.file.path|startswith:
+            - "/usr/bin/apt"
+            - "/usr/bin/yum"
+            - "/usr/sbin/useradd"
+    condition: selection_passwd and selection_suspicious_binaries or (selection_suspicious_uid and not filter_whitelisted_binaries)
+```
+
+
+Does this rule makes sense?
+Im trying to say that 
+if target_file.contains("/etc/passwd")
+{
+    if process_file_path.endswith(selection_suspicious_binaries)
+    {
+        return true
+    }
+    else if selection_suspicious_uid and not filter_whitelisted_binaries
+    {
+        return true
+    }
+}
+return false
+
+
+2) align "(selection_passwd_write and not filter_root) or (selection_shadow_access and selection_non_root)" with the condition in the rule below.
+
+3) Instead of creating "ASCII tree graph" just create a picture.
+- The picture should be 
+Rule --> tree
+- The tree nodes need to contain:
+    + P0, P1, P2... as headers.
+    + The actual predicate values. under the headers.
+
+4) Stop using the phrase "Sigma YAML". Use "Sigma Rules"
+
+5) "The Conversion Algorithm" - No need to explain how the algorithm works. 
+Its good enough to say what algorithm we used and why.
+Then add a picture: from the AST --> postfix
+
+6) talk about the 
+- id_to_string, id_to_ip and id_to_predicate tables. 
+- tokenazation 
+- serailization (json). Show the output json from the rule. 
+
+7) "The trade-off is memory: `(pattern_length + 1) × 256` bytes per pattern. For "passwd" (6 chars), that's 1,792 bytes."
+I think this is incorrect. because its C-style arrays, its always 256*256
+
+8) Talk about dedicated rule type maps. So write event won't need to evaluate chmod rules. 
+Say that you can specify multiple event types in an a rule, but we aren't going to expand on this for now. 
+
+9) "## Stage 3: Pre-computation — String Matching Preparation" don't talk here about the kernel code.
+But talking about the tradeof is good. 
+
+11) "### Postfix Evaluation with Short-Circuiting"
+- give the name of the algorithm we use. 
+talk about it a bit (how efficient and why we chose it).
+Instead of doing a walkthrough of how evaluate it (the step by step you did). Do a picture, showing the stack with all the tokens, and the helper stack (empty). in the picture, above the two stack have the algorithm name.
+
+12) How we bring the correct predicate from the token we have. 
+
+13) In the predicate_cahce explain why and how we use the timestamp.
+- cleaning the cache after every event is more expensive.
+- event time can be used vs previous event time, as the cache is a per cpu map. and event time is provided in the event population phase. and becase eBPF programs aren't preemptable (I think that is how its called) we are guranteed that this event will have a higher time then the previous. 
+
+14) "This differs from SIEM systems that evaluate all rules" differes from most Sigma Rules Engines that always evaluate all the rules. 
+
+15) Move the string constains kernel code to the kerenl stage.
+
+16) At the end say that we explicitly left out talking abiut how we support: fieldref, keywords, ip's (Ipv4 and IPv6), and many more concepts.
+Let us know if you would want to hear about how we solved these issues.
