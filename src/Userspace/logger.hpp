@@ -44,6 +44,7 @@ private:
     std::shared_ptr<::spdlog::logger> m_logger;
     bool m_initialized = false;
     bool m_async = true;
+    bool m_async_pool_started;
 };
 
 class LogStream

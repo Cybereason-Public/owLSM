@@ -45,11 +45,10 @@ bool Logger::pathsReferToSameLogFile(const std::filesystem::path& a, const std::
 
 void Logger::maybeInitAsyncThreadPool()
 {
-    static bool pool_started = false;
-    if (!pool_started)
+    if (!m_async_pool_started)
     {
         ::spdlog::init_thread_pool(8192, 1);
-        pool_started = true;
+        m_async_pool_started = true;
     }
 }
 
@@ -188,6 +187,8 @@ void Logger::shutdown()
         instance.m_logger.reset();
     }
     instance.m_initialized = false;
+    ::spdlog::shutdown();
+    m_async_pool_started = false;
 }
 
 Logger::~Logger() 
@@ -197,7 +198,6 @@ Logger::~Logger()
         m_logger->flush();
         m_logger.reset();
     }
-    ::spdlog::shutdown();
 }
 
 }
