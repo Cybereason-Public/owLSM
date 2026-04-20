@@ -3,6 +3,7 @@
 #include <string>
 #include <memory>
 #include <sstream>
+#include <filesystem>
 
 #include "log_levels_enum.h"
 
@@ -21,6 +22,7 @@ class Logger {
 public:
     static Logger& getInstance();
     static void initialize(const std::string& log_path, enum log_level level, bool async = true);
+    static void applyConfiguredLogLocation(const std::string& log_location);
     static void shutdown();
     void log(enum log_level level, const char* file, int line, const char* function, const std::string& message);
     void setLogLevel(enum log_level level);
@@ -35,9 +37,13 @@ private:
     Logger() = default;
     ~Logger();
     static ::spdlog::level::level_enum toSpdlogLevel(enum log_level level);
+    static bool pathsReferToSameLogFile(const std::filesystem::path& a, const std::filesystem::path& b);
+    static void maybeInitAsyncThreadPool();
+    void openLogger(const std::string& log_path, ::spdlog::level::level_enum level, bool async);
 
     std::shared_ptr<::spdlog::logger> m_logger;
     bool m_initialized = false;
+    bool m_async = true;
 };
 
 class LogStream

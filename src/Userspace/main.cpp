@@ -79,6 +79,7 @@ void setup(int argc, char *argv[])
         explicit_bzero(config_str.data(), config_str.size());
         config_str.clear();
     }
+    owlsm::Logger::applyConfiguredLogLocation(owlsm::globals::g_config.userspace.log_location);
     owlsm::Logger::getInstance().setLogLevel(owlsm::globals::g_config.userspace.log_level);
 
     owlsm::RulesOrganizer::add_end_rules(owlsm::globals::g_config.rules_config.rules);

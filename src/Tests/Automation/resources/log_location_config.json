@@ -1,0 +1,34 @@
+{
+  "features": {
+    "file_monitoring": {
+      "enabled": true,
+      "events": {
+        "chmod": true,
+        "chown": true,
+        "file_create": true,
+        "unlink": true,
+        "rename": true,
+        "write": true,
+        "read": false,
+        "mkdir": true,
+        "rmdir": true
+      }
+    },
+    "network_monitoring": {
+      "enabled": true
+    },
+    "shell_commands_monitoring": {
+      "enabled": true
+    }
+  },
+  "userspace": {
+    "max_events_queue_size": 10000,
+    "output_type": "JSON",
+    "log_level": "LOG_LEVEL_INFO",
+    "set_limits": true,
+    "log_location": "/tmp/owlsm_custom_location.log"
+  },
+  "kernel": {
+    "log_level": "LOG_LEVEL_WARNING"
+  }
+}

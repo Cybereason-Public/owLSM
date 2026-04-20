@@ -40,7 +40,8 @@ See [How to generate a config](https://github.com/cybereason-labs/owLSM/blob/mai
         "<a href="#userspace-max_events_queue_size" class="code-link">max_events_queue_size</a>": 10000,
         "<a href="#userspace-output_type" class="code-link">output_type</a>": "JSON",
         "<a href="#userspace-log_level" class="code-link">log_level</a>": "LOG_LEVEL_INFO",
-        "<a href="#userspace-set_limits" class="code-link">set_limits</a>": true
+        "<a href="#userspace-set_limits" class="code-link">set_limits</a>": true,
+        "<a href="#userspace-log_location" class="code-link">log_location</a>": "/var/log/owlsm/owlsm.log"  # optional
     },
     "<a href="#kernel" class="code-link">kernel</a>": {
         "<a href="#kernel-log_level" class="code-link">log_level</a>": "LOG_LEVEL_WARNING"
@@ -348,6 +349,20 @@ Logging verbosity for userspace.
 </div>
 
 Set climits. Should be enabled.
+</div>
+
+<h3 id="userspace-log_location" class="section-anchor">
+  <span class="section-path">userspace<span class="dot">.</span>log_location</span>
+</h3>
+
+<div class="config-section">
+<div class="field-meta">
+<p><strong>Required:</strong> false</p>
+<p><strong>Default value:</strong> Same directory as the owlsm binary (<code>filename: owlsm.log</code>)</p>
+<p><strong>Options:</strong> Any writable absolute file path</p>
+</div>
+
+owLSM log file absolute path.
 </div>
 
 ---

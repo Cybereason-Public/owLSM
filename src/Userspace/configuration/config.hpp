@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vector>
-
 #include "log_levels_enum.h"
 #include "rule.hpp"
 
@@ -56,6 +54,7 @@ struct UserspaceConfig
     OutputType output_type = OutputType::JSON;
     log_level log_level = LOG_LEVEL_INFO;
     bool set_limits = true;
+    std::string log_location;
 };
 
 struct KernelConfig 
