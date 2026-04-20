@@ -107,7 +107,7 @@ def main() -> None:
         args = parser.parse_args()
 
         input_dir = args.input_directory.resolve()
-        output_dir = args.output_directory.resolve()
+        output_dir = args.o.resolve()
 
         if not input_dir.is_dir():
             raise Exception(f"Input directory does not exist or is not a directory: {input_dir}")
