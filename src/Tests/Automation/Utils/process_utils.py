@@ -211,8 +211,11 @@ def stop_owlsm_process():
             
     system_globals.OWLSM_PROCESS_OBJECT = None
 
-def wait_for_owlsm_initialization(proc):
-    log_path = system_globals.OWLSM_LOGGER_LOG
+def wait_for_owlsm_initialization(proc, custom_log_path=None):
+    from pathlib import Path
+    log_paths = [system_globals.OWLSM_LOGGER_LOG]
+    if custom_log_path:
+        log_paths.append(Path(custom_log_path))
     timeout = system_globals.OWLSM_SETUP_TIME_IN_SECONDS
     start_time = time.time()
 
@@ -221,15 +224,16 @@ def wait_for_owlsm_initialization(proc):
             logger.log_error(f"owLSM process exited prematurely with code {proc.returncode}")
             assert False, f"owLSM process exited prematurely with code {proc.returncode}"
 
-        try:
-            if log_path.exists():
-                with open(log_path, 'r') as f:
-                    if global_strings.OWLSM_INIT_COMPLETE_MESSAGE in f.read():
-                        elapsed = time.time() - start_time
-                        logger.log_info(f"owLSM initialization confirmed after {elapsed:.1f}s")
-                        return
-        except Exception as e:
-            logger.log_error(f"Failed to read owLSM log at {log_path}: {e}")
+        for log_path in log_paths:
+            try:
+                if log_path.exists():
+                    with open(log_path, 'r') as f:
+                        if global_strings.OWLSM_INIT_COMPLETE_MESSAGE in f.read():
+                            elapsed = time.time() - start_time
+                            logger.log_info(f"owLSM initialization confirmed after {elapsed:.1f}s")
+                            return
+            except Exception as e:
+                logger.log_error(f"Failed to read owLSM log at {log_path}: {e}")
 
         time.sleep(1)
 
@@ -237,7 +241,7 @@ def wait_for_owlsm_initialization(proc):
     proc.kill()
     assert False, f"owLSM failed to initialize within {timeout}s"
 
-def start_owlsm_process(command: str, stdin_data: str = None, stdout_fd=None, stderr_fd=None):
+def start_owlsm_process(command: str, stdin_data: str = None, stdout_fd=None, stderr_fd=None, custom_log_path=None):
     if system_globals.OWLSM_LOGGER_LOG.exists():
         open(system_globals.OWLSM_LOGGER_LOG, 'w').close()
 
@@ -253,7 +257,7 @@ def start_owlsm_process(command: str, stdin_data: str = None, stdout_fd=None, st
         proc.stdin.write(stdin_data)
         proc.stdin.close()
 
-    wait_for_owlsm_initialization(proc)
+    wait_for_owlsm_initialization(proc, custom_log_path=custom_log_path)
 
     system_globals.OWLSM_PROCESS_OBJECT = proc
     process_db.remove(proc.pid)

@@ -41,7 +41,7 @@ See [How to generate a config](https://github.com/cybereason-labs/owLSM/blob/mai
         "<a href="#userspace-output_type" class="code-link">output_type</a>": "JSON",
         "<a href="#userspace-log_level" class="code-link">log_level</a>": "LOG_LEVEL_INFO",
         "<a href="#userspace-set_limits" class="code-link">set_limits</a>": true,
-        "<a href="#userspace-log_location" class="code-link">log_location</a>": "/var/log/owlsm/owlsm.log"  # optional
+        "<a href="#userspace-log_location" class="code-link">log_location</a>": "/path/to/file.log" 
     },
     "<a href="#kernel" class="code-link">kernel</a>": {
         "<a href="#kernel-log_level" class="code-link">log_level</a>": "LOG_LEVEL_WARNING"
