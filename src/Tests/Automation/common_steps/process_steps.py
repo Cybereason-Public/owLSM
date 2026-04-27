@@ -5,6 +5,7 @@ from Utils.logger_utils import logger
 import psutil
 import os
 import pwd
+import json
 from globals.global_strings import global_strings
 from state_db.file_db import file_db
 
@@ -215,7 +216,14 @@ def I_start_the_owlsm_process_with_config_via_stdin():
 @when(parsers.parse('I start the owLSM process with config file "{config_file}"'))
 @then(parsers.parse('I start the owLSM process with config file "{config_file}"'))
 def I_start_the_owlsm_process_with_config_file(config_file):
-    start_owlsm_process(f"{system_globals.OWLSM_PATH} -c {system_globals.RESOURCES_PATH / config_file}")
+    config_path = system_globals.RESOURCES_PATH / config_file
+    custom_log_path = None
+    try:
+        with open(config_path) as f:
+            custom_log_path = json.load(f).get("userspace", {}).get("log_location")
+    except Exception:
+        pass
+    start_owlsm_process(f"{system_globals.OWLSM_PATH} -c {config_path}", custom_log_path=custom_log_path)
 
 
 @given(parsers.parse('I start owLSM and ignore the resource pid'))

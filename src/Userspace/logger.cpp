@@ -4,7 +4,7 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/rotating_file_sink.h>
 #include <spdlog/async.h>
-#include <spdlog/fmt/fmt.h> 
+#include <spdlog/fmt/fmt.h>
 #include <fstream>
 #include <chrono>
 
@@ -28,41 +28,19 @@ Logger& Logger::getInstance()
     }
 }
 
-bool Logger::pathsReferToSameLogFile(const std::filesystem::path& a, const std::filesystem::path& b)
-{
-    try
-    {
-        if (std::filesystem::exists(a) && std::filesystem::exists(b))
-            return std::filesystem::equivalent(a, b);
-    }
-    catch (const std::exception&)
-    {
-    }
-
-    return std::filesystem::absolute(a).lexically_normal()
-        == std::filesystem::absolute(b).lexically_normal();
-}
-
-void Logger::maybeInitAsyncThreadPool()
-{
-    static bool pool_started = false;
-    if (!pool_started)
-    {
-        ::spdlog::init_thread_pool(8192, 1);
-        pool_started = true;
-    }
-}
-
 void Logger::openLogger(const std::string& log_path, ::spdlog::level::level_enum level, bool async)
 {
-    if (async) 
+    if (async)
     {
-        maybeInitAsyncThreadPool();
-        m_logger = ::spdlog::create_async< ::spdlog::sinks::rotating_file_sink_mt >("owlsm_logger", log_path, 100 * owlsm::globals::MB, owlsm::globals::MAX_LOG_FILES);
-    } 
-    else 
+        ::spdlog::init_thread_pool(8192, 1);
+        m_logger = ::spdlog::create_async<::spdlog::sinks::rotating_file_sink_mt>(
+            "owlsm_logger", log_path, 100 * owlsm::globals::MB, owlsm::globals::MAX_LOG_FILES);
+        ::spdlog::flush_every(std::chrono::milliseconds(500));
+    }
+    else
     {
-        m_logger = ::spdlog::rotating_logger_mt("owlsm_logger", log_path, 100 * owlsm::globals::MB, owlsm::globals::MAX_LOG_FILES);
+        m_logger = ::spdlog::rotating_logger_mt(
+            "owlsm_logger", log_path, 100 * owlsm::globals::MB, owlsm::globals::MAX_LOG_FILES);
     }
 
     m_logger->set_pattern("[%d.%m.%Y %H:%M:%S.%e][%l]%v");
@@ -76,21 +54,15 @@ void Logger::initialize(const std::string& log_path, enum log_level level, bool 
     Logger& instance = getInstance();
     
     if (instance.m_initialized) 
-    {
         return;
-    }
 
     try 
     {
         std::filesystem::path log_file_path(log_path);
         if (log_file_path.has_parent_path()) 
-        {
             std::filesystem::create_directories(log_file_path.parent_path());
-        }
 
         instance.openLogger(log_path, toSpdlogLevel(level), async);
-        ::spdlog::flush_every(std::chrono::milliseconds(500));
-
     } 
     catch (const ::spdlog::spdlog_ex& ex) 
     {
@@ -110,34 +82,38 @@ void Logger::applyConfiguredLogLocation(const std::string& log_location)
 
     auto* active_sink = static_cast<::spdlog::sinks::rotating_file_sink_mt*>(instance.m_logger->sinks()[0].get());
     const std::filesystem::path active_path = std::filesystem::absolute(active_sink->filename()).lexically_normal();
-    const std::filesystem::path configured_path = std::filesystem::absolute(log_location).lexically_normal();
+    const std::filesystem::path new_path = std::filesystem::absolute(log_location).lexically_normal();
 
-    if (pathsReferToSameLogFile(active_path, configured_path))
+    if (active_path == new_path)
         return;
 
-    const ::spdlog::level::level_enum saved_level = instance.m_logger->level();
+    const auto saved_level = instance.m_logger->level();
+    const bool saved_async = instance.m_async;
 
     instance.m_logger->flush();
     ::spdlog::drop("owlsm_logger");
     instance.m_logger.reset();
     instance.m_initialized = false;
 
-    std::filesystem::create_directories(configured_path.parent_path());
+    // For async loggers, spdlog::shutdown() blocks until the worker thread drains
+    // all queued messages (including the flush above) to disk. Without this, the
+    // file copy below might see an empty or incomplete file.
+    if (saved_async)
+        ::spdlog::shutdown();
 
-    if (std::filesystem::exists(active_path) && std::filesystem::is_regular_file(active_path))
+    std::filesystem::create_directories(new_path.parent_path());
+
+    if (std::filesystem::exists(active_path) && std::filesystem::file_size(active_path) > 0)
     {
-        if (std::filesystem::file_size(active_path) > 0)
-        {
-            std::ifstream in(active_path, std::ios::binary);
-            std::ofstream out(configured_path, std::ios::binary | std::ios::app);
-            out << in.rdbuf();
-        }
+        std::ifstream in(active_path, std::ios::binary);
+        std::ofstream out(new_path, std::ios::binary | std::ios::app);
+        out << in.rdbuf();
     }
 
-    instance.openLogger(configured_path.string(), saved_level, instance.m_async);
-
-    if (std::filesystem::exists(active_path) && std::filesystem::is_regular_file(active_path))
+    if (std::filesystem::exists(active_path))
         std::filesystem::remove(active_path);
+
+    instance.openLogger(new_path.string(), saved_level, saved_async);
 }
 
 void Logger::log(enum log_level level, const char* file, int line, const char* function, const std::string& message) 
@@ -184,9 +160,10 @@ void Logger::shutdown()
     if (instance.m_logger) 
     {
         instance.m_logger->flush();
+        ::spdlog::drop("owlsm_logger");
         instance.m_logger.reset();
     }
-    
+    instance.m_initialized = false;
     ::spdlog::shutdown();
 }
 

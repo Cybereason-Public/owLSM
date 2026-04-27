@@ -37,13 +37,11 @@ private:
     Logger() = default;
     ~Logger();
     static ::spdlog::level::level_enum toSpdlogLevel(enum log_level level);
-    static bool pathsReferToSameLogFile(const std::filesystem::path& a, const std::filesystem::path& b);
-    static void maybeInitAsyncThreadPool();
     void openLogger(const std::string& log_path, ::spdlog::level::level_enum level, bool async);
 
     std::shared_ptr<::spdlog::logger> m_logger;
     bool m_initialized = false;
-    bool m_async = true;
+    bool m_async = false;
 };
 
 class LogStream
@@ -90,4 +88,3 @@ private:
 #define LOG_INFO(msg)     owlsm::LogStream(LOG_LEVEL_INFO,    __FILE_NAME__, __LINE__, __FUNCTION__, owlsm::Logger::getInstance().shouldLog(LOG_LEVEL_INFO)) << msg
 #define LOG_WARN(msg)     owlsm::LogStream(LOG_LEVEL_WARNING, __FILE_NAME__, __LINE__, __FUNCTION__, owlsm::Logger::getInstance().shouldLog(LOG_LEVEL_WARNING)) << msg
 #define LOG_ERROR(msg)    owlsm::LogStream(LOG_LEVEL_ERROR,   __FILE_NAME__, __LINE__, __FUNCTION__, owlsm::Logger::getInstance().shouldLog(LOG_LEVEL_ERROR)) << msg
-

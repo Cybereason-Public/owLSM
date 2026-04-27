@@ -19,6 +19,7 @@ protected:
     {
         fs::remove(DEFAULT_LOG);
         fs::remove(CUSTOM_LOG);
+        owlsm::Logger::shutdown();
         owlsm::Logger::initialize(DEFAULT_LOG, LOG_LEVEL_DEBUG, false);
     }
 
@@ -27,6 +28,10 @@ protected:
         owlsm::Logger::shutdown();
         fs::remove(DEFAULT_LOG);
         fs::remove(CUSTOM_LOG);
+        // Restore the global test logger so other test suites still have a logger.
+        // Use sync (false) since spdlog::shutdown() was never called; the thread pool stays alive
+        // but we don't want to depend on it here.
+        owlsm::Logger::initialize(owlsm::globals::UNIT_TEST_LOG_PATH, LOG_LEVEL_DEBUG, false);
     }
 
     static bool fileContains(const fs::path& path, const std::string& text)
@@ -82,9 +87,6 @@ TEST_F(LoggerMigrationTest, logs_written_after_migration_go_to_new_path)
     owlsm::Logger::shutdown();
 
     EXPECT_TRUE(fileContains(CUSTOM_LOG, post_migration_msg));
-
-    // Re-initialize so TearDown does not crash
-    owlsm::Logger::initialize(DEFAULT_LOG, LOG_LEVEL_DEBUG, false);
 }
 
 TEST_F(LoggerMigrationTest, logs_written_after_migration_do_not_go_to_old_path)
@@ -97,8 +99,6 @@ TEST_F(LoggerMigrationTest, logs_written_after_migration_do_not_go_to_old_path)
     owlsm::Logger::shutdown();
 
     EXPECT_FALSE(fileContains(DEFAULT_LOG, post_migration_msg));
-
-    owlsm::Logger::initialize(DEFAULT_LOG, LOG_LEVEL_DEBUG, false);
 }
 
 TEST_F(LoggerMigrationTest, noop_when_log_location_is_empty)
