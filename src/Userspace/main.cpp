@@ -10,6 +10,7 @@
 #include "rules_managment/rules_organizer.hpp"
 #include "configuration/schema.inc"
 #include "shell_detection/shells_finder.hpp"
+#include "globals/global_numbers.hpp"
 
 #include <unistd.h>
 #include <filesystem>
@@ -19,6 +20,7 @@ void safeSetup(int argc, char *argv[]);
 void setup(int argc, char *argv[]);
 void cleanup();
 void setupShellDetection();
+int libbpfLogCallback(enum libbpf_print_level level, const char *format, va_list args);
 
 int main(int argc, char *argv[])
 {
@@ -81,6 +83,7 @@ void setup(int argc, char *argv[])
     }
     owlsm::Logger::applyConfiguredLogLocation(owlsm::globals::g_config.userspace.log_location);
     owlsm::Logger::getInstance().setLogLevel(owlsm::globals::g_config.userspace.log_level);
+    libbpf_set_print(libbpfLogCallback);
 
     owlsm::RulesOrganizer::add_end_rules(owlsm::globals::g_config.rules_config.rules);
     auto organized_rules = owlsm::RulesOrganizer::organize_rules(owlsm::globals::g_config.rules_config.rules);
@@ -127,3 +130,28 @@ void cleanup()
     owlsm::globals::g_probe_manager.bpfDestroy();
     owlsm::Logger::shutdown();
 }
+
+int libbpfLogCallback(enum libbpf_print_level level, const char *format, va_list args)
+{
+    char buffer[owlsm::globals::LIBBPF_LOG_MESSAGE_SIZE] = {};
+    std::vsnprintf(buffer, sizeof(buffer), format, args);
+
+    switch (level)
+    {
+    case LIBBPF_WARN:
+        LOG_WARN("libbpf: '" << buffer << "'");
+        break;
+    case LIBBPF_INFO:
+        LOG_INFO("libbpf: '" << buffer << "'");
+        break;
+    case LIBBPF_DEBUG:
+        LOG_DEBUG("libbpf: '" << buffer << "'");
+        break;
+    default:
+        LOG_INFO("libbpf: '" << buffer << "'");
+        break;
+    }
+
+    return 0;
+}
+
