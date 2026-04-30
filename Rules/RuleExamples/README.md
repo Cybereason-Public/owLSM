@@ -11,3 +11,6 @@ Real rules from [SigmaHQ](https://github.com/SigmaHQ/sigma/tree/master/rules/lin
 
 ## CustomExampleRules
 Custom rules written specifically for owLSM to showcase its capabilities — different event types, modifiers, field comparisons, and complex conditions.
+
+## ExploitsMitigations
+CustomCustom rules written for specific famous vulnerabilities. These rules detect and block the attack. Zero false positives and 100% coverage of that specific vuln.

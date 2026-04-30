@@ -9,7 +9,7 @@
                 "unlink": true,
                 "rename": true,
                 "write": true,
-                "read": true,
+                "read": false,
                 "mkdir": true,
                 "rmdir": true
             }
