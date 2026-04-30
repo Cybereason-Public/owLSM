@@ -1,4 +1,4 @@
-id: 100
+id: 305
 description: "Detect unauthorized SSH private key access"
 action: "BLOCK_EVENT"
 events:
