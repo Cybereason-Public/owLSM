@@ -2346,7 +2346,14 @@
     "rules": [
       {
         "id": 1,
-        "description": "Complex chmod rule with all major condition features",
+        "metadata": {
+          "description": "Complex chmod rule with all major condition features",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_EVENT",
         "applied_events": [
           "CHMOD"
@@ -2475,7 +2482,14 @@
       },
       {
         "id": 2,
-        "description": "Complex exec rule with 1 of, 3 of, and, or, not conditions",
+        "metadata": {
+          "description": "Complex exec rule with 1 of, 3 of, and, or, not conditions",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_EVENT",
         "applied_events": [
           "EXEC"
@@ -2618,7 +2632,14 @@
       },
       {
         "id": 3,
-        "description": "Test rule 3 - CHMOD block with extensive process fields and exact match path",
+        "metadata": {
+          "description": "Test rule 3 - CHMOD block with extensive process fields and exact match path",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_EVENT",
         "applied_events": [
           "CHMOD"
@@ -2702,7 +2723,14 @@
       },
       {
         "id": 4,
-        "description": "Test rule 4 - CHMOD block with process euid below threshold",
+        "metadata": {
+          "description": "Test rule 4 - CHMOD block with process euid below threshold",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_EVENT",
         "applied_events": [
           "CHMOD"
@@ -2753,7 +2781,14 @@
       },
       {
         "id": 5,
-        "description": "Test rule 5 - CHMOD block kill process with rgid and parent_process conditions",
+        "metadata": {
+          "description": "Test rule 5 - CHMOD block kill process with rgid and parent_process conditions",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_KILL_PROCESS",
         "applied_events": [
           "CHMOD"
@@ -2824,7 +2859,14 @@
       },
       {
         "id": 6,
-        "description": "Test rule 6 - CHMOD block kill process and parent with minimal conditions",
+        "metadata": {
+          "description": "Test rule 6 - CHMOD block kill process and parent with minimal conditions",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_KILL_PROCESS_KILL_PARENT",
         "applied_events": [
           "CHMOD"
@@ -2853,7 +2895,14 @@
       },
       {
         "id": 7,
-        "description": "Test rule 7 - CHOWN block with process and target file conditions",
+        "metadata": {
+          "description": "Test rule 7 - CHOWN block with process and target file conditions",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_EVENT",
         "applied_events": [
           "CHOWN"
@@ -2888,7 +2937,14 @@
       },
       {
         "id": 8,
-        "description": "Test rule 8 - EXEC block with process, parent_process, and new_process conditions",
+        "metadata": {
+          "description": "Test rule 8 - EXEC block with process, parent_process, and new_process conditions",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_EVENT",
         "applied_events": [
           "EXEC"
@@ -2951,7 +3007,14 @@
       },
       {
         "id": 9,
-        "description": "Test rule 9 - FILE_CREATE block with special characters in path",
+        "metadata": {
+          "description": "Test rule 9 - FILE_CREATE block with special characters in path",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_EVENT",
         "applied_events": [
           "FILE_CREATE"
@@ -2993,7 +3056,14 @@
       },
       {
         "id": 10,
-        "description": "Test rule 10 - WRITE block with process and target file conditions",
+        "metadata": {
+          "description": "Test rule 10 - WRITE block with process and target file conditions",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_EVENT",
         "applied_events": [
           "WRITE"
@@ -3028,7 +3098,14 @@
       },
       {
         "id": 11,
-        "description": "Test rule 11 - READ block with process and target file conditions",
+        "metadata": {
+          "description": "Test rule 11 - READ block with process and target file conditions",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_EVENT",
         "applied_events": [
           "READ"
@@ -3070,7 +3147,14 @@
       },
       {
         "id": 12,
-        "description": "Block outgoing netcat connection to port 1339",
+        "metadata": {
+          "description": "Block outgoing netcat connection to port 1339",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_EVENT",
         "applied_events": [
           "NETWORK"
@@ -3119,7 +3203,14 @@
       },
       {
         "id": 13,
-        "description": "Block incoming netcat connection on port 1338 - kill process",
+        "metadata": {
+          "description": "Block incoming netcat connection on port 1338 - kill process",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_KILL_PROCESS",
         "applied_events": [
           "NETWORK"
@@ -3168,7 +3259,14 @@
       },
       {
         "id": 14,
-        "description": "Block incoming network traffic on port 8001",
+        "metadata": {
+          "description": "Block incoming network traffic on port 8001",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_EVENT",
         "applied_events": [
           "NETWORK"
@@ -3196,7 +3294,14 @@
       },
       {
         "id": 15,
-        "description": "Test rule 15 - UNLINK block with process and target file conditions",
+        "metadata": {
+          "description": "Test rule 15 - UNLINK block with process and target file conditions",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_EVENT",
         "applied_events": [
           "UNLINK"
@@ -3231,7 +3336,14 @@
       },
       {
         "id": 16,
-        "description": "Test rule 16 - RENAME block with source and destination file conditions",
+        "metadata": {
+          "description": "Test rule 16 - RENAME block with source and destination file conditions",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_EVENT",
         "applied_events": [
           "RENAME"
@@ -3266,7 +3378,14 @@
       },
       {
         "id": 17,
-        "description": "Test rule 17 - FILE_CREATE exclude event for test files",
+        "metadata": {
+          "description": "Test rule 17 - FILE_CREATE exclude event for test files",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "EXCLUDE_EVENT",
         "applied_events": [
           "FILE_CREATE"
@@ -3294,7 +3413,14 @@
       },
       {
         "id": 18,
-        "description": "Test rule 18 - CHOWN block with only target file conditions",
+        "metadata": {
+          "description": "Test rule 18 - CHOWN block with only target file conditions",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_EVENT",
         "applied_events": [
           "CHOWN"
@@ -3315,7 +3441,14 @@
       },
       {
         "id": 19,
-        "description": "Test rule 19 - CHMOD block for directory type with version constraints",
+        "metadata": {
+          "description": "Test rule 19 - CHMOD block for directory type with version constraints",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_EVENT",
         "applied_events": [
           "CHMOD"
@@ -3352,7 +3485,14 @@
       },
       {
         "id": 20,
-        "description": "Rule ordering test - first rule with EXCLUDE_EVENT",
+        "metadata": {
+          "description": "Rule ordering test - first rule with EXCLUDE_EVENT",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "EXCLUDE_EVENT",
         "applied_events": [
           "CHMOD"
@@ -3390,7 +3530,14 @@
       },
       {
         "id": 21,
-        "description": "Rule ordering test - second rule with BLOCK_EVENT",
+        "metadata": {
+          "description": "Rule ordering test - second rule with BLOCK_EVENT",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_EVENT",
         "applied_events": [
           "CHMOD"
@@ -3418,7 +3565,14 @@
       },
       {
         "id": 22,
-        "description": "Escaped wildcards test - matches literal * and ? in filename",
+        "metadata": {
+          "description": "Escaped wildcards test - matches literal * and ? in filename",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_EVENT",
         "applied_events": [
           "CHMOD"
@@ -3432,7 +3586,14 @@
       },
       {
         "id": 23,
-        "description": "Normal wildcards test - all wildcard patterns",
+        "metadata": {
+          "description": "Normal wildcards test - all wildcard patterns",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_EVENT",
         "applied_events": [
           "CHMOD"
@@ -3474,7 +3635,14 @@
       },
       {
         "id": 24,
-        "description": "Keywords with |all modifier - both patterns must match",
+        "metadata": {
+          "description": "Keywords with |all modifier - both patterns must match",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_EVENT",
         "applied_events": [
           "CHMOD"
@@ -3691,7 +3859,14 @@
       },
       {
         "id": 25,
-        "description": "Multiple keywords with AND - exact, startswith, endswith patterns",
+        "metadata": {
+          "description": "Multiple keywords with AND - exact, startswith, endswith patterns",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_EVENT",
         "applied_events": [
           "CHMOD"
@@ -3908,7 +4083,14 @@
       },
       {
         "id": 26,
-        "description": "Multi-event keywords - tests keyword expansion across different event types",
+        "metadata": {
+          "description": "Multi-event keywords - tests keyword expansion across different event types",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "ALLOW_EVENT",
         "applied_events": [
           "CHMOD"
@@ -4055,7 +4237,14 @@
       },
       {
         "id": 26,
-        "description": "Multi-event keywords - tests keyword expansion across different event types",
+        "metadata": {
+          "description": "Multi-event keywords - tests keyword expansion across different event types",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "ALLOW_EVENT",
         "applied_events": [
           "FILE_CREATE"
@@ -4202,7 +4391,14 @@
       },
       {
         "id": 26,
-        "description": "Multi-event keywords - tests keyword expansion across different event types",
+        "metadata": {
+          "description": "Multi-event keywords - tests keyword expansion across different event types",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "ALLOW_EVENT",
         "applied_events": [
           "UNLINK"
@@ -4349,7 +4545,14 @@
       },
       {
         "id": 26,
-        "description": "Multi-event keywords - tests keyword expansion across different event types",
+        "metadata": {
+          "description": "Multi-event keywords - tests keyword expansion across different event types",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "ALLOW_EVENT",
         "applied_events": [
           "RENAME"
@@ -4524,7 +4727,14 @@
       },
       {
         "id": 26,
-        "description": "Multi-event keywords - tests keyword expansion across different event types",
+        "metadata": {
+          "description": "Multi-event keywords - tests keyword expansion across different event types",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "ALLOW_EVENT",
         "applied_events": [
           "EXEC"
@@ -4699,7 +4909,14 @@
       },
       {
         "id": 27,
-        "description": "out of range versions",
+        "metadata": {
+          "description": "out of range versions",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_EVENT",
         "applied_events": [
           "CHMOD"
@@ -4714,7 +4931,14 @@
       },
       {
         "id": 28,
-        "description": "Test rule 28 - MKDIR block with special characters in path",
+        "metadata": {
+          "description": "Test rule 28 - MKDIR block with special characters in path",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_EVENT",
         "applied_events": [
           "MKDIR"
@@ -4749,7 +4973,14 @@
       },
       {
         "id": 29,
-        "description": "Test rule 29 - MKDIR exclude event for test directories",
+        "metadata": {
+          "description": "Test rule 29 - MKDIR exclude event for test directories",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "EXCLUDE_EVENT",
         "applied_events": [
           "MKDIR"
@@ -4777,7 +5008,14 @@
       },
       {
         "id": 30,
-        "description": "Test rule 30 - RMDIR block with special characters in path",
+        "metadata": {
+          "description": "Test rule 30 - RMDIR block with special characters in path",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_EVENT",
         "applied_events": [
           "RMDIR"
@@ -4812,7 +5050,14 @@
       },
       {
         "id": 31,
-        "description": "Test rule 31 - RMDIR exclude event for test directories",
+        "metadata": {
+          "description": "Test rule 31 - RMDIR exclude event for test directories",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "EXCLUDE_EVENT",
         "applied_events": [
           "RMDIR"
@@ -4840,7 +5085,14 @@
       },
       {
         "id": 32,
-        "description": "Test rule 32 - WRITE block when shell_command contains marker and target file matches",
+        "metadata": {
+          "description": "Test rule 32 - WRITE block when shell_command contains marker and target file matches",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_EVENT",
         "applied_events": [
           "WRITE"
@@ -4868,7 +5120,14 @@
       },
       {
         "id": 33,
-        "description": "neq numeric test - should NOT match chmod 755",
+        "metadata": {
+          "description": "neq numeric test - should NOT match chmod 755",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_EVENT",
         "applied_events": [
           "CHMOD"
@@ -4892,7 +5151,14 @@
       },
       {
         "id": 34,
-        "description": "neq string test - should NOT match chmod process",
+        "metadata": {
+          "description": "neq string test - should NOT match chmod process",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_EVENT",
         "applied_events": [
           "CHMOD"
@@ -4916,7 +5182,14 @@
       },
       {
         "id": 35,
-        "description": "Normal chmod rule matching /tmp/neq_test - no neq",
+        "metadata": {
+          "description": "Normal chmod rule matching /tmp/neq_test - no neq",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_EVENT",
         "applied_events": [
           "CHMOD"
@@ -4930,7 +5203,14 @@
       },
       {
         "id": 36,
-        "description": "Complex ~120-token chmod rule for max token limit testing",
+        "metadata": {
+          "description": "Complex ~120-token chmod rule for max token limit testing",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_EVENT",
         "applied_events": [
           "CHMOD"
@@ -5363,7 +5643,17 @@
       },
       {
         "id": 37,
-        "description": "Fieldref automation test - CHMOD with 3 string and 3 numeric fieldrefs",
+        "metadata": {
+          "description": "Fieldref automation test - CHMOD with 3 string and 3 numeric fieldrefs",
+          "title": "Fieldref CHMOD metadata title",
+          "severity": "high",
+          "mitre_tags": [
+            "attack.execution",
+            "attack.t1059.004"
+          ],
+          "name": "fieldref_chmod_rule",
+          "author": "Automation Team"
+        },
         "action": "BLOCK_EVENT",
         "applied_events": [
           "CHMOD"
@@ -5419,7 +5709,17 @@
       },
       {
         "id": 38,
-        "description": "Fieldref automation test - RENAME with 2 string and 2 numeric fieldrefs using source/destination fields",
+        "metadata": {
+          "description": "Fieldref automation test - RENAME with 2 string and 2 numeric fieldrefs using source/destination fields",
+          "title": "Fieldref RENAME metadata title",
+          "severity": "medium",
+          "mitre_tags": [
+            "attack.defense-evasion",
+            "attack.t1070.010"
+          ],
+          "name": "fieldref_rename_rule",
+          "author": "Automation Team"
+        },
         "action": "BLOCK_EVENT",
         "applied_events": [
           "RENAME"
@@ -5461,7 +5761,14 @@
       },
       {
         "id": 50,
-        "description": "Block file ops matching all three placeholder conditions",
+        "metadata": {
+          "description": "Block file ops matching all three placeholder conditions",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_EVENT",
         "applied_events": [
           "CHMOD",
@@ -5534,7 +5841,14 @@
       },
       {
         "id": 51,
-        "description": "Regex chmod test - multiple regex patterns on different fields",
+        "metadata": {
+          "description": "Regex chmod test - multiple regex patterns on different fields",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_EVENT",
         "applied_events": [
           "CHMOD"

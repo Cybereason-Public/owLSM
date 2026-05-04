@@ -14,7 +14,22 @@ namespace std
     {
         std::size_t operator()(const owlsm::config::RuleMetadata& m) const
         {
-            return std::hash<std::string>{}(m.description);
+            std::size_t seed = 0;
+            auto hash_combine = [&seed](std::size_t value)
+            {
+                seed ^= value + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+            };
+
+            hash_combine(std::hash<std::string>{}(m.description));
+            hash_combine(std::hash<std::string>{}(m.title));
+            hash_combine(std::hash<int>{}(static_cast<int>(m.severity)));
+            for (const auto& tag : m.mitre_tags)
+            {
+                hash_combine(std::hash<std::string>{}(tag));
+            }
+            hash_combine(std::hash<std::string>{}(m.name));
+            hash_combine(std::hash<std::string>{}(m.author));
+            return seed;
         }
     };
 }

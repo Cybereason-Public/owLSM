@@ -106,6 +106,11 @@ class ConditionExpr:
 class ParsedRule:
     rule_id: int
     description: str
+    title: str
+    severity: str
+    mitre_tags: List[str]
+    name: str
+    author: str
     action: str
     applied_events: List[str]
     condition_expr: ConditionExpr
@@ -869,6 +874,11 @@ def _convert_single_rule(rule: SigmaRule, pysigma_rule: PySigmaRule, ctx: Parsed
     return ParsedRule(
         rule_id=rule.id,
         description=rule.description,
+        title=rule.title,
+        severity=rule.severity,
+        mitre_tags=rule.mitre_tags,
+        name=rule.name,
+        author=rule.author,
         action=rule.action,
         applied_events=applied_events,
         condition_expr=results[0],

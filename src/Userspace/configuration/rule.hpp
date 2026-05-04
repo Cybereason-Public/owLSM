@@ -40,10 +40,30 @@ struct Token
 struct RuleMetadata
 {
     std::string description;
+    std::string title;
+    enum rule_severity severity = RULE_SEVERITY_UNKNOWN;
+    std::vector<std::string> mitre_tags;
+    std::string name;
+    std::string author;
+
+    bool hasAnyValue() const
+    {
+        return !description.empty() ||
+            !title.empty() ||
+            severity != RULE_SEVERITY_UNKNOWN ||
+            !mitre_tags.empty() ||
+            !name.empty() ||
+            !author.empty();
+    }
 
     bool operator==(const RuleMetadata& other) const
     {
-        return description == other.description;
+        return description == other.description &&
+            title == other.title &&
+            severity == other.severity &&
+            mitre_tags == other.mitre_tags &&
+            name == other.name &&
+            author == other.author;
     }
 };
 

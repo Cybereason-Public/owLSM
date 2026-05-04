@@ -53,6 +53,16 @@ def generate_header(json_path: Path, output_path: Path) -> None:
             comma = "," if i < len(actions) - 1 else ""
             lines.append(f"    {action} = {i}{comma}")
         lines.append("};")
+
+    # Process rule_severity (dict with string values)
+    if "rule_severity" in constants:
+        lines.append("")
+        lines.append("enum rule_severity {")
+        severity_items = list(constants["rule_severity"].keys())
+        for i, severity in enumerate(severity_items):
+            comma = "," if i < len(severity_items) - 1 else ""
+            lines.append(f"    {severity} = {i}{comma}")
+        lines.append("};")
     
     # Process file_types (dict with explicit numeric values)
     if "file_types" in constants:

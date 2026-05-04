@@ -150,8 +150,36 @@ class TestRuleSerialization:
         rule_data = data["rules"][0]
         assert rule_data["id"] == 42
         assert rule_data["action"] == "KILL_PROCESS"
-        assert rule_data["description"] == "Test description"
+        assert rule_data["metadata"]["description"] == "Test description"
+        assert rule_data["metadata"]["severity"] == "unknown"
         assert set(rule_data["applied_events"]) == {"CHMOD", "READ"}
+
+    def test_rule_extended_metadata(self):
+        rule = SigmaRule(
+            id=43,
+            action="BLOCK_EVENT",
+            events=["CHMOD"],
+            detection={"sel": {"process.file.filename": "test.exe"}, "condition": "sel"},
+            source_file="test.yml",
+            description="Metadata description",
+            title="Metadata title",
+            severity="high",
+            mitre_tags=["attack.execution", "attack.t1059.004"],
+            name="metadata_rule_name",
+            author="John Doe",
+        )
+
+        ast_ctx = parse_rules([rule])
+        postfix_ctx = convert_to_postfix(ast_ctx)
+        data = serialize_context(postfix_ctx)
+
+        metadata = data["rules"][0]["metadata"]
+        assert metadata["description"] == "Metadata description"
+        assert metadata["title"] == "Metadata title"
+        assert metadata["severity"] == "high"
+        assert metadata["mitre_tags"] == ["attack.execution", "attack.t1059.004"]
+        assert metadata["name"] == "metadata_rule_name"
+        assert metadata["author"] == "John Doe"
     
     def test_tokens_serialized(self):
         rule = SigmaRule(
@@ -216,6 +244,7 @@ class TestFullPipelineIntegration:
         
         for rule in data["rules"]:
             assert "id" in rule
+            assert "metadata" in rule
             assert "action" in rule
             assert "tokens" in rule
             assert "applied_events" in rule

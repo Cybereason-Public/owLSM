@@ -12,6 +12,8 @@ MAX_RULES_PER_MAP: int = _config["MAX_RULES_PER_MAP"]
 MAX_REGEX_DFA_STATES: int = _config["MAX_REGEX_DFA_STATES"]
 
 ALLOWED_ACTIONS: set = set(_config["actions"])
+RULE_SEVERITIES: set = set(_config["rule_severity"].values())
+RULE_SEVERITY_UNKNOWN: str = _config["rule_severity"]["RULE_SEVERITY_UNKNOWN"]
 
 # Valid event types for sigma rules (FORK and EXIT are not supported)
 VALID_EVENT_TYPES: set = {

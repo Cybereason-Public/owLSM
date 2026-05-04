@@ -343,6 +343,24 @@ constexpr std::string_view REAL_SCHEMA_4 = R"(
                 "required": ["predicate_idx"]
             }
         },
+        "rule_metadata_t": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "description": { "type": "string" },
+                "title": { "type": "string" },
+                "severity": {
+                    "type": "string",
+                    "enum": ["unknown", "informational", "low", "medium", "high", "critical"]
+                },
+                "mitre_tags": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                },
+                "name": { "type": "string" },
+                "author": { "type": "string" }
+            }
+        },
         "rule_t": {
             "type": "object",
             "required": ["id", "action", "applied_events", "tokens"],
@@ -351,6 +369,9 @@ constexpr std::string_view REAL_SCHEMA_4 = R"(
                 "id": {
                     "type": "integer",
                     "minimum": 1
+                },
+                "metadata": {
+                    "$ref": "#/definitions/rule_metadata_t"
                 },
                 "description": {
                     "type": "string"
@@ -496,7 +517,9 @@ constexpr std::string_view REAL_JSON_5 = R"(
         "rules": [
             {
                 "id": 100,
-                "description": "Test rule",
+                "metadata": {
+                    "description": "Test rule"
+                },
                 "action": "BLOCK_EVENT",
                 "applied_events": ["READ", "WRITE"],
                 "tokens": [

@@ -26,6 +26,11 @@ class Token:
 class PostfixRule:
     rule_id: int
     description: str
+    title: str
+    severity: str
+    mitre_tags: List[str]
+    name: str
+    author: str
     action: str
     applied_events: List[str]
     tokens: List[Token]
@@ -90,6 +95,11 @@ def convert_rule_to_postfix(parsed_rule: ParsedRule) -> PostfixRule:
     return PostfixRule(
         rule_id=parsed_rule.rule_id,
         description=parsed_rule.description,
+        title=parsed_rule.title,
+        severity=parsed_rule.severity,
+        mitre_tags=parsed_rule.mitre_tags,
+        name=parsed_rule.name,
+        author=parsed_rule.author,
         action=parsed_rule.action,
         applied_events=parsed_rule.applied_events,
         tokens=tokens,

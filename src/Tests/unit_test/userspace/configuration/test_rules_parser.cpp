@@ -25,7 +25,9 @@ constexpr std::string_view MINIMAL_RULES_JSON = R"({
   "rules": [
     {
       "id": 1,
-      "description": "Test rule",
+      "metadata": {
+        "description": "Test rule"
+      },
       "action": "BLOCK_EVENT",
       "applied_events": ["READ"],
       "tokens": [
@@ -75,7 +77,9 @@ constexpr std::string_view COMPLEX_RULES_JSON = R"({
   "rules": [
     {
       "id": 100,
-      "description": "Detect unauthorized SSH private key access",
+      "metadata": {
+        "description": "Detect unauthorized SSH private key access"
+      },
       "action": "BLOCK_EVENT",
       "min_version": "0.0.1",
       "max_version": "1.0.0",
@@ -133,6 +137,8 @@ TEST_F(RulesParserNewTest, parse_minimal_rules_config)
         EXPECT_EQ(config.rules[0].id, 1);
         EXPECT_EQ(config.rules[0].action, BLOCK_EVENT);
         EXPECT_EQ(config.rules[0].metadata.description, "Test rule");
+        EXPECT_EQ(config.rules[0].metadata.severity, RULE_SEVERITY_UNKNOWN);
+        EXPECT_TRUE(config.rules[0].metadata.mitre_tags.empty());
         EXPECT_EQ(config.rules[0].applied_events.size(), 1);
         EXPECT_EQ(config.rules[0].applied_events[0], READ);
         EXPECT_EQ(config.rules[0].tokens.size(), 1);
@@ -175,6 +181,7 @@ TEST_F(RulesParserNewTest, parse_complex_rules_config)
         EXPECT_EQ(config.rules[0].id, 100);
         EXPECT_EQ(config.rules[0].action, BLOCK_EVENT);
         EXPECT_EQ(config.rules[0].metadata.description, "Detect unauthorized SSH private key access");
+        EXPECT_EQ(config.rules[0].metadata.severity, RULE_SEVERITY_UNKNOWN);
         
         // Check applied_events
         EXPECT_EQ(config.rules[0].applied_events.size(), 2);
@@ -201,6 +208,57 @@ TEST_F(RulesParserNewTest, parse_complex_rules_config)
         EXPECT_EQ(config.rules[0].min_version, min_version);
         EXPECT_EQ(config.rules[0].max_version, max_version);
     });
+}
+
+TEST_F(RulesParserNewTest, parse_extended_rule_metadata)
+{
+    nlohmann::json j = nlohmann::json::parse(R"({
+        "id_to_string": {},
+        "id_to_predicate": {
+            "0": {
+                "field": "process.pid",
+                "comparison_type": "equal",
+                "string_idx": -1,
+                "numerical_value": 1000,
+                "fieldref": "FIELD_TYPE_NONE"
+            }
+        },
+        "id_to_ip": {},
+        "rules": [
+            {
+                "id": 101,
+                "metadata": {
+                    "description": "Extended metadata rule",
+                    "title": "Extended title",
+                    "severity": "high",
+                    "mitre_tags": ["attack.execution", "attack.t1059.004"],
+                    "name": "extended_rule",
+                    "author": "John Doe"
+                },
+                "action": "BLOCK_EVENT",
+                "applied_events": ["CHMOD"],
+                "tokens": [
+                    {
+                        "operator_type": "OPERATOR_PREDICATE",
+                        "predicate_idx": 0
+                    }
+                ]
+            }
+        ]
+    })");
+
+    owlsm::config::RulesParser parser;
+    auto config = parser.parse_json_to_rules_config(j);
+
+    ASSERT_EQ(config.rules.size(), 1);
+    EXPECT_EQ(config.rules[0].metadata.description, "Extended metadata rule");
+    EXPECT_EQ(config.rules[0].metadata.title, "Extended title");
+    EXPECT_EQ(config.rules[0].metadata.severity, RULE_SEVERITY_HIGH);
+    ASSERT_EQ(config.rules[0].metadata.mitre_tags.size(), 2);
+    EXPECT_EQ(config.rules[0].metadata.mitre_tags[0], "attack.execution");
+    EXPECT_EQ(config.rules[0].metadata.mitre_tags[1], "attack.t1059.004");
+    EXPECT_EQ(config.rules[0].metadata.name, "extended_rule");
+    EXPECT_EQ(config.rules[0].metadata.author, "John Doe");
 }
 
 TEST_F(RulesParserNewTest, parse_field_id_transformation)

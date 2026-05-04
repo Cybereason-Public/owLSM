@@ -24,12 +24,12 @@ For more examples, see [`Rules/RuleExamples`](https://github.com/cybereason-labs
     <button class="tab-button active" data-tab="simple">Simple Example</button>
     <button class="tab-button" data-tab="complex">Network Example</button>
     <button class="tab-button" data-tab="multievent">Multi-Event Example</button>
+    <button class="tab-button" data-tab="metadata">Rule Metadata Example</button>
   </div>
   
   <div id="simple" class="tab-content active">
     <div class="interactive-code">
 <pre><code><a href="#rule-id" class="code-link">id</a>: 1
-<a href="#rule-description" class="code-link">description</a>: "Block curl from reading SSH keys"
 <a href="#rule-min-version" class="code-link">min_version</a>: "1.0.0"
 <a href="#rule-max-version" class="code-link">max_version</a>: "2.0.0"
 <a href="#rule-action" class="code-link">action</a>: "BLOCK_EVENT"
@@ -46,7 +46,6 @@ For more examples, see [`Rules/RuleExamples`](https://github.com/cybereason-labs
   <div id="complex" class="tab-content">
     <div class="interactive-code">
 <pre><code><a href="#rule-id" class="code-link">id</a>: 200
-<a href="#rule-description" class="code-link">description</a>: "Block suspicious outbound connections to known C2 patterns"
 <a href="#rule-action" class="code-link">action</a>: "BLOCK_KILL_PROCESS"
 <a href="#rule-events" class="code-link">events</a>:
     - NETWORK
@@ -82,7 +81,6 @@ For more examples, see [`Rules/RuleExamples`](https://github.com/cybereason-labs
   <div id="multievent" class="tab-content">
     <div class="interactive-code">
 <pre><code><a href="#rule-id" class="code-link">id</a>: 50
-<a href="#rule-description" class="code-link">description</a>: "Block suspicious access to /etc/passwd from processes in /tmp"
 <a href="#rule-action" class="code-link">action</a>: "BLOCK_KILL_PROCESS"
 <a href="#rule-events" class="code-link">events</a>:
     - CHMOD
@@ -97,6 +95,27 @@ For more examples, see [`Rules/RuleExamples`](https://github.com/cybereason-labs
     <a href="#rule-selection" class="code-link">selection_parent_in_tmp</a>:
         parent_process.file.path|startswith: "/tmp"
     <a href="#rule-condition" class="code-link">condition</a>: selection_target and (selection_process_in_tmp or selection_parent_in_tmp)</code></pre>
+    </div>
+  </div>
+  
+  <div id="metadata" class="tab-content">
+    <div class="interactive-code">
+<pre><code><a href="#rule-id" class="code-link">id</a>: 900
+<a href="#rule-title" class="code-link">title</a>: Suspicious chmod on sensitive paths
+<a href="#rule-severity" class="code-link">severity</a>: high
+<a href="#rule-mitre-tags" class="code-link">mitre_tags</a>:
+    - attack.execution
+    - attack.t1059.004
+<a href="#rule-name" class="code-link">name</a>: suspicious_chmod_sensitive_path
+<a href="#rule-author" class="code-link">author</a>: Security Team
+<a href="#rule-action" class="code-link">action</a>: "BLOCK_EVENT"
+<a href="#rule-events" class="code-link">events</a>:
+    - CHMOD
+<a href="#rule-detection" class="code-link">detection</a>:
+    <a href="#rule-selection" class="code-link">selection</a>:
+        target.file.path|contains: "/etc/"
+        chmod.requested_mode|gt: 420
+    <a href="#rule-condition" class="code-link">condition</a>: selection</code></pre>
     </div>
   </div>
   
@@ -130,12 +149,80 @@ This behavior differs from most Sigma engines, which process all rules and accum
 
 <div class="rule-section">
 <div class="field-meta">
-<p><strong>Required:</strong> true</p>
+<p><strong>Required:</strong> false</p>
 <p><strong>Options:</strong> String</p>
 </div>
 
 Human-readable description of what the rule detects.<br>
 This is included in the event output when the rule matches.
+</div>
+
+<h3 id="rule-title" class="section-anchor">
+  <span class="section-path">title</span>
+</h3>
+
+<div class="rule-section">
+<div class="field-meta">
+<p><strong>Required:</strong> false</p>
+<p><strong>Options:</strong> String</p>
+</div>
+
+Short human-readable rule name (usually Sigma `title`).<br>
+Included in matched rule metadata output.
+</div>
+
+<h3 id="rule-severity" class="section-anchor">
+  <span class="section-path">severity</span>
+</h3>
+
+<div class="rule-section">
+<div class="field-meta">
+<p><strong>Required:</strong> false</p>
+<p><strong>Options:</strong> <code>unknown</code>, <code>informational</code>, <code>low</code>, <code>medium</code>, <code>high</code>, <code>critical</code></p>
+</div>
+
+Rule severity level. Default is <code>unknown</code> when omitted.<br>
+YAML plain scalars are valid, so <code>severity: critical</code> and <code>severity: "critical"</code> are both accepted.<br>
+In generated JSON, severity is serialized as a string.
+</div>
+
+<h3 id="rule-mitre-tags" class="section-anchor">
+  <span class="section-path">mitre_tags</span>
+</h3>
+
+<div class="rule-section">
+<div class="field-meta">
+<p><strong>Required:</strong> false</p>
+<p><strong>Options:</strong> Array of strings</p>
+</div>
+
+Sigma-style tags such as <code>attack.execution</code> or <code>attack.t1059.004</code>.
+</div>
+
+<h3 id="rule-name" class="section-anchor">
+  <span class="section-path">name</span>
+</h3>
+
+<div class="rule-section">
+<div class="field-meta">
+<p><strong>Required:</strong> false</p>
+<p><strong>Options:</strong> String</p>
+</div>
+
+Machine-readable rule name.
+</div>
+
+<h3 id="rule-author" class="section-anchor">
+  <span class="section-path">author</span>
+</h3>
+
+<div class="rule-section">
+<div class="field-meta">
+<p><strong>Required:</strong> false</p>
+<p><strong>Options:</strong> String</p>
+</div>
+
+Rule author.
 </div>
 
 <h3 id="rule-action" class="section-anchor">
@@ -354,7 +441,7 @@ condition: 3 of selection_suspicious_*</code></pre>
 
 ### Other Sigma rule components {#other-sigma-rule-components}
 
-You may include additional Sigma rule components (e.g., `title`, `status`, `author`, `logsource`, etc). owLSM ignores keys it does not use when loading rules.
+You may include additional Sigma rule components (e.g., `logsource`). owLSM ignores keys it does not use when loading rules.
 
 
 

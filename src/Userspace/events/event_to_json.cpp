@@ -18,7 +18,49 @@ NLOHMANN_JSON_SERIALIZE_ENUM(file_type, {
 
 namespace owlsm::config
 {
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(owlsm::config::RuleMetadata, description)
+static std::string ruleSeverityToString(enum rule_severity severity)
+{
+    switch (severity)
+    {
+        case RULE_SEVERITY_UNKNOWN: return "unknown";
+        case RULE_SEVERITY_INFORMATIONAL: return "informational";
+        case RULE_SEVERITY_LOW: return "low";
+        case RULE_SEVERITY_MEDIUM: return "medium";
+        case RULE_SEVERITY_HIGH: return "high";
+        case RULE_SEVERITY_CRITICAL: return "critical";
+        default: return "unknown";
+    }
+}
+
+void to_json(nlohmann::json& j, const RuleMetadata& metadata)
+{
+    j = nlohmann::json::object();
+
+    if (!metadata.description.empty())
+    {
+        j["description"] = metadata.description;
+    }
+    if (!metadata.title.empty())
+    {
+        j["title"] = metadata.title;
+    }
+    if (metadata.severity != RULE_SEVERITY_UNKNOWN)
+    {
+        j["severity"] = ruleSeverityToString(metadata.severity);
+    }
+    if (!metadata.mitre_tags.empty())
+    {
+        j["mitre_tags"] = metadata.mitre_tags;
+    }
+    if (!metadata.name.empty())
+    {
+        j["name"] = metadata.name;
+    }
+    if (!metadata.author.empty())
+    {
+        j["author"] = metadata.author;
+    }
+}
 }
 
 namespace owlsm::events
@@ -140,12 +182,16 @@ void EventToJson<Event>::write_root_event_json(nlohmann::json& j, const Event& e
         {"type", ::to_string(ev.type)},
         {"action", ::to_string(ev.action)},
         {"matched_rule_id", ev.matched_rule_id},
-        {"matched_rule_metadata", ev.matched_rule_metadata},
         {"had_error", ev.had_error_while_handling},
         {"process", ev.process},
         {"parent_process", ev.parent_process},
         {"time", ev.time}
     };
+
+    if (ev.matched_rule_metadata.hasAnyValue())
+    {
+        j["matched_rule_metadata"] = ev.matched_rule_metadata;
+    }
 
     std::visit([&j](const auto& data) {
         to_json(j["data"], data);

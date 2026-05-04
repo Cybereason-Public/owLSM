@@ -89,10 +89,21 @@ namespace owlsm::config
             semver::parse(it->get<std::string>(), o.max_version);
         }
         
-        if (auto it = j.find("description"); it != j.end())
+        if (auto metadata_it = j.find("metadata"); metadata_it != j.end() && metadata_it->is_object())
         {
-            o.metadata.description = it->get<std::string>();
+            const auto& metadata = *metadata_it;
+            get_if_present(metadata, "description", o.metadata.description);
+            get_if_present(metadata, "title", o.metadata.title);
+            get_if_present(metadata, "mitre_tags", o.metadata.mitre_tags);
+            get_if_present(metadata, "name", o.metadata.name);
+            get_if_present(metadata, "author", o.metadata.author);
+
+            if (auto severity_it = metadata.find("severity"); severity_it != metadata.end())
+            {
+                o.metadata.severity = parse_rule_severity(severity_it->get<std::string>());
+            }
         }
+
     }
 
     void RulesParser::from_json(const nlohmann::json& j, Token& o) const
@@ -199,5 +210,20 @@ namespace owlsm::config
             return result.value();
         }
         throw std::runtime_error("Unknown event type: " + event_str);
+    }
+
+    enum rule_severity RulesParser::parse_rule_severity(const std::string& severity_str) const
+    {
+        std::string enum_name = "RULE_SEVERITY_";
+        std::string upper_severity = severity_str;
+        std::transform(upper_severity.begin(), upper_severity.end(), upper_severity.begin(), ::toupper);
+        enum_name += upper_severity;
+
+        const auto result = magic_enum::enum_cast<rule_severity>(enum_name);
+        if (result.has_value())
+        {
+            return result.value();
+        }
+        throw std::runtime_error("Unknown rule severity: " + severity_str + " (tried enum name: " + enum_name + ")");
     }
 }

@@ -31,6 +31,7 @@ private:
     static fb::FileType toFbFileType(file_type ft);
     static fb::EventType toFbEventType(event_type et);
     static fb::Action toFbAction(rule_action a);
+    static fb::RuleSeverity toFbRuleSeverity(rule_severity severity);
     static flatbuffers::Offset<fb::File> serializeFile(flatbuffers::FlatBufferBuilder& builder, const File& f);
     static flatbuffers::Offset<fb::Process> serializeProcess(flatbuffers::FlatBufferBuilder& builder, const Process& p);
     void serializeEvent(const Event& ev);

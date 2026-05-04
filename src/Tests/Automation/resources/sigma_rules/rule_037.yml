@@ -12,6 +12,13 @@
 
 id: 37
 description: "Fieldref automation test - CHMOD with 3 string and 3 numeric fieldrefs"
+title: "Fieldref CHMOD metadata title"
+severity: high
+mitre_tags:
+    - attack.execution
+    - attack.t1059.004
+name: "fieldref_chmod_rule"
+author: "Automation Team"
 action: "BLOCK_EVENT"
 events:
     - CHMOD

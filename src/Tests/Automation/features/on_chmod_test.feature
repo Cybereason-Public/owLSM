@@ -77,7 +77,7 @@ Scenario: blocked_and_kill_process_chmod
         | process.cmd                       | /usr/bin/chmod 555 /tmp/test3 |
         | data.exit_code                    | 0                             |
         | data.signal                       | 9                             |
-        | matched_rule_metadata.description |                               |
+        | matched_rule_metadata.description | None                          |
 
 
 Scenario: blocked_and_kill_parent_chmod

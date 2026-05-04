@@ -24,6 +24,15 @@
         "EXCLUDE_EVENT"
     ],
 
+    "rule_severity": {
+        "RULE_SEVERITY_UNKNOWN": "unknown",
+        "RULE_SEVERITY_INFORMATIONAL": "informational",
+        "RULE_SEVERITY_LOW": "low",
+        "RULE_SEVERITY_MEDIUM": "medium",
+        "RULE_SEVERITY_HIGH": "high",
+        "RULE_SEVERITY_CRITICAL": "critical"
+    },
+
     "file_types": {
         "UNKNOWN_FILE_TYPE": 0,
         "DIRECTORY": 1,

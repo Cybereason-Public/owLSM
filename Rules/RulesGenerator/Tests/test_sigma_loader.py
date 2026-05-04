@@ -2101,3 +2101,84 @@ detection:
         assert len(data["rules"]) == 1
         assert "min_version" not in data["rules"][0]
         assert data["rules"][0]["max_version"] == "10.0.0"
+
+
+class TestRuleMetadataValidation:
+    """Tests for optional rule metadata fields."""
+
+    def test_description_is_optional(self, tmp_path):
+        rule = """
+id: 950
+action: "BLOCK_EVENT"
+events: [CHMOD]
+detection:
+    sel:
+        process.file.filename: "test.exe"
+    condition: sel
+"""
+        (tmp_path / "rule.yml").write_text(rule)
+        rules = load_sigma_rules(str(tmp_path))
+
+        assert len(rules) == 1
+        assert rules[0].description == ""
+        assert rules[0].severity == "unknown"
+        assert rules[0].mitre_tags == []
+
+    def test_extended_metadata_is_loaded(self, tmp_path):
+        rule = """
+id: 951
+description: "Metadata description"
+title: "Metadata title"
+severity: high
+mitre_tags:
+    - "attack.execution"
+    - "attack.t1059.004"
+name: "metadata_rule_name"
+author: "John Doe"
+action: "BLOCK_EVENT"
+events: [CHMOD]
+detection:
+    sel:
+        process.file.filename: "test.exe"
+    condition: sel
+"""
+        (tmp_path / "rule.yml").write_text(rule)
+        rules = load_sigma_rules(str(tmp_path))
+
+        assert len(rules) == 1
+        assert rules[0].description == "Metadata description"
+        assert rules[0].title == "Metadata title"
+        assert rules[0].severity == "high"
+        assert rules[0].mitre_tags == ["attack.execution", "attack.t1059.004"]
+        assert rules[0].name == "metadata_rule_name"
+        assert rules[0].author == "John Doe"
+
+    def test_invalid_severity_rejected(self, tmp_path):
+        rule = """
+id: 952
+severity: "urgent"
+action: "BLOCK_EVENT"
+events: [CHMOD]
+detection:
+    sel:
+        process.file.filename: "test.exe"
+    condition: sel
+"""
+        (tmp_path / "rule.yml").write_text(rule)
+        with pytest.raises(Exception, match="Invalid severity"):
+            load_sigma_rules(str(tmp_path))
+
+    def test_invalid_mitre_tags_rejected(self, tmp_path):
+        rule = """
+id: 953
+mitre_tags: "attack.execution"
+action: "BLOCK_EVENT"
+events: [CHMOD]
+detection:
+    sel:
+        process.file.filename: "test.exe"
+    condition: sel
+"""
+        (tmp_path / "rule.yml").write_text(rule)
+        with pytest.raises(Exception, match="mitre_tags.*list"):
+            load_sigma_rules(str(tmp_path))

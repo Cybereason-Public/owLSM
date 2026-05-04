@@ -51,6 +51,20 @@ const char* connectionDirectionName(owlsm::fb::ConnectionDirection d)
     return (s && *s) ? s : "INCOMING";
 }
 
+const char* ruleSeverityName(owlsm::fb::RuleSeverity severity)
+{
+    switch (severity)
+    {
+        case owlsm::fb::RuleSeverity::UNKNOWN: return "unknown";
+        case owlsm::fb::RuleSeverity::INFORMATIONAL: return "informational";
+        case owlsm::fb::RuleSeverity::LOW: return "low";
+        case owlsm::fb::RuleSeverity::MEDIUM: return "medium";
+        case owlsm::fb::RuleSeverity::HIGH: return "high";
+        case owlsm::fb::RuleSeverity::CRITICAL: return "critical";
+        default: return "unknown";
+    }
+}
+
 } // namespace
 
 std::string FlatbufferToJson::fbStr(const flatbuffers::String* s)
@@ -220,23 +234,59 @@ FlatbufferToJson::json FlatbufferToJson::eventDataJson(const owlsm::fb::Event* e
 
 std::string FlatbufferToJson::jsonLineFromFlatbufferEvent(const owlsm::fb::Event* ev)
 {
-    json meta = json{{"description", ""}};
-    if (const auto* m = ev->matched_rule_metadata())
-    {
-        meta = json{{"description", fbStr(m->description())}};
-    }
     json j = json{
         {"id", ev->id()},
         {"type", owlsm::fb::EnumNameEventType(ev->type())},
         {"action", owlsm::fb::EnumNameAction(ev->action())},
         {"matched_rule_id", ev->matched_rule_id()},
-        {"matched_rule_metadata", meta},
         {"had_error", static_cast<int>(ev->had_error())},
         {"process", processJson(ev->process())},
         {"parent_process", processJson(ev->parent_process())},
         {"time", ev->time()},
         {"data", eventDataJson(ev)},
     };
+
+    if (const auto* m = ev->matched_rule_metadata())
+    {
+        json meta = json::object();
+        if (m->description())
+        {
+            meta["description"] = fbStr(m->description());
+        }
+        if (m->title())
+        {
+            meta["title"] = fbStr(m->title());
+        }
+        if (m->severity() != owlsm::fb::RuleSeverity::UNKNOWN)
+        {
+            meta["severity"] = ruleSeverityName(m->severity());
+        }
+        if (m->mitre_tags())
+        {
+            json tags = json::array();
+            for (const auto* tag : *m->mitre_tags())
+            {
+                tags.push_back(fbStr(tag));
+            }
+            if (!tags.empty())
+            {
+                meta["mitre_tags"] = tags;
+            }
+        }
+        if (m->name())
+        {
+            meta["name"] = fbStr(m->name());
+        }
+        if (m->author())
+        {
+            meta["author"] = fbStr(m->author());
+        }
+
+        if (!meta.empty())
+        {
+            j["matched_rule_metadata"] = meta;
+        }
+    }
     return j.dump();
 }
 

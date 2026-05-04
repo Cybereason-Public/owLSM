@@ -123,6 +123,21 @@ fb::Action EventToFlatbuffer<MessageType>::toFbAction(rule_action a)
 }
 
 template <typename MessageType>
+fb::RuleSeverity EventToFlatbuffer<MessageType>::toFbRuleSeverity(rule_severity severity)
+{
+    switch (severity)
+    {
+        case RULE_SEVERITY_UNKNOWN: return fb::RuleSeverity::UNKNOWN;
+        case RULE_SEVERITY_INFORMATIONAL: return fb::RuleSeverity::INFORMATIONAL;
+        case RULE_SEVERITY_LOW: return fb::RuleSeverity::LOW;
+        case RULE_SEVERITY_MEDIUM: return fb::RuleSeverity::MEDIUM;
+        case RULE_SEVERITY_HIGH: return fb::RuleSeverity::HIGH;
+        case RULE_SEVERITY_CRITICAL: return fb::RuleSeverity::CRITICAL;
+        default: return fb::RuleSeverity::UNKNOWN;
+    }
+}
+
+template <typename MessageType>
 flatbuffers::Offset<fb::File> EventToFlatbuffer<MessageType>::serializeFile(
     flatbuffers::FlatBufferBuilder& builder, const File& f)
 {
@@ -174,10 +189,30 @@ void EventToFlatbuffer<MessageType>::serializeEvent(const Event& ev)
     auto parent_off = serializeProcess(m_builder, ev.parent_process);
 
     flatbuffers::Offset<fb::RuleMetadata> meta_off = 0;
-    if (ev.matched_rule_id > 0)
+    if (ev.matched_rule_id > 0 && ev.matched_rule_metadata.hasAnyValue())
     {
         auto desc_off = m_builder.CreateString(ev.matched_rule_metadata.description);
-        meta_off = fb::CreateRuleMetadata(m_builder, desc_off);
+        auto title_off = m_builder.CreateString(ev.matched_rule_metadata.title);
+        auto name_off = m_builder.CreateString(ev.matched_rule_metadata.name);
+        auto author_off = m_builder.CreateString(ev.matched_rule_metadata.author);
+
+        std::vector<flatbuffers::Offset<flatbuffers::String>> mitre_tag_offsets;
+        mitre_tag_offsets.reserve(ev.matched_rule_metadata.mitre_tags.size());
+        for (const auto& mitre_tag : ev.matched_rule_metadata.mitre_tags)
+        {
+            mitre_tag_offsets.push_back(m_builder.CreateString(mitre_tag));
+        }
+        auto mitre_tags_off = m_builder.CreateVector(mitre_tag_offsets);
+
+        meta_off = fb::CreateRuleMetadata(
+            m_builder,
+            desc_off,
+            title_off,
+            toFbRuleSeverity(ev.matched_rule_metadata.severity),
+            mitre_tags_off,
+            name_off,
+            author_off
+        );
     }
 
     fb::EventData data_type = fb::EventData::NONE;
