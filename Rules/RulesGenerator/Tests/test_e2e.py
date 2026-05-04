@@ -1335,7 +1335,7 @@ detection:
         for rule in data["rules"]:
             assert rule["action"] == "BLOCK_EVENT"
             assert rule["applied_events"] == ["CHMOD"]
-            assert "different condition" in rule["description"]
+            assert "different condition" in rule["metadata"]["description"]
 
 
 # =============================================================================
@@ -1392,6 +1392,8 @@ detection:
 RULE_WITHOUT_EXTRA_SIGMA_FIELDS = """
 id: 5000
 description: "Detects suspicious chmod on sensitive paths"
+title: "Detect Suspicious chmod on /etc"
+author: "Test Author (Test Organization)"
 action: "BLOCK_EVENT"
 events:
     - CHMOD
@@ -1438,8 +1440,11 @@ class TestExtraSigmaFieldsIgnored:
         rules = load_sigma_rules(str(tmp_path))
         rule = rules[0]
 
+        assert rule.title == "Detect Suspicious chmod on /etc"
+        assert rule.author == "Test Author (Test Organization)"
+
         extra_field_names = [
-            "title", "status", "level", "author", "date", "modified",
+            "status", "level", "date", "modified",
             "references", "tags", "logsource", "falsepositives", "related",
             "simulation",
         ]
