@@ -1,11 +1,11 @@
 name: Build Artifact Full Lifecycle
 
 on:
-  pull_request_review:
+  workflow_run:
+    workflows:
+      - "PR Approval Gate"
     types:
-      - submitted
-    branches:
-      - 'main'
+      - completed
   workflow_dispatch:
     inputs:
       create_tag:
@@ -51,11 +51,30 @@ env:
   VERSION: ${{ github.event.inputs.major || '1' }}.${{ github.event.inputs.minor || '0' }}.${{ github.event.inputs.patch || '0' }}
 
 jobs:
+  # Environment gate job — only runs for workflow_run (fork PR) trigger.
+  # Pauses here and requires a maintainer to click "Approve and deploy"
+  # in the Actions UI before the build job starts. Skipped entirely for
+  # workflow_dispatch so manual runs proceed without reviewer approval.
+  environment-gate:
+    name: Environment Gate (fork PR only)
+    # Only pause for fork PRs — internal PRs and manual runs proceed without gate.
+    if: >-
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.head_repository.full_name != github.repository
+    runs-on: ubuntu-latest
+    environment: ci-runners
+    steps:
+      - run: echo "Environment gate passed for ${{ github.event.workflow_run.head_sha }}"
+
   build:
     name: Build Artifact
+    needs: [environment-gate]
     if: >-
-      github.event_name == 'workflow_dispatch' ||
-      github.event.review.state == 'approved'
+      always() &&
+      (github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       (needs.environment-gate.result == 'success' || needs.environment-gate.result == 'skipped')))
     runs-on: ["OCI", "owLSM"]
     permissions:
       contents: write
@@ -64,6 +83,9 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0  # Full history for revision info
+          # For workflow_run (fork PR): check out the PR's head commit.
+          # For workflow_dispatch: falls back to the default sha (HEAD).
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Get branch info
         id: branch_info
@@ -217,7 +239,12 @@ jobs:
   automation-tests-runners:
     name: Create runners and run automation tests
     needs: [build]
-    if: github.event_name == 'pull_request_review' || inputs.run_automation_tests == true
+    if: >-
+      always() &&
+      needs.build.result == 'success' &&
+      ((github.event_name == 'workflow_dispatch' && inputs.run_automation_tests == true) ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success'))
     uses: ./.github/workflows/automation-tests-runners.yml
     with:
       artifact-name: ${{ needs.build.outputs.artifact_name }}
@@ -233,6 +260,7 @@ jobs:
     needs: [build, automation-tests-runners]
     if: >-
       always() &&
+      github.event_name == 'workflow_dispatch' &&
       inputs.create_tag == true &&
       needs.build.result == 'success' &&
       (needs.automation-tests-runners.result == 'success' || needs.automation-tests-runners.result == 'skipped')
