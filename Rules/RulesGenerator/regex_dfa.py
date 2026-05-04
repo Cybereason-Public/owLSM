@@ -17,7 +17,7 @@ This Python code only validates that conversion is possible.
 
 import re
 from dataclasses import dataclass
-from typing import Set, Tuple, Optional
+from typing import Optional
 from greenery import parse as greenery_parse
 from greenery.fsm import Fsm
 

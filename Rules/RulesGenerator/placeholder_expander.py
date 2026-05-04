@@ -6,7 +6,6 @@ with actual values from a placeholder definitions file.
 Uses pySigma's SigmaString.insert_placeholders() internally
 to parse the %name% pattern consistently with the Sigma specification.
 """
-import re
 import yaml
 from typing import Dict, List, Any, Optional
 from sigma.types import SigmaString, Placeholder
