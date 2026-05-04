@@ -298,6 +298,49 @@ TEST_F(EventToFlatbufferTest, event_with_matched_rule)
         "Test rule: block shadow chmod");
 }
 
+TEST_F(EventToFlatbufferTest, event_with_extended_matched_rule_metadata)
+{
+    auto ev = makeBaseEvent(CHMOD, 21);
+    ev->action = BLOCK_EVENT;
+    ev->matched_rule_id = 101;
+    ev->matched_rule_metadata.description = "Extended metadata description";
+    ev->matched_rule_metadata.title = "Extended metadata title";
+    ev->matched_rule_metadata.severity = RULE_SEVERITY_HIGH;
+    ev->matched_rule_metadata.mitre_tags = {"attack.execution", "attack.t1059.004"};
+    ev->matched_rule_metadata.name = "extended_metadata_rule";
+    ev->matched_rule_metadata.author = "John Doe";
+    ev->data = owlsm::events::ChmodEventData{};
+
+    std::vector<std::shared_ptr<owlsm::events::Event>> msgs = {ev};
+    m_event_serializer.buildOutputBuffer(msgs);
+
+    const auto* fb_ev = getSizePrefixedEvent(m_event_serializer.data());
+    ASSERT_NE(fb_ev->matched_rule_metadata(), nullptr);
+    EXPECT_STREQ(fb_ev->matched_rule_metadata()->title()->c_str(), "Extended metadata title");
+    EXPECT_EQ(fb_ev->matched_rule_metadata()->severity(), owlsm::fb::RuleSeverity::HIGH);
+    ASSERT_NE(fb_ev->matched_rule_metadata()->mitre_tags(), nullptr);
+    ASSERT_EQ(fb_ev->matched_rule_metadata()->mitre_tags()->size(), 2u);
+    EXPECT_STREQ(fb_ev->matched_rule_metadata()->mitre_tags()->Get(0)->c_str(), "attack.execution");
+    EXPECT_STREQ(fb_ev->matched_rule_metadata()->mitre_tags()->Get(1)->c_str(), "attack.t1059.004");
+    EXPECT_STREQ(fb_ev->matched_rule_metadata()->name()->c_str(), "extended_metadata_rule");
+    EXPECT_STREQ(fb_ev->matched_rule_metadata()->author()->c_str(), "John Doe");
+}
+
+TEST_F(EventToFlatbufferTest, event_without_set_metadata_omits_metadata_table)
+{
+    auto ev = makeBaseEvent(CHMOD, 22);
+    ev->action = BLOCK_EVENT;
+    ev->matched_rule_id = 102;
+    ev->data = owlsm::events::ChmodEventData{};
+
+    std::vector<std::shared_ptr<owlsm::events::Event>> msgs = {ev};
+    m_event_serializer.buildOutputBuffer(msgs);
+
+    const auto* fb_ev = getSizePrefixedEvent(m_event_serializer.data());
+    ASSERT_NE(fb_ev, nullptr);
+    EXPECT_EQ(fb_ev->matched_rule_metadata(), nullptr);
+}
+
 TEST_F(EventToFlatbufferTest, error_serialization)
 {
     auto err = std::make_shared<owlsm::events::Error>();

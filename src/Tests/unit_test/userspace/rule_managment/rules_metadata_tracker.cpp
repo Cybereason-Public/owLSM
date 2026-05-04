@@ -9,7 +9,14 @@ TEST_F(RulesMetadataTrackerTest, get_existing_metadata)
     std::vector<owlsm::config::Rule> rules;
     rules.push_back({
         .id = 1,
-        .metadata = {.description = "test"},
+        .metadata = {
+            .description = "test",
+            .title = "title1",
+            .severity = RULE_SEVERITY_LOW,
+            .mitre_tags = {"attack.execution"},
+            .name = "rule_1",
+            .author = "author1"
+        },
     });
     rules.push_back({
         .id = 2,
@@ -18,6 +25,12 @@ TEST_F(RulesMetadataTrackerTest, get_existing_metadata)
     owlsm::RulesMetadataTracker rules_metadata_tracker(rules);
     auto& metadata = rules_metadata_tracker.get_metadata(1);
     EXPECT_EQ(metadata.description, "test");
+    EXPECT_EQ(metadata.title, "title1");
+    EXPECT_EQ(metadata.severity, RULE_SEVERITY_LOW);
+    ASSERT_EQ(metadata.mitre_tags.size(), 1);
+    EXPECT_EQ(metadata.mitre_tags[0], "attack.execution");
+    EXPECT_EQ(metadata.name, "rule_1");
+    EXPECT_EQ(metadata.author, "author1");
     auto& metadata2 = rules_metadata_tracker.get_metadata(2);
     EXPECT_EQ(metadata2.description, "aaa bb 123");
 }

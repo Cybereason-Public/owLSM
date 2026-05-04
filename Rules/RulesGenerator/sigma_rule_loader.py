@@ -1,7 +1,7 @@
 import os
 import re
 from typing import Dict, List, Set, Any, Optional
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import yaml
 from placeholder_expander import expand_detection_placeholders
 from constants import (
@@ -21,6 +21,8 @@ from constants import (
     COMPARISON_TYPE_EQUAL_ABOVE,
     COMPARISON_TYPE_EQUAL_BELOW,
     COMPARISON_TYPE_REGEX,
+    RULE_SEVERITIES,
+    RULE_SEVERITY_UNKNOWN,
 )
 from regex_dfa import validate_regex_or_raise
 from field_mapping import apply_field_mapping_to_detection
@@ -86,7 +88,7 @@ ALLOWED_NUMERIC_MODIFIERS: Set[str] = {"gt", "gte", "lt", "lte"}
 ALLOWED_IP_MODIFIERS: Set[str] = {"cidr"} 
 ALLOWED_MODIFIERS: Set[str] = ALLOWED_STRING_MODIFIERS | ALLOWED_NUMERIC_MODIFIERS | ALLOWED_IP_MODIFIERS
 
-REQUIRED_FIELDS: Set[str] = {"id", "description", "action", "events", "detection"}
+REQUIRED_FIELDS: Set[str] = {"id", "action", "events", "detection"}
 
 VERSION_PATTERN = re.compile(r'^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$')
 
@@ -105,6 +107,56 @@ def validate_version_field(version: Any, field_name: str, rule_file: str) -> str
         )
     
     return version
+
+
+def validate_optional_string_field(rule_data: Dict[str, Any], field_name: str, rule_file: str) -> str:
+    if field_name not in rule_data:
+        return ""
+
+    value = rule_data[field_name]
+    if not isinstance(value, str):
+        raise Exception(
+            f"Validation error in '{rule_file}': Field '{field_name}' must be a string, got {type(value).__name__}"
+        )
+    return value
+
+
+def validate_optional_severity(rule_data: Dict[str, Any], rule_file: str) -> str:
+    if "severity" not in rule_data:
+        return RULE_SEVERITY_UNKNOWN
+
+    severity = rule_data["severity"]
+    if not isinstance(severity, str):
+        raise Exception(
+            f"Validation error in '{rule_file}': Field 'severity' must be a string, got {type(severity).__name__}"
+        )
+    if severity not in RULE_SEVERITIES:
+        raise Exception(
+            f"Validation error in '{rule_file}': Invalid severity '{severity}'. Allowed values: {sorted(RULE_SEVERITIES)}"
+        )
+    return severity
+
+
+def validate_optional_mitre_tags(rule_data: Dict[str, Any], rule_file: str) -> List[str]:
+    if "mitre_tags" not in rule_data:
+        return []
+
+    tags = rule_data["mitre_tags"]
+    if not isinstance(tags, list):
+        raise Exception(
+            f"Validation error in '{rule_file}': Field 'mitre_tags' must be a list, got {type(tags).__name__}"
+        )
+
+    validated_tags: List[str] = []
+    for idx, tag in enumerate(tags):
+        if not isinstance(tag, str):
+            raise Exception(
+                f"Validation error in '{rule_file}': Field 'mitre_tags' item {idx} must be a string, got {type(tag).__name__}"
+            )
+        validated_tags.append(tag)
+
+    return validated_tags
+
 @dataclass
 class FieldModifiers:
     field_name: str
@@ -116,11 +168,16 @@ class FieldModifiers:
 @dataclass
 class SigmaRule:
     id: int
-    description: str
     action: str
     events: List[str]
     detection: Dict[str, Any]
     source_file: str
+    description: str = ""
+    title: str = ""
+    severity: str = RULE_SEVERITY_UNKNOWN
+    mitre_tags: List[str] = field(default_factory=list)
+    name: str = ""
+    author: str = ""
     min_version: Optional[str] = None
     max_version: Optional[str] = None
 
@@ -636,9 +693,12 @@ def validate_rule(rule_data: Dict[str, Any], rule_file: str) -> SigmaRule:
     if rule_id < 0:
         raise Exception(f"Validation error in '{rule_file}': Field 'id' must be non-negative, got {rule_id}")
     
-    description = rule_data["description"]
-    if not isinstance(description, str):
-        raise Exception(f"Validation error in '{rule_file}': Field 'description' must be a string, got {type(description).__name__}")
+    description = validate_optional_string_field(rule_data, "description", rule_file)
+    title = validate_optional_string_field(rule_data, "title", rule_file)
+    severity = validate_optional_severity(rule_data, rule_file)
+    mitre_tags = validate_optional_mitre_tags(rule_data, rule_file)
+    name = validate_optional_string_field(rule_data, "name", rule_file)
+    author = validate_optional_string_field(rule_data, "author", rule_file)
     
     action = rule_data["action"]
     if not isinstance(action, str):
@@ -661,11 +721,16 @@ def validate_rule(rule_data: Dict[str, Any], rule_file: str) -> SigmaRule:
     
     return SigmaRule(
         id=rule_id,
-        description=description,
         action=action,
         events=events,
         detection=rule_data["detection"],
         source_file=rule_file,
+        description=description,
+        title=title,
+        severity=severity,
+        mitre_tags=mitre_tags,
+        name=name,
+        author=author,
         min_version=min_version,
         max_version=max_version
     )

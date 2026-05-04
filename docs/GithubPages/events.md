@@ -25,9 +25,7 @@ Every event shares a common top-level structure. The `data` field varies dependi
     "type": "FILE_CREATE",
     "action": "ALLOW_EVENT",
     "matched_rule_id": 0,
-    "matched_rule_metadata": {
-        "description": ""
-    },
+    "matched_rule_metadata": { },
     "had_error": 0,
     "process": { },
     "parent_process": { },
@@ -44,7 +42,7 @@ Every event shares a common top-level structure. The `data` field varies dependi
 | `type` | string | Event type. See [Event Types](#event-types) |
 | `action` | string | Action taken. See [Actions](#actions) |
 | `matched_rule_id` | int | ID of the matched rule (0 if no rule matched) |
-| `matched_rule_metadata` | object | Metadata from the matched rule (e.g. `description`) |
+| `matched_rule_metadata` | object | Optional. Present only when at least one metadata field is set on the matched rule. See [Matched Rule Metadata Object](#matched-rule-metadata-object) |
 | `had_error` | int | Currently not supported |
 | `process` | object | The process that triggered the event. See [Process Object](#process-object) |
 | `parent_process` | object | The parent of the triggering process. See [Process Object](#process-object) |
@@ -114,6 +112,55 @@ Every event shares a common top-level structure. The `data` field varies dependi
 </table>
 
 ---
+
+<h3 id="matched-rule-metadata-object" class="section-anchor">Matched Rule Metadata Object</h3>
+
+<details class="field-dropdown">
+<summary><strong>Matched Rule Metadata Object</strong> — Optional metadata copied from the matched rule</summary>
+<div class="field-content">
+<p>Present only when at least one metadata field is set in the matched rule.</p>
+
+<div class="tab-container">
+  <div class="tab-buttons">
+    <button class="tab-button active" data-tab="matched-rule-metadata-example">Example JSON</button>
+    <button class="tab-button" data-tab="matched-rule-metadata-schema">JSON Schema</button>
+  </div>
+
+  <div id="matched-rule-metadata-example" class="tab-content active">
+    <div class="interactive-code">
+<pre><code>{
+    "description": "Block suspicious chmod patterns",
+    "title": "Suspicious chmod",
+    "severity": "high",
+    "mitre_tags": [
+        "attack.execution",
+        "attack.t1059.004"
+    ],
+    "name": "suspicious_chmod",
+    "author": "Security Team"
+}</code></pre>
+    </div>
+  </div>
+
+  <div id="matched-rule-metadata-schema" class="tab-content">
+    <table class="fields-table">
+    <thead>
+    <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+    <tr><td><code>description</code></td><td>string</td><td>Rule description</td></tr>
+    <tr><td><code>title</code></td><td>string</td><td>Short rule title</td></tr>
+    <tr><td><code>severity</code></td><td>enum (<code>unknown</code>, <code>informational</code>, <code>low</code>, <code>medium</code>, <code>high</code>, <code>critical</code>)</td><td>Rule severity</td></tr>
+    <tr><td><code>mitre_tags</code></td><td>array of strings</td><td>Sigma-style MITRE tags</td></tr>
+    <tr><td><code>name</code></td><td>string</td><td>Machine-readable rule name</td></tr>
+    <tr><td><code>author</code></td><td>string</td><td>Rule author</td></tr>
+    </tbody>
+    </table>
+  </div>
+</div>
+
+</div>
+</details>
 
 <h3 id="process-object" class="section-anchor">Process Object</h3>
 

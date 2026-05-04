@@ -93,7 +93,14 @@
     "rules": [
       {
         "id": 4,
-        "description": "Test rule 4 - CHMOD block with process euid below threshold",
+        "metadata": {
+          "description": "Test rule 4 - CHMOD block with process euid below threshold",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": ""
+        },
         "action": "BLOCK_EVENT",
         "applied_events": [
           "CHMOD"

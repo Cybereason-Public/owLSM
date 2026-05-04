@@ -260,6 +260,48 @@ inline const char *EnumNameConnectionDirection(ConnectionDirection e) {
   return EnumNamesConnectionDirection()[index];
 }
 
+enum class RuleSeverity : uint8_t {
+  UNKNOWN = 0,
+  INFORMATIONAL = 1,
+  LOW = 2,
+  MEDIUM = 3,
+  HIGH = 4,
+  CRITICAL = 5,
+  MIN = UNKNOWN,
+  MAX = CRITICAL
+};
+
+inline const RuleSeverity (&EnumValuesRuleSeverity())[6] {
+  static const RuleSeverity values[] = {
+    RuleSeverity::UNKNOWN,
+    RuleSeverity::INFORMATIONAL,
+    RuleSeverity::LOW,
+    RuleSeverity::MEDIUM,
+    RuleSeverity::HIGH,
+    RuleSeverity::CRITICAL
+  };
+  return values;
+}
+
+inline const char * const *EnumNamesRuleSeverity() {
+  static const char * const names[7] = {
+    "UNKNOWN",
+    "INFORMATIONAL",
+    "LOW",
+    "MEDIUM",
+    "HIGH",
+    "CRITICAL",
+    nullptr
+  };
+  return names;
+}
+
+inline const char *EnumNameRuleSeverity(RuleSeverity e) {
+  if (::flatbuffers::IsOutRange(e, RuleSeverity::UNKNOWN, RuleSeverity::CRITICAL)) return "";
+  const size_t index = static_cast<size_t>(e);
+  return EnumNamesRuleSeverity()[index];
+}
+
 enum class EventData : uint8_t {
   NONE = 0,
   GenericFileEventData = 1,
@@ -807,16 +849,46 @@ struct RuleMetadata FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     return "owlsm.fb.RuleMetadata";
   }
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_DESCRIPTION = 4
+    VT_DESCRIPTION = 4,
+    VT_TITLE = 6,
+    VT_SEVERITY = 8,
+    VT_MITRE_TAGS = 10,
+    VT_NAME = 12,
+    VT_AUTHOR = 14
   };
   const ::flatbuffers::String *description() const {
     return GetPointer<const ::flatbuffers::String *>(VT_DESCRIPTION);
+  }
+  const ::flatbuffers::String *title() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_TITLE);
+  }
+  owlsm::fb::RuleSeverity severity() const {
+    return static_cast<owlsm::fb::RuleSeverity>(GetField<uint8_t>(VT_SEVERITY, 0));
+  }
+  const ::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>> *mitre_tags() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>> *>(VT_MITRE_TAGS);
+  }
+  const ::flatbuffers::String *name() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_NAME);
+  }
+  const ::flatbuffers::String *author() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_AUTHOR);
   }
   template <bool B = false>
   bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyOffset(verifier, VT_DESCRIPTION) &&
            verifier.VerifyString(description()) &&
+           VerifyOffset(verifier, VT_TITLE) &&
+           verifier.VerifyString(title()) &&
+           VerifyField<uint8_t>(verifier, VT_SEVERITY, 1) &&
+           VerifyOffset(verifier, VT_MITRE_TAGS) &&
+           verifier.VerifyVector(mitre_tags()) &&
+           verifier.VerifyVectorOfStrings(mitre_tags()) &&
+           VerifyOffset(verifier, VT_NAME) &&
+           verifier.VerifyString(name()) &&
+           VerifyOffset(verifier, VT_AUTHOR) &&
+           verifier.VerifyString(author()) &&
            verifier.EndTable();
   }
 };
@@ -827,6 +899,21 @@ struct RuleMetadataBuilder {
   ::flatbuffers::uoffset_t start_;
   void add_description(::flatbuffers::Offset<::flatbuffers::String> description) {
     fbb_.AddOffset(RuleMetadata::VT_DESCRIPTION, description);
+  }
+  void add_title(::flatbuffers::Offset<::flatbuffers::String> title) {
+    fbb_.AddOffset(RuleMetadata::VT_TITLE, title);
+  }
+  void add_severity(owlsm::fb::RuleSeverity severity) {
+    fbb_.AddElement<uint8_t>(RuleMetadata::VT_SEVERITY, static_cast<uint8_t>(severity), 0);
+  }
+  void add_mitre_tags(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> mitre_tags) {
+    fbb_.AddOffset(RuleMetadata::VT_MITRE_TAGS, mitre_tags);
+  }
+  void add_name(::flatbuffers::Offset<::flatbuffers::String> name) {
+    fbb_.AddOffset(RuleMetadata::VT_NAME, name);
+  }
+  void add_author(::flatbuffers::Offset<::flatbuffers::String> author) {
+    fbb_.AddOffset(RuleMetadata::VT_AUTHOR, author);
   }
   explicit RuleMetadataBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
@@ -841,19 +928,43 @@ struct RuleMetadataBuilder {
 
 inline ::flatbuffers::Offset<RuleMetadata> CreateRuleMetadata(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    ::flatbuffers::Offset<::flatbuffers::String> description = 0) {
+    ::flatbuffers::Offset<::flatbuffers::String> description = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> title = 0,
+    owlsm::fb::RuleSeverity severity = owlsm::fb::RuleSeverity::UNKNOWN,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> mitre_tags = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> name = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> author = 0) {
   RuleMetadataBuilder builder_(_fbb);
+  builder_.add_author(author);
+  builder_.add_name(name);
+  builder_.add_mitre_tags(mitre_tags);
+  builder_.add_title(title);
   builder_.add_description(description);
+  builder_.add_severity(severity);
   return builder_.Finish();
 }
 
 inline ::flatbuffers::Offset<RuleMetadata> CreateRuleMetadataDirect(
     ::flatbuffers::FlatBufferBuilder &_fbb,
-    const char *description = nullptr) {
+    const char *description = nullptr,
+    const char *title = nullptr,
+    owlsm::fb::RuleSeverity severity = owlsm::fb::RuleSeverity::UNKNOWN,
+    const std::vector<::flatbuffers::Offset<::flatbuffers::String>> *mitre_tags = nullptr,
+    const char *name = nullptr,
+    const char *author = nullptr) {
   auto description__ = description ? _fbb.CreateString(description) : 0;
+  auto title__ = title ? _fbb.CreateString(title) : 0;
+  auto mitre_tags__ = mitre_tags ? _fbb.CreateVector<::flatbuffers::Offset<::flatbuffers::String>>(*mitre_tags) : 0;
+  auto name__ = name ? _fbb.CreateString(name) : 0;
+  auto author__ = author ? _fbb.CreateString(author) : 0;
   return owlsm::fb::CreateRuleMetadata(
       _fbb,
-      description__);
+      description__,
+      title__,
+      severity,
+      mitre_tags__,
+      name__,
+      author__);
 }
 
 struct Target FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {

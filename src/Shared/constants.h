@@ -41,6 +41,15 @@ enum rule_action {
     EXCLUDE_EVENT = 5
 };
 
+enum rule_severity {
+    RULE_SEVERITY_UNKNOWN = 0,
+    RULE_SEVERITY_INFORMATIONAL = 1,
+    RULE_SEVERITY_LOW = 2,
+    RULE_SEVERITY_MEDIUM = 3,
+    RULE_SEVERITY_HIGH = 4,
+    RULE_SEVERITY_CRITICAL = 5
+};
+
 enum file_type {
     UNKNOWN_FILE_TYPE = 0,
     DIRECTORY = 1,

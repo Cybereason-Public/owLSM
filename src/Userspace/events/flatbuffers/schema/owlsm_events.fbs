@@ -48,6 +48,15 @@ enum ConnectionDirection : ubyte {
     OUTGOING
 }
 
+enum RuleSeverity : ubyte {
+    UNKNOWN = 0,
+    INFORMATIONAL,
+    LOW,
+    MEDIUM,
+    HIGH,
+    CRITICAL
+}
+
 // ── Structs (inline, zero-overhead) ──────────────────────────
 
 struct Owner {
@@ -96,6 +105,11 @@ table Process {
 
 table RuleMetadata {
     description:string;
+    title:string;
+    severity:RuleSeverity = UNKNOWN;
+    mitre_tags:[string];
+    name:string;
+    author:string;
 }
 
 // ── Nested structures to match JSON output format ────────────

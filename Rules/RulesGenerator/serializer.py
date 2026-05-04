@@ -28,10 +28,21 @@ def serialize_token(token: Token) -> Dict[str, Any]:
     return result
 
 
+def serialize_rule_metadata(rule: PostfixRule) -> Dict[str, Any]:
+    return {
+        "description": rule.description,
+        "title": rule.title,
+        "severity": rule.severity,
+        "mitre_tags": rule.mitre_tags,
+        "name": rule.name,
+        "author": rule.author,
+    }
+
+
 def serialize_rule(rule: PostfixRule) -> Dict[str, Any]:
     result = {
         "id": rule.rule_id,
-        "description": rule.description,
+        "metadata": serialize_rule_metadata(rule),
         "action": rule.action,
         "applied_events": rule.applied_events,
         "tokens": [serialize_token(t) for t in rule.tokens]

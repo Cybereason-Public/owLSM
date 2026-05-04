@@ -17,6 +17,11 @@ Scenario: chmod_blocked_with_multiple_numeric_and_string_fieldrefs
         | data.chmod.requested_mode         | 493                                                                       |
         | matched_rule_id                   | 37                                                                        |
         | matched_rule_metadata.description | Fieldref automation test - CHMOD with 3 string and 3 numeric fieldrefs    |
+        | matched_rule_metadata.title       | Fieldref CHMOD metadata title                                             |
+        | matched_rule_metadata.severity    | high                                                                      |
+        | matched_rule_metadata.mitre_tags  | ['attack.execution', 'attack.t1059.004']                                  |
+        | matched_rule_metadata.name        | fieldref_chmod_rule                                                       |
+        | matched_rule_metadata.author      | Automation Team                                                           |
 
 
 Scenario: rename_blocked_with_multiple_numeric_and_string_fieldrefs
@@ -36,3 +41,8 @@ Scenario: rename_blocked_with_multiple_numeric_and_string_fieldrefs
         | data.rename.destination_file.path | /tmp/fieldref_rename_dst                                                                                |
         | matched_rule_id                   | 38                                                                                                      |
         | matched_rule_metadata.description | Fieldref automation test - RENAME with 2 string and 2 numeric fieldrefs using source/destination fields |
+        | matched_rule_metadata.title       | Fieldref RENAME metadata title                                                                          |
+        | matched_rule_metadata.severity    | medium                                                                                                  |
+        | matched_rule_metadata.mitre_tags  | ['attack.defense-evasion', 'attack.t1070.010']                                                          |
+        | matched_rule_metadata.name        | fieldref_rename_rule                                                                                    |
+        | matched_rule_metadata.author      | Automation Team                                                                                         |

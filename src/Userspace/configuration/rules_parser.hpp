@@ -49,6 +49,7 @@ private:
     enum comparison_type parse_comparison_type(const std::string& comp_str) const;
     enum operator_types parse_operator_type(const std::string& op_str) const;
     enum event_type parse_event_type(const std::string& event_str) const;
+    enum rule_severity parse_rule_severity(const std::string& severity_str) const;
     void from_json(const nlohmann::json& j, RuleString& o) const;
     void from_json(const nlohmann::json& j, Predicate& o) const;
     void from_json(const nlohmann::json& j, RuleIP& o) const;

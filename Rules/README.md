@@ -56,11 +56,11 @@ Rules are written in YAML format based on Sigma syntax. See `RuleExamples/` for 
 
 ### Required Fields
 - `id`: Unique integer identifier
-- `description`: Human-readable description
 - `action`: One of `BLOCK_EVENT`, `ALLOW_EVENT`, `KILL_PROCESS`, etc.
 - `events`: List of event types (CHMOD, READ, WRITE, EXEC, etc.)
 - `detection`: Detection logic with selections and condition
 
+Other sigma fields like `title`, `severity`, `description`, etc' are optional 
 ## Running Tests
 Unit tests for the rules generator
 
