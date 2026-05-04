@@ -16,14 +16,13 @@ Modify this if changes.
 ```
 RulesGenerator/
 ├── AGENTS.md              # This file
-├── main.py                # CLI entry point - converts rules directory to JSON
+├── create_config.py       # CLI entry point - generates/validates final config JSON
 ├── sigma_rule_loader.py   # YAML parser and rule loader
 ├── AST.py                 # Abstract Syntax Tree for detection logic
 ├── postfix.py             # Infix to postfix expression conversion
 ├── serializer.py          # JSON serialization
 ├── regex_dfa.py           # Regex validation — converts regex to DFA and checks state limits
 ├── constants.py           # Shared constants (must match src/Shared/constants.h)
-├── create_config.py       # Tool to create/update config files with new rules
 ├── requirements.txt       # Python dependencies
 └── Tests/                 # pytest unit tests
     ├── test_sigma_loader.py
@@ -45,21 +44,11 @@ source venv/bin/activate
 uv pip install -r requirements.txt
 ```
 
-### Generate Rules JSON
-
-```bash
-# Output to stdout
-python main.py ../RuleExamples
-
-# Output to file
-python main.py ../RuleExamples rules.json
-```
-
 ### Create Config with New Rules
 
 ```bash
 python create_config.py --help
-python create_config.py <rules_dir> <output_config.json> # specify the current config.json file to just update its rules.
+python create_config.py -d ../RuleExamples -c base_config.json -o full_config.json
 ```
 
 ---

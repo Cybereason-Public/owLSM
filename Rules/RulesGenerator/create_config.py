@@ -2,9 +2,14 @@
 import argparse
 import json
 import sys
-import subprocess
 from pathlib import Path
 import jsonschema
+from AST import parse_rules
+from field_mapping import load_field_mapping_file
+from placeholder_expander import load_placeholders
+from postfix import convert_to_postfix
+from serializer import serialize_context
+from sigma_rule_loader import load_sigma_rules
 
 
 def parse_arguments():
@@ -45,42 +50,57 @@ Examples:
     parser.add_argument(
         '-m', '--mapping-file',
         default=None,
-        help='YAML file mapping external field names to owLSM field names (passed to main.py)'
+        help='YAML file mapping external field names to owLSM field names'
     )
 
     return parser.parse_args()
 
 
-def generate_rules_json(rules_directory, output_path, placeholder_file=None, mapping_file=None):
+def generate_rules_json(rules_directory, placeholder_file=None, mapping_file=None):
     print(f"Generating rules from directory: {rules_directory}")
-    script_dir = Path(__file__).parent
-    main_py = script_dir / 'main.py'
-    
-    if not main_py.exists():
-        raise FileNotFoundError(f"main.py not found at {main_py}")
-
-    cmd = [sys.executable, str(main_py), rules_directory, output_path]
-    if placeholder_file:
-        cmd.extend(['-p', placeholder_file])
-    if mapping_file:
-        cmd.extend(['-m', mapping_file])
-
     try:
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            check=True)
-        
-        if result.stderr:
-            print(result.stderr, end='')
-        
-        print(f"✓ Rules generated successfully: {output_path}")
-        return output_path
-        
-    except subprocess.CalledProcessError as e:
-        print(f"✗ Error running main.py:", file=sys.stderr)
-        print(e.stderr, file=sys.stderr)
+        placeholders = None
+        if placeholder_file:
+            print(f"Loading placeholders from: {placeholder_file}")
+            placeholders = load_placeholders(placeholder_file)
+            print(f"  Loaded {len(placeholders)} placeholder definitions")
+
+        field_mapping = None
+        if mapping_file:
+            print(f"Loading field mapping from: {mapping_file}")
+            field_mapping = load_field_mapping_file(mapping_file)
+            print(f"  Loaded {len(field_mapping)} field alias(es)")
+
+        print("Step 1-2: Loading and validating rules...")
+        rules = load_sigma_rules(
+            rules_directory,
+            placeholders=placeholders,
+            placeholder_file=placeholder_file,
+            field_mapping=field_mapping,
+        )
+        print(f"  Loaded {len(rules)} rules")
+
+        print("Step 3: Parsing detection sections (AST)...")
+        ast_ctx = parse_rules(rules)
+        print(
+            f"  Built tables: {len(ast_ctx.id_to_string)} strings, {len(ast_ctx.id_to_predicate)} predicates",
+        )
+
+        print("Step 4: Converting to postfix notation...")
+        postfix_ctx = convert_to_postfix(ast_ctx)
+        total_tokens = sum(len(rule.tokens) for rule in postfix_ctx.rules)
+        print(
+            f"  Generated {total_tokens} total tokens across {len(postfix_ctx.rules)} rules",
+        )
+
+        print("Step 5: Serializing to JSON...")
+        rules_data = serialize_context(postfix_ctx)
+
+        print("✓ Rules generated successfully")
+        return rules_data
+
+    except Exception as e:
+        print(f"✗ Error generating rules: {e}", file=sys.stderr)
         raise RuntimeError(f"Failed to generate rules: {e}")
 
 
@@ -90,7 +110,7 @@ def load_json_file(file_path):
     if not file_path.exists():
         raise FileNotFoundError(f"File not found: {file_path}")
     
-    with open(file_path, 'r') as f:
+    with open(file_path, 'r', encoding='utf-8') as f:
         return json.load(f)
 
 
@@ -121,7 +141,7 @@ def validate_config(config, schema):
 def write_json_file(data, file_path, indent=2):
     file_path = Path(file_path)
     file_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(file_path, 'w') as f:
+    with open(file_path, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=indent)
         f.write('\n')
 
@@ -131,13 +151,11 @@ def main():
     
     try:
         print("=" * 70)
-        print("Step 1: Generating rules.json from Sigma rules")
+        print("Step 1: Generating rules data from Sigma rules")
         print("=" * 70)
-        
-        rules_json_path = Path(args.rules_directory).parent / 'rules.json'
-        generate_rules_json(
+
+        rules_data = generate_rules_json(
             args.rules_directory,
-            str(rules_json_path),
             args.placeholders,
             args.mapping_file,
         )
@@ -150,10 +168,7 @@ def main():
         print(f"Loading base config: {args.config_file}")
         base_config = load_json_file(args.config_file)
         print("✓ Base config loaded")
-        
-        print(f"Loading rules: {rules_json_path}")
-        rules_data = load_json_file(rules_json_path)
-        print("✓ Rules loaded")
+        print("✓ Rules ready")
         print()
         
         print("=" * 70)
