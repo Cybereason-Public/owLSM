@@ -1,11 +1,11 @@
 name: Build Artifact Full Lifecycle
 
 on:
-  pull_request_review:
+  workflow_run:
+    workflows:
+      - "PR Approval Gate"
     types:
-      - submitted
-    branches:
-      - 'main'
+      - completed
   workflow_dispatch:
     inputs:
       create_tag:
@@ -53,10 +53,18 @@ env:
 jobs:
   build:
     name: Build Artifact
+    # For workflow_run: only proceed when the gate workflow succeeded (PR was approved).
+    # For workflow_dispatch: always run.
     if: >-
       github.event_name == 'workflow_dispatch' ||
-      github.event.review.state == 'approved'
+      github.event.workflow_run.conclusion == 'success'
     runs-on: ["OCI", "owLSM"]
+    # This environment gate requires a maintainer to click "Approve and deploy"
+    # in the Actions UI before this job starts. Secrets (GH_RUNNER_PAT,
+    # SSH_PUBLIC_KEY) live in this environment, so they are physically
+    # inaccessible until a human approves — even though workflow_run already
+    # runs in the base-repo context.
+    environment: ci-runners
     permissions:
       contents: write
     steps:
@@ -64,6 +72,9 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0  # Full history for revision info
+          # For workflow_run (fork PR): check out the PR's head commit.
+          # For workflow_dispatch: falls back to the default sha (HEAD).
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Get branch info
         id: branch_info
@@ -217,7 +228,7 @@ jobs:
   automation-tests-runners:
     name: Create runners and run automation tests
     needs: [build]
-    if: github.event_name == 'pull_request_review' || inputs.run_automation_tests == true
+    if: github.event_name == 'workflow_run' || inputs.run_automation_tests == true
     uses: ./.github/workflows/automation-tests-runners.yml
     with:
       artifact-name: ${{ needs.build.outputs.artifact_name }}

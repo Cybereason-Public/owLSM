@@ -31,6 +31,10 @@ jobs:
   destroy-runners:
     name: Destroy OCI Runner VMs
     runs-on: ["OCI", "owLSM"]
+    # Required for workflow_dispatch and schedule triggers to access secrets
+    # from the ci-runners environment. When called via workflow_call, secrets
+    # are already passed explicitly so the gate is skipped automatically.
+    environment: ci-runners
 
     steps:
       # =====================================================================

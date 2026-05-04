@@ -72,6 +72,7 @@ jobs:
   provision-runners:
     name: Provision OCI Runner VMs
     runs-on: ["OCI", "owLSM"]
+    environment: ci-runners
     outputs:
       runners_ready: ${{ steps.apply.outputs.runners_ready }}
       runner_labels: ${{ steps.runner_count.outputs.labels }}
