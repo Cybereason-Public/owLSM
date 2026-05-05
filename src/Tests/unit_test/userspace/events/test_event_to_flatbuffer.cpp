@@ -129,7 +129,7 @@ TEST_F(EventToFlatbufferTest, exit_event_with_exit_code_and_signal)
     EXPECT_EQ(exit_d->exit_code(), 137u);
     EXPECT_EQ(exit_d->signal(), 9u);
 }
-
+// delete me
 TEST_F(EventToFlatbufferTest, chmod_event_with_file_details)
 {
     auto ev = makeBaseEvent(CHMOD, 5);
