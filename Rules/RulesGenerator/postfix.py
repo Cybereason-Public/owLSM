@@ -1,7 +1,12 @@
 from dataclasses import dataclass
+import sys
 from typing import List, Optional
 from AST import ConditionExpr, ParsedRule, ParsedRulesContext
 from constants import MAX_TOKENS_PER_RULE, OperatorType
+
+
+def log_info(message):
+    print(message, file=sys.stderr)
 
 
 @dataclass
@@ -125,26 +130,21 @@ def convert_to_postfix(ctx: ParsedRulesContext) -> PostfixRulesContext:
 
 def print_postfix_context(ctx: PostfixRulesContext) -> None:
     """Print the postfix context for debugging."""
-    print("=" * 60)
-    print("id_to_string:")
-    print("=" * 60)
+    log_info("id_to_string:")
     for idx, entry in sorted(ctx.id_to_string.items()):
         contains_tag = " [CONTAINS]" if entry.is_contains else ""
-        print(f"  {idx}: {repr(entry.value)}{contains_tag}")
+        log_info(f"  {idx}: {repr(entry.value)}{contains_tag}")
     
-    print()
-    print("=" * 60)
-    print("id_to_predicate:")
-    print("=" * 60)
+    log_info("id_to_predicate:")
     for idx, pred in sorted(ctx.id_to_predicate.items()):
-        print(f"  {idx}: Predicate({pred.field}, {pred.comparison_type}, string_idx={pred.string_idx})")
+        log_info(
+            f"  {idx}: Predicate({pred.field}, {pred.comparison_type}, string_idx={pred.string_idx})",
+        )
     
-    print()
-    print("=" * 60)
-    print("Postfix Rules:")
-    print("=" * 60)
+    log_info("")
+    log_info("Postfix Rules:")
     for rule in ctx.rules:
-        print(f"\nRule {rule.rule_id}: {rule.description}")
-        print(f"  Action: {rule.action}")
-        print(f"  Tokens ({len(rule.tokens)}): {' '.join(repr(t) for t in rule.tokens)}")
+        log_info(f"\nRule {rule.rule_id}: {rule.description}")
+        log_info(f"  Action: {rule.action}")
+        log_info(f"  Tokens ({len(rule.tokens)}): {' '.join(repr(t) for t in rule.tokens)}")
 

@@ -2,14 +2,36 @@
 import argparse
 import json
 import sys
+import traceback
 from pathlib import Path
 import jsonschema
 from AST import parse_rules
 from field_mapping import load_field_mapping_file
+from memory_input_handler import MemoryInputHandler
 from placeholder_expander import load_placeholders
-from postfix import convert_to_postfix
+from postfix import convert_to_postfix, log_info
 from serializer import serialize_context
 from sigma_rule_loader import load_sigma_rules
+
+
+def _resolve_first_existing_path(candidates):
+    for candidate in candidates:
+        resolved = Path(candidate).resolve()
+        if resolved.exists():
+            return resolved
+    return None
+
+
+def _packaged_and_embedded_candidates(relative_path):
+    exe_dir = Path(sys.executable).resolve().parent
+
+    candidates = [(exe_dir / ".." / "rules_generator" / relative_path).resolve()]
+
+    if hasattr(sys, "_MEIPASS"):
+        meipass_dir = Path(getattr(sys, "_MEIPASS")).resolve()
+        candidates.append((meipass_dir / relative_path).resolve())
+
+    return candidates
 
 
 def parse_arguments():
@@ -20,24 +42,25 @@ def parse_arguments():
 Examples:
   %(prog)s -d /path/to/rules/directory -c base_config.json -o output_config.json
   %(prog)s -d ./sigma_rules -c config.json -o final.json -p placeholders.yml
+  %(prog)s --memory < input.json > output.json
         """
     )
     
     parser.add_argument(
         '-d', '--rules_directory',
-        required=True,
+        required=False,
         help='Directory containing Sigma rule files (.yml)'
     )
     
     parser.add_argument(
         '-c', '--config_file',
-        required=True,
+        required=False,
         help='Path to base configuration file (JSON)'
     )
     
     parser.add_argument(
         '-o', '--output_file',
-        required=True,
+        required=False,
         help='Path to output configuration file (JSON)'
     )
 
@@ -53,55 +76,93 @@ Examples:
         help='YAML file mapping external field names to owLSM field names'
     )
 
-    return parser.parse_args()
+    parser.add_argument(
+        '--memory',
+        action='store_true',
+        help='Read input JSON from stdin and write final config JSON to stdout. For users that dont want their rules/config files to be on the disk.'
+    )
+
+    args = parser.parse_args()
+
+    if args.memory:
+        file_mode_flags = [
+            args.rules_directory,
+            args.config_file,
+            args.output_file,
+            args.placeholders,
+            args.mapping_file,
+        ]
+        if any(value is not None for value in file_mode_flags):
+            parser.error("--memory cannot be used with file-based flags (-d/-c/-o/-p/-m)")
+    else:
+        if not args.rules_directory or not args.config_file or not args.output_file:
+            parser.error("file mode requires -d/--rules_directory, -c/--config_file, and -o/--output_file")
+
+    return args
+
+
+def _build_rules_json(rules):
+    log_info(f"Loaded and validated {len(rules)} rules")
+
+    ast_ctx = parse_rules(rules)
+    log_info(f"Parsed detection sections: {len(ast_ctx.id_to_string)} strings, {len(ast_ctx.id_to_predicate)} predicates")
+
+    postfix_ctx = convert_to_postfix(ast_ctx)
+    total_tokens = sum(len(rule.tokens) for rule in postfix_ctx.rules)
+    log_info(f"Converted to postfix notation: {total_tokens} tokens across {len(postfix_ctx.rules)} rules")
+
+    rules_data = serialize_context(postfix_ctx)
+    log_info("Rules generated successfully")
+    return rules_data
 
 
 def generate_rules_json(rules_directory, placeholder_file=None, mapping_file=None):
-    print(f"Generating rules from directory: {rules_directory}")
+    log_info(f"Generating rules from directory: {rules_directory}")
     try:
         placeholders = None
         if placeholder_file:
-            print(f"Loading placeholders from: {placeholder_file}")
+            log_info(f"Loading placeholders from: {placeholder_file}")
             placeholders = load_placeholders(placeholder_file)
-            print(f"  Loaded {len(placeholders)} placeholder definitions")
+            log_info(f"Loaded {len(placeholders)} placeholder definitions")
 
         field_mapping = None
         if mapping_file:
-            print(f"Loading field mapping from: {mapping_file}")
+            log_info(f"Loading field mapping from: {mapping_file}")
             field_mapping = load_field_mapping_file(mapping_file)
-            print(f"  Loaded {len(field_mapping)} field alias(es)")
+            log_info(f"Loaded {len(field_mapping)} field alias(es)")
 
-        print("Step 1-2: Loading and validating rules...")
         rules = load_sigma_rules(
             rules_directory,
             placeholders=placeholders,
             placeholder_file=placeholder_file,
             field_mapping=field_mapping,
         )
-        print(f"  Loaded {len(rules)} rules")
-
-        print("Step 3: Parsing detection sections (AST)...")
-        ast_ctx = parse_rules(rules)
-        print(
-            f"  Built tables: {len(ast_ctx.id_to_string)} strings, {len(ast_ctx.id_to_predicate)} predicates",
-        )
-
-        print("Step 4: Converting to postfix notation...")
-        postfix_ctx = convert_to_postfix(ast_ctx)
-        total_tokens = sum(len(rule.tokens) for rule in postfix_ctx.rules)
-        print(
-            f"  Generated {total_tokens} total tokens across {len(postfix_ctx.rules)} rules",
-        )
-
-        print("Step 5: Serializing to JSON...")
-        rules_data = serialize_context(postfix_ctx)
-
-        print("✓ Rules generated successfully")
-        return rules_data
+        return _build_rules_json(rules)
 
     except Exception as e:
         print(f"✗ Error generating rules: {e}", file=sys.stderr)
         raise RuntimeError(f"Failed to generate rules: {e}")
+
+
+def generate_rules_json_from_memory(memory_input_handler: MemoryInputHandler):
+    log_info("Generating rules from stdin memory payload")
+    try:
+        placeholders = memory_input_handler.get_placeholders()
+        if placeholders is not None:
+            log_info(f"Loaded {len(placeholders)} placeholder definitions from stdin")
+
+        field_mapping = memory_input_handler.get_field_mapping()
+        if field_mapping is not None:
+            log_info(f"Loaded {len(field_mapping)} field alias(es) from stdin")
+
+        rules = memory_input_handler.load_rules(
+            placeholders=placeholders,
+            field_mapping=field_mapping,
+        )
+        return _build_rules_json(rules)
+    except Exception as e:
+        print(f"✗ Error generating rules from memory input: {e}", file=sys.stderr)
+        raise RuntimeError(f"Failed to generate rules from memory input: {e}")
 
 
 def load_json_file(file_path):
@@ -118,19 +179,21 @@ def merge_config(base_config, rules_data):
     merged = dict(base_config)
     merged['rules'] = rules_data
     
-    print(f"✓ Merged configuration:")
-    print(f"  - {len(rules_data.get('id_to_string', {}))} strings")
-    print(f"  - {len(rules_data.get('id_to_predicate', {}))} predicates")
-    print(f"  - {len(rules_data.get('rules', []))} rules")
+    log_info(
+        "Merged configuration: "
+        f"{len(rules_data.get('id_to_string', {}))} strings, "
+        f"{len(rules_data.get('id_to_predicate', {}))} predicates, "
+        f"{len(rules_data.get('rules', []))} rules",
+    )
     
     return merged
 
 
 def validate_config(config, schema):
-    print("Validating configuration against schema...")
+    log_info("Validating configuration against schema...")
     try:
         jsonschema.validate(instance=config, schema=schema)
-        print("✓ Configuration is valid")
+        log_info("Configuration is valid")
     except jsonschema.ValidationError as e:
         print(f"✗ Validation error:", file=sys.stderr)
         print(f"  Message: {e.message}", file=sys.stderr)
@@ -146,67 +209,76 @@ def write_json_file(data, file_path, indent=2):
         f.write('\n')
 
 
+def write_json_stdout(data, indent=2):
+    json.dump(data, sys.stdout, indent=indent)
+    sys.stdout.write('\n')
+
+
+def get_embedded_base_config_path():
+    script_dir = Path(__file__).resolve().parent
+    candidates = [script_dir / "base_config.json", *_packaged_and_embedded_candidates("base_config.json")]
+    resolved_path = _resolve_first_existing_path(candidates)
+    if resolved_path is not None:
+        return resolved_path
+
+    candidate_text = ", ".join(str(path) for path in candidates)
+    raise FileNotFoundError(f"base_config.json not found in expected paths: {candidate_text}")
+
+
+def get_configuration_schema_path():
+    script_dir = Path(__file__).resolve().parent
+    candidates = [
+        (script_dir / "../../src/Userspace/configuration/schema.json").resolve(),
+        *_packaged_and_embedded_candidates("schema.json"),
+    ]
+    resolved_path = _resolve_first_existing_path(candidates)
+    if resolved_path is not None:
+        return resolved_path
+
+    candidate_text = ", ".join(str(path) for path in candidates)
+    raise FileNotFoundError(f"schema.json not found in expected paths: {candidate_text}")
+
+
 def main():
     args = parse_arguments()
     
     try:
-        print("=" * 70)
-        print("Step 1: Generating rules data from Sigma rules")
-        print("=" * 70)
+        log_info("Step 1/5: Generating rules data from Sigma rules")
 
-        rules_data = generate_rules_json(
-            args.rules_directory,
-            args.placeholders,
-            args.mapping_file,
-        )
-        print()
-        
-        print("=" * 70)
-        print("Step 2: Loading configuration files")
-        print("=" * 70)
-        
-        print(f"Loading base config: {args.config_file}")
-        base_config = load_json_file(args.config_file)
-        print("✓ Base config loaded")
-        print("✓ Rules ready")
-        print()
-        
-        print("=" * 70)
-        print("Step 3: Merging configuration")
-        print("=" * 70)
-        
-        merged_config = merge_config(base_config, rules_data)
-        print()
-        
-        print("=" * 70)
-        print("Step 4: Validating configuration")
-        print("=" * 70)
-        
-        script_dir = Path(__file__).parent
-        schema_path = script_dir / '../../src/Userspace/configuration/schema.json'
-        schema_path = schema_path.resolve()
-        
-        if not schema_path.exists():
-            print(f"Warning: Schema not found at {schema_path}", file=sys.stderr)
-            print("Skipping validation", file=sys.stderr)
+        if args.memory:
+            memory_input_handler = MemoryInputHandler.from_stdin()
+            rules_data = generate_rules_json_from_memory(memory_input_handler)
+            base_config_path = get_embedded_base_config_path()
         else:
-            print(f"Loading schema: {schema_path}")
-            schema = load_json_file(schema_path)
-            validate_config(merged_config, schema)
-        print()
-        
-        print("=" * 70)
-        print("Step 5: Writing output")
-        print("=" * 70)
-        
-        print(f"Writing to: {args.output_file}")
-        write_json_file(merged_config, args.output_file)
-        print(f"✓ Configuration written successfully")
-        print()
-        
-        print("=" * 70)
-        print("✓ Done! Configuration generated successfully")
-        print("=" * 70)
+            rules_data = generate_rules_json(
+                args.rules_directory,
+                args.placeholders,
+                args.mapping_file,
+            )
+            base_config_path = args.config_file
+            
+        log_info("Step 2/5: Loading configuration files")
+        base_config = load_json_file(base_config_path)
+        log_info("Base config loaded")
+
+        log_info("Step 3/5: Merging configuration")
+        merged_config = merge_config(base_config, rules_data)
+
+        log_info("Step 4/5: Validating configuration")
+        schema_path = get_configuration_schema_path()
+        log_info(f"Loading schema: {schema_path}")
+        schema = load_json_file(schema_path)
+        validate_config(merged_config, schema)
+
+        log_info("Step 5/5: Writing output")
+        if args.memory:
+            log_info("Writing final config to stdout")
+            write_json_stdout(merged_config)
+        else:
+            log_info(f"Writing to: {args.output_file}")
+            write_json_file(merged_config, args.output_file)
+        log_info("Configuration written successfully")
+        log_info("Done. Configuration generated successfully")
         
     except FileNotFoundError as e:
         print(f"✗ Error: {e}", file=sys.stderr)
@@ -219,7 +291,6 @@ def main():
         sys.exit(1)
     except Exception as e:
         print(f"✗ Unexpected error: {e}", file=sys.stderr)
-        import traceback
         traceback.print_exc()
         sys.exit(1)
 

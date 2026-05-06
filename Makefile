@@ -36,11 +36,11 @@ INSTALL_DIR    := $(BUILD_DIR)/owlsm
 TEST_INSTALL_DIR := $(BUILD_DIR)/unit_tests
 
 # ---- Phony Targets -------------------------------------------
-.PHONY: all clean test tarball automation help kernel userspace
+.PHONY: all clean test tarball automation help kernel userspace rules_generator
 .DEFAULT_GOAL := all
 
 # ---- Build Targets -------------------------------------------
-all: kernel userspace
+all: kernel userspace rules_generator
 	@python3 $(SCRIPTS_DIR)/package.py owlsm
 
 kernel:
@@ -50,6 +50,10 @@ kernel:
 userspace: kernel
 	@echo "==> Building Userspace..."
 	@$(MAKE) -C $(USERSPACE_DIR)
+
+rules_generator:
+	@echo "==> Building RulesGenerator binary..."
+	@bash Rules/RulesGenerator/build_py_to_bin.sh
 
 test: kernel
 	@echo "==> Building unit tests..."
@@ -75,6 +79,8 @@ clean:
 	@echo "==> Cleaning Tests..."
 	@$(MAKE) -C $(UNIT_TEST_DIR) clean
 	@$(MAKE) -C $(AUTOMATION_RESOURCES_DIR) clean
+	@echo "==> Cleaning RulesGenerator binary..."
+	@rm -f Rules/RulesGenerator/rules_generator
 	@echo "==> Cleaning build directory..."
 	@rm -rf $(BUILD_DIR)
 
@@ -82,12 +88,13 @@ help:
 	@echo "OWLSM Build System"
 	@echo ""
 	@echo "Targets:"
-	@echo "  all        - Build and package owlsm (default) → build/owlsm/"
+	@echo "  all        - Build and package owlsm (default) → build/owlsm/ (includes rules_generator)"
 	@echo "  kernel     - Build eBPF kernel code"
 	@echo "  userspace  - Build userspace binary"
 	@echo "  test       - Build and package unit tests → build/unit_tests/"
 	@echo "  tarball    - Create release tarball (depends on all)"
 	@echo "  automation - Build and setup automation tests"
+	@echo "  rules_generator - Build RulesGenerator binary → Rules/RulesGenerator/rules_generator"
 	@echo "  clean      - Clean all build artifacts"
 	@echo "  help       - Show this help message"
 	@echo ""

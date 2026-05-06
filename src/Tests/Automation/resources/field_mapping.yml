@@ -1,0 +1,3 @@
+event.custom.path1: process.file.path
+event.custom.path2: process.file.path
+event.custom.name: process.file.filename

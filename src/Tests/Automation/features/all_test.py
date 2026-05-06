@@ -5,6 +5,7 @@ from common_steps.event_steps import *
 from common_steps.network_steps import *
 from common_steps.logger_steps import *
 from common_steps.db_steps import *
+from features.rules_generator_steps import *
 
 @scenario('on_chmod_test.feature', 'allowed_chmod')
 def test_allowed_chmod():
@@ -300,4 +301,16 @@ def test_placeholder_expand_two_of_three_fields_match_allows_chmod():
 
 @scenario('flatbuffer.feature', 'flatbuffer_output_events_and_errors')
 def test_flatbuffer_output_events_and_errors():
+    pass
+
+@scenario('rules_generator.feature', 'rules_generator_binary_gets_files_valid')
+def test_rules_generator_binary_gets_files_valid():
+    pass
+
+@scenario('rules_generator.feature', 'rules_generator_binary_gets_memory_valid')
+def test_rules_generator_binary_gets_memory_valid():
+    pass
+
+@scenario('rules_generator.feature', 'rules_generator_binary_gets_memory_invalid')
+def test_rules_generator_binary_gets_memory_invalid():
     pass
