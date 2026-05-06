@@ -7,7 +7,7 @@
 #include <vector>
 #include <netinet/in.h>
 
-#testcommit
+// test commit
 
 class EventToFlatbufferTest : public ::testing::Test
 {
