@@ -83,47 +83,47 @@ def run_shell_commands_sync(shell_path: str, commands: Union[str, List[str]], ti
             child.terminate(force=True)
         return False, shell_pid
 
-def run_command_sync(command: str, timeout: int = None, stdout_fd=None, stderr_fd=None, stdin_data=None, expect_exit_code=None, user: str = None) -> bool:
+def run_command_sync(command: str, timeout: int = None, stdout_out: list = None, stderr_out: list = None, stdin_data=None, expect_exit_code=None, user: str = None) -> bool:
     return_value = False
     try:
-        stdout_target = stdout_fd if stdout_fd is not None else subprocess.PIPE
-        stderr_target = stderr_fd if stderr_fd is not None else subprocess.PIPE
-        
         result = subprocess.run(
-            command.split(), 
-            stdout=stdout_target,
-            stderr=stderr_target,
+            command.split(),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             input=stdin_data,
             text=True,
             timeout=timeout,
             user=user,
         )
-        
+
+        if stdout_out is not None:
+            stdout_out.append(result.stdout)
+        if stderr_out is not None:
+            stderr_out.append(result.stderr)
+
         user_info = f" (as user: {user})" if user else ""
-        if stdout_fd is None and stderr_fd is None:
-            logger.log_info(f"Command completed{user_info}: {command}, stdout: {result.stdout.strip()}, stderr: {result.stderr.strip()}, exit code: {result.returncode}")
-        else:
-            logger.log_info(f"Command completed{user_info}: {command}, exit code: {result.returncode} (output redirected to provided file descriptors)")
+        logger.log_info(f"Command completed{user_info}: {command}, exit code: {result.returncode}")
 
         if expect_exit_code is not None:
             return_value = (result.returncode == expect_exit_code)
         else:
             return_value = True
-        
+
     except subprocess.TimeoutExpired as e:
         message = f"Command timed out after {timeout}s: {command}"
-        if stdout_fd is None and e.stdout:
+        if e.stdout:
             message += f"\nSTDOUT: {e.stdout.strip()}"
-        if stderr_fd is None and e.stderr:
+        if e.stderr:
             message += f"\nSTDERR: {e.stderr.strip()}"
         logger.log_error(message)
         return_value = False
-        
+
     except Exception as e:
         logger.log_error(f"Failed to run command: {command}. Error: {e}")
         return_value = False
 
     return return_value
+
 
 
 def run_command_async(command: str, stdout_fd=None, stderr_fd=None, user: str = None):

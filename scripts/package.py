@@ -24,12 +24,15 @@ LIBRARY_SEARCH_PATHS = ["/usr/lib64", "/usr/lib/x86_64-linux-gnu", "/usr/lib", "
 RESOURCES_SRC = PROJECT_ROOT / "src" / "Userspace" / "resources"
 FLATBUFFERS_SRC = PROJECT_ROOT / "src" / "Userspace" / "events" / "flatbuffers"
 RULES_GENERATOR_SRC = PROJECT_ROOT / "Rules" / "RulesGenerator"
+RULES_GENERATOR_BIN = RULES_GENERATOR_SRC / "rules_generator"
 RULES_GENERATOR_FILES = [
     "AST.py",
     "base_config.json",
     "constants.py",
     "create_config.py",
     "field_mapping.py",
+    "memory_input_handler.py",
+    "memory_json_schema.json",
     "placeholder_expander.py",
     "postfix.py",
     "regex_dfa.py",
@@ -43,6 +46,7 @@ MODES = {
         "binary": PROJECT_ROOT / "src" / "Userspace" / "owlsm",
         "output": PROJECT_ROOT / "build" / "owlsm",
         "with_rules_generator": True,
+        "with_rules_generator_bin": True,
         "with_resources": True,
         "with_flatbuffers": True,
     },
@@ -102,6 +106,10 @@ def package(mode_name):
         print(f"Error: Binary not found: {binary_path}")
         sys.exit(1)
 
+    if mode.get("with_rules_generator_bin") and not RULES_GENERATOR_BIN.is_file():
+        print(f"Error: RulesGenerator binary not found: {RULES_GENERATOR_BIN}")
+        sys.exit(1)
+
     print(f"==> Packaging {binary_path.name} into {output_dir}")
 
     # Recreate directory structure (handle both file and directory from previous builds)
@@ -116,8 +124,10 @@ def package(mode_name):
     bin_dir.mkdir(parents=True)
     lib_dir.mkdir(parents=True)
 
-    # Copy binary
+    # Copy binaries
     shutil.copy2(binary_path, bin_dir / binary_path.name)
+    if mode.get("with_rules_generator_bin"):
+        shutil.copy2(RULES_GENERATOR_BIN, bin_dir / RULES_GENERATOR_BIN.name)
 
     # Copy shared libraries (resolve symlinks, keep SONAME filename)
     print("==> Copying shared libraries...")

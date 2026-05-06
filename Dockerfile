@@ -45,7 +45,8 @@ RUN rm -rf /var/lib/apt/lists/* && \
         libgtest-dev \
         googletest \
         # misc
-        make && \
+        make \
+        patchelf && \
     rm -rf /var/lib/apt/lists/*
 
 # Make clang-18 and LLVM tools the default (without version suffix)

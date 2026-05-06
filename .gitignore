@@ -19,6 +19,9 @@ venv/
 .DS_Store
 Thumbs.db
 
+# RulesGenerator compiled binary
+Rules/RulesGenerator/rules_generator
+
 # automation 
 *.log
 *.sqlite

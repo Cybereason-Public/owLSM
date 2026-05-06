@@ -1,8 +1,28 @@
 import json
+import sys
 from pathlib import Path
 from enum import Enum
 
-_constants_path = Path(__file__).resolve().parent.parent.parent / "src" / "Shared" / "constants.json"
+
+def _find_constants_path() -> Path:
+    script_dir = Path(__file__).resolve().parent
+    exe_dir = Path(sys.executable).resolve().parent
+    candidates = [(script_dir.parent.parent / "src" / "Shared" / "constants.json").resolve()]
+    candidates.append((exe_dir / ".." / "rules_generator" / "constants.json").resolve())
+
+    if hasattr(sys, "_MEIPASS"):
+        meipass_dir = Path(getattr(sys, "_MEIPASS")).resolve()
+        candidates.append((meipass_dir / "constants.json").resolve())
+
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+
+    candidate_text = ", ".join(str(path) for path in candidates)
+    raise FileNotFoundError(f"constants.json not found in expected paths: {candidate_text}")
+
+
+_constants_path = _find_constants_path()
 _config = json.loads(_constants_path.read_text())
 
 MAX_TOKENS_PER_RULE: int = _config["MAX_TOKENS_PER_RULE"]
