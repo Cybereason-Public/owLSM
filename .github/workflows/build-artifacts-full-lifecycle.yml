@@ -51,30 +51,11 @@ env:
   VERSION: ${{ github.event.inputs.major || '1' }}.${{ github.event.inputs.minor || '0' }}.${{ github.event.inputs.patch || '0' }}
 
 jobs:
-  # Environment gate job — only runs for workflow_run (fork PR) trigger.
-  # Pauses here and requires a maintainer to click "Approve and deploy"
-  # in the Actions UI before the build job starts. Skipped entirely for
-  # workflow_dispatch so manual runs proceed without reviewer approval.
-  environment-gate:
-    name: Environment Gate (fork PR only)
-    # Only pause for fork PRs — internal PRs and manual runs proceed without gate.
-    if: >-
-      github.event_name == 'workflow_run' &&
-      github.event.workflow_run.head_repository.full_name != github.repository
-    runs-on: ubuntu-latest
-    environment: ci-runners
-    steps:
-      - run: echo "Environment gate passed for ${{ github.event.workflow_run.head_sha }}"
-
   build:
     name: Build Artifact
-    needs: [environment-gate]
     if: >-
-      always() &&
-      (github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'workflow_run' &&
-       github.event.workflow_run.conclusion == 'success' &&
-       (needs.environment-gate.result == 'success' || needs.environment-gate.result == 'skipped')))
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
     runs-on: ["OCI", "owLSM"]
     permissions:
       contents: write
