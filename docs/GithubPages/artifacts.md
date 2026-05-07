@@ -18,16 +18,15 @@ Running `make -j$(nproc)` builds and packages into `build/owlsm/`:
 ```
 build/owlsm/
 ├── bin/
-│   └── owlsm                 # Main binary
+│   ├── owlsm                  # Main binary
+│   └── rules_generator        # RulesGenerator binary
 ├── lib/
 │   ├── libelf.so.1            # Required shared libraries
 │   ├── libz.so.1              # (auto-detected via ldd)
 │   └── ...
-├── resources/
-│   └── ...                    # Userspace resource files
-└── rules_generator/
-    ├── create_config.py       # Config creation tool
-    └── ...
+└── resources/
+    ├── base_config.json       # Starting config template (no rules)
+    └── ...                    # Userspace resource files
 ```
 
 ## Unit Tests Output (`make test`)
