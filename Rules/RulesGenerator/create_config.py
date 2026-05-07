@@ -23,15 +23,10 @@ def _resolve_first_existing_path(candidates):
 
 
 def _packaged_and_embedded_candidates(relative_path):
-    exe_dir = Path(sys.executable).resolve().parent
-
-    candidates = [(exe_dir / ".." / "rules_generator" / relative_path).resolve()]
-
     if hasattr(sys, "_MEIPASS"):
         meipass_dir = Path(getattr(sys, "_MEIPASS")).resolve()
-        candidates.append((meipass_dir / relative_path).resolve())
-
-    return candidates
+        return [(meipass_dir / relative_path).resolve()]
+    return []
 
 
 def parse_arguments():

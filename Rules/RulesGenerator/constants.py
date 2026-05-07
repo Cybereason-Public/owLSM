@@ -6,9 +6,7 @@ from enum import Enum
 
 def _find_constants_path() -> Path:
     script_dir = Path(__file__).resolve().parent
-    exe_dir = Path(sys.executable).resolve().parent
     candidates = [(script_dir.parent.parent / "src" / "Shared" / "constants.json").resolve()]
-    candidates.append((exe_dir / ".." / "rules_generator" / "constants.json").resolve())
 
     if hasattr(sys, "_MEIPASS"):
         meipass_dir = Path(getattr(sys, "_MEIPASS")).resolve()

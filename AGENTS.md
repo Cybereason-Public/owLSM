@@ -12,7 +12,7 @@ Using EBPF hooks it monitors the system and prevents malicious behavior.
 | **Kernel** | eBPF programs for syscall/network/other monitoring and rule enforcement | `src/Kernel/AGENTS.md` |
 | **Userspace** | C++ program that attaches eBPF programs, manages config and rules, and handles events | `src/Userspace/AGENTS.md` |
 | **Shared** | Common headers, files and scripts (constants, structs) used by more then one component. | `src/Shared/AGENTS.md` |
-| **RulesGenerator** | Python tool that converts Sigma YAML rules to JSON config | `Rules/RulesGenerator/AGENTS.md` |
+| **RulesGenerator** | Converts Sigma YAML rules to JSON config — available as Python source and as a compiled binary | `Rules/RulesGenerator/AGENTS.md` |
 | **Automation Tests** | pytest-bdd integration tests | `src/Tests/Automation/AGENTS.md` |
 | **Unit Tests** | C++ and eBPF unit tests using Google's GTest | `src/Tests/unit_test/AGENTS.md` |
 
@@ -64,7 +64,7 @@ docker run -it --rm -v "$PWD":/workspace -w /workspace ghcr.io/cybereason-public
 
 | Command | Description |
 |---------|-------------|
-| `make -j$(nproc)` | Build and package owlsm → `build/owlsm/` (bin, lib, resources, rules_generator) |
+| `make -j$(nproc)` | Build and package owlsm → `build/owlsm/` (binaries, libraries, resources, flatbuffers) |
 | `make kernel -j$(nproc)` | Build only eBPF programs |
 | `make userspace -j$(nproc)` | Build only userspace (requires kernel) |
 | `make test -j$(nproc)` | Build and package unit tests → `build/unit_tests/` (bin, lib) |

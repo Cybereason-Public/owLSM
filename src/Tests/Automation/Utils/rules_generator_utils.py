@@ -10,7 +10,7 @@ _SIGMA_DIR = system_globals.RESOURCES_PATH / "sigma_rules"
 _PLACEHOLDERS_FILE = _SIGMA_DIR / "placeholder_values.yml"
 _FIELD_MAPPING_FILE = system_globals.RESOURCES_PATH / "field_mapping.yml"
 _BINARY = system_globals.AUTOMATION_ROOT_DIR / "owlsm" / "bin" / "rules_generator"
-_BASE_CONFIG = system_globals.AUTOMATION_ROOT_DIR / "owlsm" / "rules_generator" / "base_config.json"
+_BASE_CONFIG = system_globals.AUTOMATION_ROOT_DIR / "owlsm" / "resources" / "base_config.json"
 
 
 def run_file_mode(output_path: Path) -> None:

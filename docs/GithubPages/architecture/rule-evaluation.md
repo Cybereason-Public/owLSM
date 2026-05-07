@@ -28,6 +28,7 @@ The rule lifecycle consists of three stages:
 
 ## Stage 1: Rules Generator (YAML → JSON)
 
+
 The Rules Generator (`Rules/RulesGenerator/`) converts Sigma-like YAML rules into a serialized JSON format.
 
 ### Processing Pipeline

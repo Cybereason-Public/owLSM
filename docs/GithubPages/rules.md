@@ -892,7 +892,7 @@ ParentCommandLine: parent_process.cmd
 Then pass that file to the [rules generator](https://github.com/Cybereason-Public/owLSM/blob/main/Rules/README.md):
 
 ```bash
-python create_config.py -m field_mapping.yml -d /path/to/rules -c base_config.json -o full_config.json
+rules_generator -m field_mapping.yml -d /path/to/rules -c base_config.json -o full_config.json
 ```
 
 This translates in memory all of the fields, including `fieldref`, `keywords`, etc'

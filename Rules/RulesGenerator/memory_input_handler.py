@@ -24,12 +24,7 @@ def _resolve_first_existing_path(candidates: List[Path]) -> Optional[Path]:
 def _memory_schema_candidates() -> List[Path]:
     file_name = "memory_json_schema.json"
     script_dir = Path(__file__).resolve().parent
-    exe_dir = Path(sys.executable).resolve().parent
-
-    candidates = [
-        script_dir / file_name,
-        (exe_dir / ".." / "rules_generator" / file_name).resolve(),
-    ]
+    candidates = [script_dir / file_name]
 
     if hasattr(sys, "_MEIPASS"):
         meipass_dir = Path(getattr(sys, "_MEIPASS")).resolve()

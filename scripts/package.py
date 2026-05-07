@@ -25,27 +25,11 @@ RESOURCES_SRC = PROJECT_ROOT / "src" / "Userspace" / "resources"
 FLATBUFFERS_SRC = PROJECT_ROOT / "src" / "Userspace" / "events" / "flatbuffers"
 RULES_GENERATOR_SRC = PROJECT_ROOT / "Rules" / "RulesGenerator"
 RULES_GENERATOR_BIN = RULES_GENERATOR_SRC / "rules_generator"
-RULES_GENERATOR_FILES = [
-    "AST.py",
-    "base_config.json",
-    "constants.py",
-    "create_config.py",
-    "field_mapping.py",
-    "memory_input_handler.py",
-    "memory_json_schema.json",
-    "placeholder_expander.py",
-    "postfix.py",
-    "regex_dfa.py",
-    "requirements.txt",
-    "serializer.py",
-    "sigma_rule_loader.py",
-]
 
 MODES = {
     "owlsm": {
         "binary": PROJECT_ROOT / "src" / "Userspace" / "owlsm",
         "output": PROJECT_ROOT / "build" / "owlsm",
-        "with_rules_generator": True,
         "with_rules_generator_bin": True,
         "with_resources": True,
         "with_flatbuffers": True,
@@ -53,7 +37,6 @@ MODES = {
     "unit_tests": {
         "binary": PROJECT_ROOT / "src" / "Tests" / "unit_test" / "unit_tests",
         "output": PROJECT_ROOT / "build" / "unit_tests",
-        "with_rules_generator": False,
         "with_resources": False,
         "with_flatbuffers": False,
     },
@@ -146,19 +129,9 @@ def package(mode_name):
             if src_file.is_file():
                 shutil.copy2(src_file, resources_dest / src_file.name)
                 print(f"  Copying: {src_file.name}")
-
-    # Copy RulesGenerator source files only (no tests, no repo-level files)
-    if mode["with_rules_generator"]:
-        rules_dest = output_dir / "rules_generator"
-        rules_dest.mkdir()
-        print("==> Copying RulesGenerator source files...")
-        for filename in RULES_GENERATOR_FILES:
-            src = RULES_GENERATOR_SRC / filename
-            if src.is_file():
-                shutil.copy2(src, rules_dest / filename)
-                print(f"  Copying: {filename}")
-            else:
-                print(f"  Warning: {filename} not found in {RULES_GENERATOR_SRC}")
+        base_config_src = RULES_GENERATOR_SRC / "base_config.json"
+        shutil.copy2(base_config_src, resources_dest / "base_config.json")
+        print(f"  Copying: base_config.json")
 
     # Copy FlatBuffers schema, generated headers, and README
     if mode.get("with_flatbuffers"):
