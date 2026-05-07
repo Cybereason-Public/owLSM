@@ -139,7 +139,7 @@ int libbpfLogCallback(enum libbpf_print_level level, const char *format, va_list
     switch (level)
     {
     case LIBBPF_WARN:
-        LOG_WARN("libbpf: '" << buffer << "'");
+        LOG_WARN("tlibbpf: '" << buffer << "'");
         break;
     case LIBBPF_INFO:
         LOG_INFO("libbpf: '" << buffer << "'");
