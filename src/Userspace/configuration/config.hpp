@@ -44,6 +44,7 @@ struct ShellCommandsMonitoringConfig
 struct AntiTamperingEventsConfig
 {
     rule_action signals = EXCLUDE_EVENT;
+    rule_action ptrace = EXCLUDE_EVENT;
 };
 
 struct AntiTamperingConfig

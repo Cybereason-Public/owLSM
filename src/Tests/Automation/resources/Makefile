@@ -35,7 +35,7 @@ FBR_DIR        := flatbuffer_reader
 # Executable lives inside FBR_DIR so the directory name does not clash with the binary.
 FBR_EXE        := $(FBR_DIR)/flatbuffer_reader
 
-TARGETS        := stdio_redirection related_process protected_process OOM_kill_me signal_sender $(FBR_EXE)
+TARGETS        := stdio_redirection related_process protected_process OOM_kill_me signal_sender ptrace_attacher $(FBR_EXE)
 
 # ---- Build Rules ---------------------------------------------
 .PHONY: all clean
@@ -55,6 +55,9 @@ OOM_kill_me: OOM_kill_me.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) $< -o $@ $(LDFLAGS) $(LDLIBS)
 
 signal_sender: signal_sender.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) $< -o $@ $(LDFLAGS) $(LDLIBS)
+
+ptrace_attacher: ptrace_attacher.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) $< -o $@ $(LDFLAGS) $(LDLIBS)
 
 $(FBR_EXE): $(FBR_DIR)/flatbuffer_reader.cpp $(FBR_DIR)/flatbuffer_to_json.cpp

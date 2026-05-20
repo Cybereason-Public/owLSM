@@ -23,7 +23,8 @@ enum event_type {
     NETWORK,
     MKDIR,
     RMDIR,
-    SIGNAL
+    SIGNAL,
+    PTRACE
 };
 
 
@@ -158,6 +159,12 @@ struct signal_event_t
     unsigned int signal;
 };
 
+struct ptrace_event_t
+{
+    struct process_t process;
+    unsigned int mode;
+};
+
 struct network_event_t
 {
     enum connection_direction direction;
@@ -199,6 +206,7 @@ struct event_t
         mkdir_event_t mkdir;
         rmdir_event_t rmdir;
         struct signal_event_t signal;
+        struct ptrace_event_t ptrace;
     } data;
 };
 

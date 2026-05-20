@@ -20,7 +20,8 @@ enum EventType : ubyte {
     READ,
     RENAME,
     NETWORK,
-    SIGNAL
+    SIGNAL,
+    PTRACE
 }
 
 enum Action : ubyte {
@@ -212,6 +213,13 @@ table SignalEventData {
     signal:uint32;
 }
 
+// Ptrace access attempt (anti-tampering)
+// JSON: { "target": { "process": {...} }, "mode": ... }
+table PtraceEventData {
+    target:Target (required);
+    mode:uint32;
+}
+
 union EventData {
     GenericFileEventData,
     ChownEventData,
@@ -221,7 +229,8 @@ union EventData {
     ExitEventData,
     RenameEventData,
     NetworkEventData,
-    SignalEventData
+    SignalEventData,
+    PtraceEventData
 }
 
 // ── Root tables ──────────────────────────────────────────────

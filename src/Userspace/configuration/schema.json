@@ -81,6 +81,9 @@
                             "properties": {
                                 "signals": {
                                     "$ref": "#/definitions/ACTION_TYPE"
+                                },
+                                "ptrace": {
+                                    "$ref": "#/definitions/ACTION_TYPE"
                                 }
                             }
                         }

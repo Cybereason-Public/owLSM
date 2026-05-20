@@ -36,6 +36,7 @@ namespace owlsm
                                                                    owlsm::globals::g_config.rules_config.id_to_ip);
         m_skel->rodata->log_level_to_print = owlsm::globals::g_config.kernel.log_level;
         m_skel->rodata->anti_tampering_signals_action = static_cast<int>(owlsm::globals::g_config.features.anti_tampering.events.signals);
+        m_skel->rodata->anti_tampering_ptrace_action = static_cast<int>(owlsm::globals::g_config.features.anti_tampering.events.ptrace);
 
         for (auto& probe : m_probes) 
         {

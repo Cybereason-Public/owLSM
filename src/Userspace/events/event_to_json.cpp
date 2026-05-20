@@ -146,6 +146,14 @@ void to_json(nlohmann::json& j, const SignalEventData& e)
     };
 }
 
+void to_json(nlohmann::json& j, const PtraceEventData& e)
+{
+    j = nlohmann::json{
+        {"target", {{"process", e.process}}},
+        {"mode", e.mode}
+    };
+}
+
 void to_json(nlohmann::json& j, const ForkEventData&)
 {
     j = nlohmann::json::object();

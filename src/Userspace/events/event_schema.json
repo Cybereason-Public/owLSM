@@ -13,7 +13,7 @@
         },
         "type": {
             "type": "string",
-            "enum": ["EXEC", "FORK", "EXIT", "FILE_CREATE", "UNLINK", "MKDIR", "RMDIR", "CHMOD", "CHOWN", "WRITE", "READ", "RENAME", "NETWORK", "SIGNAL"],
+            "enum": ["EXEC", "FORK", "EXIT", "FILE_CREATE", "UNLINK", "MKDIR", "RMDIR", "CHMOD", "CHOWN", "WRITE", "READ", "RENAME", "NETWORK", "SIGNAL", "PTRACE"],
             "description": "Event type"
         },
         "action": {
@@ -295,6 +295,31 @@
                                 }
                             },
                             "signal": { "type": "integer", "minimum": 0 }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": { "type": { "const": "PTRACE" } }
+            },
+            "then": {
+                "properties": {
+                    "data": {
+                        "type": "object",
+                        "required": ["target", "mode"],
+                        "additionalProperties": false,
+                        "properties": {
+                            "target": {
+                                "type": "object",
+                                "required": ["process"],
+                                "additionalProperties": false,
+                                "properties": {
+                                    "process": { "$ref": "#/definitions/process_object" }
+                                }
+                            },
+                            "mode": { "type": "integer", "minimum": 0 }
                         }
                     }
                 }

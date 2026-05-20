@@ -3,7 +3,8 @@
         "anti_tampering": {
             "enabled": true,
             "events": {
-                "signals": "BLOCK_EVENT"
+                "signals": "BLOCK_EVENT",
+                "ptrace": "BLOCK_EVENT"
             }
         },
         "file_monitoring": {

@@ -69,6 +69,7 @@ Every event shares a common top-level structure. The `data` field varies dependi
 | `RENAME` | File rename / move |
 | `NETWORK` | Network connection (TCP) |
 | `SIGNAL` | Signal sent to a protected process |
+| `PTRACE` | Ptrace access to a protected process |
 
 ### Actions
 
@@ -416,6 +417,21 @@ For <code>MKDIR</code> and <code>RMDIR</code>, the file <code>type</code> will b
     "signal": 9
 }</code></pre>
 </div>
+</div>
+</details>
+
+<details class="field-dropdown">
+<summary><strong>PTRACE</strong> — Ptrace access to a protected process</summary>
+<div class="field-content">
+<div class="interactive-code">
+<pre><code>"data": {
+    "target": {
+        "process": { <a href="#process-object" class="code-link"> Process Object </a> }
+    },
+    "mode": 1
+}</code></pre>
+</div>
+<p><code>mode</code> is the kernel <code>PTRACE_MODE_*</code> flags passed to the LSM hook (unsigned integer).</p>
 </div>
 </details>
 

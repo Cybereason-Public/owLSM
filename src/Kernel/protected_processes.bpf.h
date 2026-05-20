@@ -22,8 +22,13 @@ statfunc void remove_current_pid_from_protected_processes(void)
     }
 }
 
+statfunc int is_pid_protected(unsigned int pid)
+{
+    return bpf_map_lookup_elem(&protected_processes, &pid) != NULL ? TRUE : FALSE;
+}
+
 statfunc int is_current_pid_protected(void)
 {
     unsigned int pid = bpf_get_current_pid_tgid() >> 32;
-    return bpf_map_lookup_elem(&protected_processes, &pid) != NULL ? TRUE : FALSE;
+    return is_pid_protected(pid);
 }
