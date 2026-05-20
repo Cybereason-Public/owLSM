@@ -180,6 +180,16 @@ struct Ipv6Addresses
     unsigned int destination_ip[4] = {0};
 };
 
+struct SignalEventData
+{
+    Process process;
+    unsigned int signal = 0;
+
+    SignalEventData() = default;
+    explicit SignalEventData(const signal_event_t& e)
+        : process(e.process), signal(e.signal) {}
+};
+
 struct NetworkEventData
 {
     connection_direction direction = INCOMING;
@@ -219,7 +229,8 @@ using EventData = std::variant<
     ExitEventData,
     GenericFileEventData,
     RenameEventData,
-    NetworkEventData
+    NetworkEventData,
+    SignalEventData
 >;
 
 struct Event
@@ -260,6 +271,7 @@ struct Event
         case NETWORK: data = NetworkEventData(ev.data.network); break;
         case MKDIR: data = GenericFileEventData(ev.data.mkdir); break;
         case RMDIR: data = GenericFileEventData(ev.data.rmdir); break;
+        case SIGNAL: data = SignalEventData(ev.data.signal); break;
         }
     }
 };

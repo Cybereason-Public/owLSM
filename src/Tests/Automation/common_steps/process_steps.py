@@ -1,4 +1,5 @@
 from pytest_bdd import given, when, then, parsers, scenarios
+import subprocess
 from globals.system_related_globals import system_globals
 from Utils.process_utils import *
 from Utils.logger_utils import logger
@@ -53,14 +54,20 @@ def I_run_the_command_sync_as_grandchild_as_user(command, user):
 @then("The owLSM process is running")
 def the_owlsm_process_is_running():
     assert system_globals.OWLSM_PROCESS_OBJECT is not None, "OWLSM process is None"
-    assert system_globals.OWLSM_PROCESS_OBJECT.poll() is None, "OWLSM process is not running"
+    assert is_subprocess_running(system_globals.OWLSM_PROCESS_OBJECT), "OWLSM process is not running"
 
 
 @given("The owLSM process is not running")
 @when("The owLSM process is not running")
 @then("The owLSM process is not running")
 def the_owlsm_process_is_not_running():
-    assert system_globals.OWLSM_PROCESS_OBJECT is None, "OWLSM process is not None"
+    proc = system_globals.OWLSM_PROCESS_OBJECT
+    if proc is None:
+        return
+    if not is_subprocess_running(proc):
+        system_globals.OWLSM_PROCESS_OBJECT = None
+        return
+    assert False, "OWLSM process is still running"
 
 @given(parsers.parse('I fork and child exits with code "{code}"'))
 @when(parsers.parse('I fork and child exits with code "{code}"'))
@@ -121,9 +128,9 @@ def I_run_the_resource_with_arguments_sync(resource, arguments):
     assert run_command_sync(full_command), f"Failed to run resource: {resource} with arguments: {arguments}"
 
 
-@given(parsers.parse('I run the resource "{resource}" with arguments "{arguments}" async and save pid'))
-@when(parsers.parse('I run the resource "{resource}" with arguments "{arguments}" async and save pid'))
-@then(parsers.parse('I run the resource "{resource}" with arguments "{arguments}" async and save pid'))
+@given(parsers.re(r'I run the resource "(?P<resource>[^"]*)" with arguments "(?P<arguments>[^"]*)" async and save pid'))
+@when(parsers.re(r'I run the resource "(?P<resource>[^"]*)" with arguments "(?P<arguments>[^"]*)" async and save pid'))
+@then(parsers.re(r'I run the resource "(?P<resource>[^"]*)" with arguments "(?P<arguments>[^"]*)" async and save pid'))
 def I_run_the_resource_with_arguments_async_and_save_pid(resource, arguments, scenario_context):
     resource_path = system_globals.RESOURCES_PATH / resource
     full_command = f"{resource_path} {arguments}"
@@ -131,6 +138,7 @@ def I_run_the_resource_with_arguments_async_and_save_pid(resource, arguments, sc
     if proc is None:
         assert False, f"Failed to run resource: {resource} with arguments: {arguments}"
     scenario_context[global_strings.RESOURCE_PID] = proc.pid
+    scenario_context[f"resource_proc_{resource}"] = proc
     logger.log_info(f"Saved scenario_context[{global_strings.RESOURCE_PID}] is {scenario_context[global_strings.RESOURCE_PID]}")
 
 
@@ -155,25 +163,9 @@ def I_run_flatbuffer_reader_async_for_stream_and_save_pid(stream, scenario_conte
 @when("I start the owLSM process with flatbuffers output")
 @then("I start the owLSM process with flatbuffers output")
 def I_start_the_owlsm_process_with_flatbuffers_output():
-    events_bin = system_globals.AUTOMATION_ROOT_DIR / "owLSM_output_events.bin"
-    errors_bin = system_globals.AUTOMATION_ROOT_DIR / "owLSM_output_errors.bin"
-
-    for p in (events_bin, errors_bin):
-        if p.exists():
-            os.remove(p)
-
-    events_fd = open(events_bin, "wb")
-    errors_fd = open(errors_bin, "wb")
-    file_db.add(events_bin)
-    file_db.add(errors_bin)
-    
-
     config_path = system_globals.RESOURCES_PATH / "flatbuffers_config.json"
     command = f"{system_globals.OWLSM_PATH} -c {config_path}"
-
-    start_owlsm_process(command, stdout_fd=events_fd, stderr_fd=errors_fd)
-    events_fd.close()
-    errors_fd.close()
+    start_owlsm_with_flatbuffer_binary_streams(command)
 
 
 @given("I check that the async resource process is still running")
@@ -292,3 +284,61 @@ def I_send_command_to_persistent_shell(command, scenario_context):
 def I_sleep_for_seconds(seconds):
     time.sleep(int(seconds))
     logger.log_info(f"Slept for {seconds} seconds")
+
+
+def _build_anti_tampering_command(name1, name2, config_filename, scenario_context):
+    pids = [os.getpid()]  # always protect the automation process so it can stop owLSM
+    for name in [name1, name2]:
+        if name and name.lower() != "none":
+            res_proc = scenario_context.get(f"resource_proc_{name}")
+            assert res_proc is not None, f"No proc saved for named resource '{name}'"
+            pids.append(res_proc.pid)
+    p_flags = " ".join(f"-p {pid}" for pid in pids)
+    config = system_globals.RESOURCES_PATH / config_filename
+    return f"{system_globals.OWLSM_PATH} -c {config} {p_flags}".strip()
+
+
+@given(parsers.parse('I start owLSM with anti_tampering config and protect the programs "{name1}" and "{name2}"'))
+@when(parsers.parse('I start owLSM with anti_tampering config and protect the programs "{name1}" and "{name2}"'))
+@then(parsers.parse('I start owLSM with anti_tampering config and protect the programs "{name1}" and "{name2}"'))
+def I_start_owlsm_with_anti_tampering_config(name1, name2, scenario_context):
+    command = _build_anti_tampering_command(name1, name2, "anti_tampering_config.json", scenario_context)
+    start_owlsm_process(command)
+
+
+@given(parsers.parse('I start owLSM with anti_tampering flatbuffers config and protect the programs "{name1}" and "{name2}"'))
+@when(parsers.parse('I start owLSM with anti_tampering flatbuffers config and protect the programs "{name1}" and "{name2}"'))
+@then(parsers.parse('I start owLSM with anti_tampering flatbuffers config and protect the programs "{name1}" and "{name2}"'))
+def I_start_owlsm_with_anti_tampering_flatbuffers_config(name1, name2, scenario_context):
+    command = _build_anti_tampering_command(name1, name2, "anti_tampering_flatbuffers_config.json", scenario_context)
+    start_owlsm_with_flatbuffer_binary_streams(command)
+
+
+@given(parsers.parse('I write "{data}" to the resource "{resource}" process stdin'))
+@when(parsers.parse('I write "{data}" to the resource "{resource}" process stdin'))
+@then(parsers.parse('I write "{data}" to the resource "{resource}" process stdin'))
+def I_write_to_resource_stdin(data, resource, scenario_context):
+    proc = scenario_context.get(f"resource_proc_{resource}")
+    assert proc is not None, f"No proc saved for resource '{resource}' in scenario_context"
+    proc.stdin.write(data + "\n")
+    proc.stdin.flush()
+    logger.log_info(f"Wrote '{data}' to resource '{resource}' (pid={proc.pid}) stdin")
+
+
+@given(parsers.parse('I ensure the resource "{resource}" subprocess has exited'))
+@when(parsers.parse('I ensure the resource "{resource}" subprocess has exited'))
+@then(parsers.parse('I ensure the resource "{resource}" subprocess has exited'))
+def I_ensure_the_resource_subprocess_has_exited(resource, scenario_context):
+    proc = scenario_context.get(f"resource_proc_{resource}")
+    assert proc is not None, f"No subprocess saved for resource '{resource}'"
+    assert not is_subprocess_running(proc), \
+        f"Subprocess for resource '{resource}' (pid={proc.pid}) is still running"
+
+
+@given(parsers.parse('I wait until resource "{resource}" is not running with a timeout of "{seconds}" seconds'))
+@when(parsers.parse('I wait until resource "{resource}" is not running with a timeout of "{seconds}" seconds'))
+@then(parsers.parse('I wait until resource "{resource}" is not running with a timeout of "{seconds}" seconds'))
+def I_wait_until_resource_is_not_running_with_timeout(resource, seconds, scenario_context):
+    proc = scenario_context.get(f"resource_proc_{resource}")
+    assert proc is not None, f"No subprocess saved for resource '{resource}'"
+    wait_until_subprocess_exited(proc, float(seconds))

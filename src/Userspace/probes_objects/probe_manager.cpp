@@ -35,6 +35,7 @@ namespace owlsm
                                                                    owlsm::globals::g_config.rules_config.id_to_predicate,
                                                                    owlsm::globals::g_config.rules_config.id_to_ip);
         m_skel->rodata->log_level_to_print = owlsm::globals::g_config.kernel.log_level;
+        m_skel->rodata->anti_tampering_signals_action = static_cast<int>(owlsm::globals::g_config.features.anti_tampering.events.signals);
 
         for (auto& probe : m_probes) 
         {
@@ -43,7 +44,7 @@ namespace owlsm
         }
     }
 
-    void ProbeManager::bpfLoad(const std::vector<unsigned int>& excluded_pids) 
+    void ProbeManager::bpfLoad(const std::vector<unsigned int>& excluded_pids, const std::vector<unsigned int>& protected_pids) 
     {
         int err = all_bpf__load(m_skel.get());
         if (err)
@@ -52,6 +53,7 @@ namespace owlsm
         }
 
         addProgramRelatedPids(excluded_pids);
+        addProtectedPids(protected_pids);
 
         for (auto& probe : m_probes)
         {
@@ -142,6 +144,19 @@ namespace owlsm
             if (bpf_map_update_elem(map_fd, &pid, &dummy, BPF_ANY) < 0)
             {
                 throw std::runtime_error("bpf_map_update_elem program_related_pids. pid: " + std::to_string(pid) + " errno: " + std::to_string(errno));
+            }
+        }
+    }
+
+    void ProbeManager::addProtectedPids(const std::vector<unsigned int>& protected_pids)
+    {
+        int map_fd = bpf_map__fd(m_skel->maps.protected_processes);
+        int dummy = 1;
+        for (unsigned int pid : protected_pids)
+        {
+            if (bpf_map_update_elem(map_fd, &pid, &dummy, BPF_ANY) < 0)
+            {
+                throw std::runtime_error("bpf_map_update_elem protected_processes. pid: " + std::to_string(pid) + " errno: " + std::to_string(errno));
             }
         }
     }

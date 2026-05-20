@@ -138,6 +138,14 @@ void to_json(nlohmann::json& j, const RenameEventData& e)
     };
 }
 
+void to_json(nlohmann::json& j, const SignalEventData& e)
+{
+    j = nlohmann::json{
+        {"target", {{"process", e.process}}},
+        {"signal", e.signal}
+    };
+}
+
 void to_json(nlohmann::json& j, const ForkEventData&)
 {
     j = nlohmann::json::object();

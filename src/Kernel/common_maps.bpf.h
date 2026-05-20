@@ -173,6 +173,16 @@ struct {
 #ifndef DEFINE_MAPS
 extern
 #endif
+struct {
+        __uint(type,       BPF_MAP_TYPE_HASH);
+        __uint(max_entries, PID_MAX_LIMIT);
+        __type(key,        u32);
+        __type(value,      int);
+} protected_processes SEC(".maps");
+
+#ifndef DEFINE_MAPS
+extern
+#endif
 volatile unsigned long long global_event_id_counter;
 
 #ifndef DEFINE_MAPS

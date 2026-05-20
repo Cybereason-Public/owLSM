@@ -28,7 +28,7 @@ public:
     }
     
     void bpfOpen(const std::unordered_map<enum event_type, std::vector<std::shared_ptr<config::Rule>>>& organized_rules);
-    void bpfLoad(const std::vector<unsigned int>& excluded_pids);
+    void bpfLoad(const std::vector<unsigned int>& excluded_pids, const std::vector<unsigned int>& protected_pids);
     virtual void bpfAttach() override;
     virtual void bpfDetach() override;
     virtual void bpfDestroy() override;
@@ -38,6 +38,7 @@ private:
     void startRingbuffers();
     void saveEbpfAttachTime();
     void addProgramRelatedPids(const std::vector<unsigned int>& excluded_pids);
+    void addProtectedPids(const std::vector<unsigned int>& protected_pids);
 
     using AbstractProbe::bpfOpen;
     using AbstractProbe::bpfLoad;

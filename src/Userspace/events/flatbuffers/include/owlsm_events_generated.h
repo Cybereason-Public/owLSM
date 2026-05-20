@@ -68,6 +68,9 @@ struct RenameEventDataBuilder;
 struct NetworkEventData;
 struct NetworkEventDataBuilder;
 
+struct SignalEventData;
+struct SignalEventDataBuilder;
+
 struct Event;
 struct EventBuilder;
 
@@ -88,11 +91,12 @@ enum class EventType : uint8_t {
   READ = 10,
   RENAME = 11,
   NETWORK = 12,
+  SIGNAL = 13,
   MIN = EXEC,
-  MAX = NETWORK
+  MAX = SIGNAL
 };
 
-inline const EventType (&EnumValuesEventType())[13] {
+inline const EventType (&EnumValuesEventType())[14] {
   static const EventType values[] = {
     EventType::EXEC,
     EventType::FORK,
@@ -106,13 +110,14 @@ inline const EventType (&EnumValuesEventType())[13] {
     EventType::WRITE,
     EventType::READ,
     EventType::RENAME,
-    EventType::NETWORK
+    EventType::NETWORK,
+    EventType::SIGNAL
   };
   return values;
 }
 
 inline const char * const *EnumNamesEventType() {
-  static const char * const names[14] = {
+  static const char * const names[15] = {
     "EXEC",
     "FORK",
     "EXIT",
@@ -126,13 +131,14 @@ inline const char * const *EnumNamesEventType() {
     "READ",
     "RENAME",
     "NETWORK",
+    "SIGNAL",
     nullptr
   };
   return names;
 }
 
 inline const char *EnumNameEventType(EventType e) {
-  if (::flatbuffers::IsOutRange(e, EventType::EXEC, EventType::NETWORK)) return "";
+  if (::flatbuffers::IsOutRange(e, EventType::EXEC, EventType::SIGNAL)) return "";
   const size_t index = static_cast<size_t>(e);
   return EnumNamesEventType()[index];
 }
@@ -312,11 +318,12 @@ enum class EventData : uint8_t {
   ExitEventData = 6,
   RenameEventData = 7,
   NetworkEventData = 8,
+  SignalEventData = 9,
   MIN = NONE,
-  MAX = NetworkEventData
+  MAX = SignalEventData
 };
 
-inline const EventData (&EnumValuesEventData())[9] {
+inline const EventData (&EnumValuesEventData())[10] {
   static const EventData values[] = {
     EventData::NONE,
     EventData::GenericFileEventData,
@@ -326,13 +333,14 @@ inline const EventData (&EnumValuesEventData())[9] {
     EventData::ForkEventData,
     EventData::ExitEventData,
     EventData::RenameEventData,
-    EventData::NetworkEventData
+    EventData::NetworkEventData,
+    EventData::SignalEventData
   };
   return values;
 }
 
 inline const char * const *EnumNamesEventData() {
-  static const char * const names[10] = {
+  static const char * const names[11] = {
     "NONE",
     "GenericFileEventData",
     "ChownEventData",
@@ -342,13 +350,14 @@ inline const char * const *EnumNamesEventData() {
     "ExitEventData",
     "RenameEventData",
     "NetworkEventData",
+    "SignalEventData",
     nullptr
   };
   return names;
 }
 
 inline const char *EnumNameEventData(EventData e) {
-  if (::flatbuffers::IsOutRange(e, EventData::NONE, EventData::NetworkEventData)) return "";
+  if (::flatbuffers::IsOutRange(e, EventData::NONE, EventData::SignalEventData)) return "";
   const size_t index = static_cast<size_t>(e);
   return EnumNamesEventData()[index];
 }
@@ -387,6 +396,10 @@ template<> struct EventDataTraits<owlsm::fb::RenameEventData> {
 
 template<> struct EventDataTraits<owlsm::fb::NetworkEventData> {
   static const EventData enum_value = EventData::NetworkEventData;
+};
+
+template<> struct EventDataTraits<owlsm::fb::SignalEventData> {
+  static const EventData enum_value = EventData::SignalEventData;
 };
 
 template <bool B = false>
@@ -1714,6 +1727,63 @@ inline ::flatbuffers::Offset<NetworkEventData> CreateNetworkEventData(
   return builder_.Finish();
 }
 
+struct SignalEventData FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef SignalEventDataBuilder Builder;
+  static FLATBUFFERS_CONSTEXPR_CPP11 const char *GetFullyQualifiedName() {
+    return "owlsm.fb.SignalEventData";
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_TARGET = 4,
+    VT_SIGNAL = 6
+  };
+  const owlsm::fb::Target *target() const {
+    return GetPointer<const owlsm::fb::Target *>(VT_TARGET);
+  }
+  uint32_t signal() const {
+    return GetField<uint32_t>(VT_SIGNAL, 0);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_TARGET) &&
+           verifier.VerifyTable(target()) &&
+           VerifyField<uint32_t>(verifier, VT_SIGNAL, 4) &&
+           verifier.EndTable();
+  }
+};
+
+struct SignalEventDataBuilder {
+  typedef SignalEventData Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_target(::flatbuffers::Offset<owlsm::fb::Target> target) {
+    fbb_.AddOffset(SignalEventData::VT_TARGET, target);
+  }
+  void add_signal(uint32_t signal) {
+    fbb_.AddElement<uint32_t>(SignalEventData::VT_SIGNAL, signal, 0);
+  }
+  explicit SignalEventDataBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<SignalEventData> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<SignalEventData>(end);
+    fbb_.Required(o, SignalEventData::VT_TARGET);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<SignalEventData> CreateSignalEventData(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<owlsm::fb::Target> target = 0,
+    uint32_t signal = 0) {
+  SignalEventDataBuilder builder_(_fbb);
+  builder_.add_signal(signal);
+  builder_.add_target(target);
+  return builder_.Finish();
+}
+
 struct Event FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   typedef EventBuilder Builder;
   static FLATBUFFERS_CONSTEXPR_CPP11 const char *GetFullyQualifiedName() {
@@ -1790,6 +1860,9 @@ struct Event FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const owlsm::fb::NetworkEventData *data_as_NetworkEventData() const {
     return data_type() == owlsm::fb::EventData::NetworkEventData ? static_cast<const owlsm::fb::NetworkEventData *>(data()) : nullptr;
   }
+  const owlsm::fb::SignalEventData *data_as_SignalEventData() const {
+    return data_type() == owlsm::fb::EventData::SignalEventData ? static_cast<const owlsm::fb::SignalEventData *>(data()) : nullptr;
+  }
   template <bool B = false>
   bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -1842,6 +1915,10 @@ template<> inline const owlsm::fb::RenameEventData *Event::data_as<owlsm::fb::Re
 
 template<> inline const owlsm::fb::NetworkEventData *Event::data_as<owlsm::fb::NetworkEventData>() const {
   return data_as_NetworkEventData();
+}
+
+template<> inline const owlsm::fb::SignalEventData *Event::data_as<owlsm::fb::SignalEventData>() const {
+  return data_as_SignalEventData();
 }
 
 struct EventBuilder {
@@ -2055,6 +2132,10 @@ inline bool VerifyEventData(::flatbuffers::VerifierTemplate<B> &verifier, const 
     }
     case EventData::NetworkEventData: {
       auto ptr = reinterpret_cast<const owlsm::fb::NetworkEventData *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
+    case EventData::SignalEventData: {
+      auto ptr = reinterpret_cast<const owlsm::fb::SignalEventData *>(obj);
       return verifier.VerifyTable(ptr);
     }
     default: return true;

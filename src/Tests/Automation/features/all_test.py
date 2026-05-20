@@ -5,6 +5,7 @@ from common_steps.event_steps import *
 from common_steps.network_steps import *
 from common_steps.logger_steps import *
 from common_steps.db_steps import *
+from common_steps.signal_steps import *
 from features.rules_generator_steps import *
 
 @scenario('on_chmod_test.feature', 'allowed_chmod')
@@ -313,4 +314,24 @@ def test_rules_generator_binary_gets_memory_valid():
 
 @scenario('rules_generator.feature', 'rules_generator_binary_gets_memory_invalid')
 def test_rules_generator_binary_gets_memory_invalid():
+    pass
+
+
+@scenario('on_signal.feature', 'signal_protection_disabled_sigkill_kills_owlsm')
+def test_signal_protection_disabled_sigkill_kills_owlsm():
+    pass
+
+
+@scenario('on_signal.feature', 'signal_protection_enabled_sigkill_blocked')
+def test_signal_protection_enabled_sigkill_blocked():
+    pass
+
+
+@scenario('on_signal.feature', 'protected_process_kills_a_protected_process')
+def test_protected_process_kills_a_protected_process():
+    pass
+
+
+@scenario('on_signal.feature', 'oom_kills_protected_process')
+def test_oom_kills_protected_process():
     pass

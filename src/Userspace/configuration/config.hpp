@@ -41,11 +41,23 @@ struct ShellCommandsMonitoringConfig
     bool enabled = true;
 };
 
+struct AntiTamperingEventsConfig
+{
+    rule_action signals = EXCLUDE_EVENT;
+};
+
+struct AntiTamperingConfig
+{
+    bool enabled = false;
+    AntiTamperingEventsConfig events;
+};
+
 struct FeaturesConfig 
 {
     FileMonitoringConfig file_monitoring;
     NetworkMonitoringConfig network_monitoring;
     ShellCommandsMonitoringConfig shell_commands_monitoring;
+    AntiTamperingConfig anti_tampering;
 };
 
 struct UserspaceConfig 

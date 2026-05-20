@@ -12,6 +12,7 @@ public:
     const std::string& getConfigPath() const { return m_config_path; }
     bool isStdin() const { return m_use_stdin; }
     const std::vector<unsigned int>& getPids() const { return m_pids; }
+    const std::vector<unsigned int>& getProtectedPids() const { return m_protected_pids; }
 
     CmdParser(const CmdParser&) = delete;
     CmdParser& operator=(const CmdParser&) = delete;
@@ -22,6 +23,7 @@ private:
     std::string m_config_path;
     bool m_use_stdin = false;
     std::vector<unsigned int> m_pids;
+    std::vector<unsigned int> m_protected_pids;
 };
 
 }

@@ -1,0 +1,18 @@
+{
+    "features": {
+        "anti_tampering": {
+            "enabled": true,
+            "events": {
+                "signals": "BLOCK_EVENT"
+            }
+        },
+        "file_monitoring": {
+            "events": {
+                "read": false
+            }
+        }
+    },
+    "userspace": {
+        "output_type": "FLATBUFFERS"
+    }
+}

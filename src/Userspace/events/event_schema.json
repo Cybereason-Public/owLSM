@@ -13,7 +13,7 @@
         },
         "type": {
             "type": "string",
-            "enum": ["EXEC", "FORK", "EXIT", "FILE_CREATE", "UNLINK", "MKDIR", "RMDIR", "CHMOD", "CHOWN", "WRITE", "READ", "RENAME", "NETWORK"],
+            "enum": ["EXEC", "FORK", "EXIT", "FILE_CREATE", "UNLINK", "MKDIR", "RMDIR", "CHMOD", "CHOWN", "WRITE", "READ", "RENAME", "NETWORK", "SIGNAL"],
             "description": "Event type"
         },
         "action": {
@@ -270,6 +270,31 @@
                                     "ip_type": { "type": "integer", "minimum": 0 }
                                 }
                             }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "if": {
+                "properties": { "type": { "const": "SIGNAL" } }
+            },
+            "then": {
+                "properties": {
+                    "data": {
+                        "type": "object",
+                        "required": ["target", "signal"],
+                        "additionalProperties": false,
+                        "properties": {
+                            "target": {
+                                "type": "object",
+                                "required": ["process"],
+                                "additionalProperties": false,
+                                "properties": {
+                                    "process": { "$ref": "#/definitions/process_object" }
+                                }
+                            },
+                            "signal": { "type": "integer", "minimum": 0 }
                         }
                     }
                 }

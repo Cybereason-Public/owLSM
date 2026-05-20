@@ -19,6 +19,12 @@
         },
         "shell_commands_monitoring": {
             "enabled": true
+        },
+        "anti_tampering": {
+            "enabled": false,
+            "events": {
+                "signals": "EXCLUDE_EVENT"
+            }
         }
     },
     "userspace": {

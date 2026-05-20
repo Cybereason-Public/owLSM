@@ -15,7 +15,8 @@ CmdParser::CmdParser(int argc, char** argv)
         options.add_options()
             ("c,config", "Path to configuration file (cannot use with --stdin)", cxxopts::value<std::string>())
             ("stdin", "Read configuration from stdin (cannot use with -c)")
-            ("e,exclude-pid", "PID to exclude from monitoring (can be specified multiple times)", cxxopts::value<std::vector<unsigned int>>())
+            ("e,exclude_pid", "PID to exclude from monitoring (can be specified multiple times)", cxxopts::value<std::vector<unsigned int>>())
+            ("p,protect_pid", "PID to protect from signals (can be specified multiple times)", cxxopts::value<std::vector<unsigned int>>())
             ("h,help", "Show help message");
 
         auto result = options.parse(argc, argv);
@@ -50,9 +51,14 @@ CmdParser::CmdParser(int argc, char** argv)
 
         m_use_stdin = (stdin_count > 0);
 
-        if (result.count("exclude-pid")) 
+        if (result.count("exclude_pid")) 
         {
-            m_pids = result["exclude-pid"].as<std::vector<unsigned int>>();
+            m_pids = result["exclude_pid"].as<std::vector<unsigned int>>();
+        }
+
+        if (result.count("protect_pid"))
+        {
+            m_protected_pids = result["protect_pid"].as<std::vector<unsigned int>>();
         }
 
     } 

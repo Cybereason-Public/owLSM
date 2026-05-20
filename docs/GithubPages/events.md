@@ -68,6 +68,7 @@ Every event shares a common top-level structure. The `data` field varies dependi
 | `READ` | File read |
 | `RENAME` | File rename / move |
 | `NETWORK` | Network connection (TCP) |
+| `SIGNAL` | Signal sent to a protected process |
 
 ### Actions
 
@@ -401,6 +402,20 @@ For <code>MKDIR</code> and <code>RMDIR</code>, the file <code>type</code> will b
 <summary><strong>FORK</strong> — Process fork event</summary>
 <div class="field-content">
 <p>Fork events have no additional data fields. The <code>data</code> field is an empty object <code>{}</code>.</p>
+</div>
+</details>
+
+<details class="field-dropdown">
+<summary><strong>SIGNAL</strong> — Signal sent to a protected process</summary>
+<div class="field-content">
+<div class="interactive-code">
+<pre><code>"data": {
+    "target": {
+        "process": { <a href="#process-object" class="code-link"> Process Object </a> }
+    },
+    "signal": 9
+}</code></pre>
+</div>
 </div>
 </details>
 

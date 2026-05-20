@@ -27,6 +27,7 @@ namespace owlsm
                 bpf_program__set_autoattach(m_skel->progs.inet_conn_request_hook_2, false);
                 break;
             }
+            case SIGNAL: break;
             default: break;
         }
     }
@@ -52,6 +53,7 @@ namespace owlsm
                 addProgramToArray(m_skel->progs.inet_conn_request_hook_2, m_skel->maps.inet_conn_request_prog_array);
                 break;
             }
+            case SIGNAL: break;
             default: break;
         }
     }
@@ -84,6 +86,7 @@ namespace owlsm
                 attachProbe(m_skel->progs.inet_conn_established, &m_skel->links.inet_conn_established);
                 break;
             }
+            case SIGNAL: attachProbe(m_skel->progs.signal_hook, &m_skel->links.signal_hook); break;
             default: break;
         }
     }

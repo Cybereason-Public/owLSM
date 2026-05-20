@@ -67,6 +67,24 @@
                             "type": "boolean"
                         }
                     }
+                },
+                "anti_tampering": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "events": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                                "signals": {
+                                    "$ref": "#/definitions/ACTION_TYPE"
+                                }
+                            }
+                        }
+                    }
                 }
             }
         },
@@ -330,15 +348,7 @@
                     "type": "string"
                 },
                 "action": {
-                    "type": "string",
-                    "enum": [
-                        "ALLOW_EVENT",
-                        "BLOCK_EVENT",
-                        "BLOCK_KILL_PROCESS",
-                        "BLOCK_KILL_PROCESS_KILL_PARENT",
-                        "KILL_PROCESS",
-                        "EXCLUDE_EVENT"
-                    ]
+                    "$ref": "#/definitions/ACTION_TYPE"
                 },
                 "min_version": {
                     "type": "string",
@@ -378,6 +388,17 @@
                     }
                 }
             }
+        },
+        "ACTION_TYPE": {
+            "type": "string",
+            "enum": [
+                "ALLOW_EVENT",
+                "BLOCK_EVENT",
+                "BLOCK_KILL_PROCESS",
+                "BLOCK_KILL_PROCESS_KILL_PARENT",
+                "KILL_PROCESS",
+                "EXCLUDE_EVENT"
+            ]
         },
         "LOG_LEVEL": {
             "type": "string",

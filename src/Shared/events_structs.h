@@ -22,7 +22,8 @@ enum event_type {
     RENAME,
     NETWORK,
     MKDIR,
-    RMDIR
+    RMDIR,
+    SIGNAL
 };
 
 
@@ -151,6 +152,12 @@ struct rename_event_t
     struct file_t destination_file;
 };
 
+struct signal_event_t
+{
+    struct process_t process;
+    unsigned int signal;
+};
+
 struct network_event_t
 {
     enum connection_direction direction;
@@ -191,6 +198,7 @@ struct event_t
         struct network_event_t network;
         mkdir_event_t mkdir;
         rmdir_event_t rmdir;
+        struct signal_event_t signal;
     } data;
 };
 

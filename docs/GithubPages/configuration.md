@@ -24,7 +24,7 @@ See [How to generate a config](https://github.com/cybereason-labs/owLSM/blob/mai
                 "<a href="#features-file_monitoring-events-unlink" class="code-link">unlink</a>": true,
                 "<a href="#features-file_monitoring-events-rename" class="code-link">rename</a>": true,
                 "<a href="#features-file_monitoring-events-write" class="code-link">write</a>": true,
-                "<a href="#features-file_monitoring-events-read" class="code-link">read</a>": true,  # Due to high volume of read syscalls, we advise to disable.
+                "<a href="#features-file_monitoring-events-read" class="code-link">read</a>": false,  # Due to high volume of read syscalls, we advise to disable.
                 "<a href="#features-file_monitoring-events-mkdir" class="code-link">mkdir</a>": true,
                 "<a href="#features-file_monitoring-events-rmdir" class="code-link">rmdir</a>": true
             }
@@ -34,6 +34,12 @@ See [How to generate a config](https://github.com/cybereason-labs/owLSM/blob/mai
         },
         "<a href="#features-network_monitoring" class="code-link">network_monitoring</a>": {
             "<a href="#features-network_monitoring-enabled" class="code-link">enabled</a>": true
+        },
+        "<a href="#features-anti_tampering" class="code-link">anti_tampering</a>": {
+            "<a href="#features-anti_tampering-enabled" class="code-link">enabled</a>": false,
+            "<a class="code-link">events</a>": {
+                "<a href="#features-anti_tampering-events-signals" class="code-link">signals</a>": "EXCLUDE_EVENT"
+            }
         }
     },
     "<a href="#userspace" class="code-link">userspace</a>": {
@@ -276,6 +282,52 @@ Currently, only TCP connections are supported.
 
 Enable network connection monitoring.<br>
 Currently, only TCP connections are supported.
+</div>
+
+<h3 id="features-anti_tampering" class="section-anchor">
+  <span class="section-path">features<span class="dot">.</span>anti_tampering</span>
+</h3>
+
+<div class="config-section">
+<div class="field-meta">
+<p><strong>Required:</strong> false</p>
+<p><strong>Default value:</strong> <code>disabled</code></p>
+</div>
+
+Anti-tampering protects specified processes from being harmed by things like signals.<br><br>
+Use the <code>-p &lt;pid&gt;</code> commandline flag to specify which processes are protected.<br>
+owLSM is automatically protected when the anti-tampering flags are enabled.<br>
+Protection is <strong>inherited</strong> by child processes — but only for children created <em>after</em> owLSM has started monitoring.<br><br>
+</div>
+
+<h3 id="features-anti_tampering-enabled" class="section-anchor">
+  <span class="section-path">features<span class="dot">.</span>anti_tampering<span class="dot">.</span>enabled</span>
+</h3>
+
+<div class="config-section">
+<div class="field-meta">
+<p><strong>Required:</strong> false</p>
+<p><strong>Default value:</strong> <code>false</code></p>
+<p><strong>Options:</strong> <code>true</code>, <code>false</code></p>
+</div>
+
+Master switch for anti-tampering. When <code>false</code>, all the anti-tampering features are disabled, and their corresponding eBPF probes aren't attached.
+</div>
+
+<h3 id="features-anti_tampering-events-signals" class="section-anchor">
+  <span class="section-path">features<span class="dot">.</span>anti_tampering<span class="dot">.</span>events<span class="dot">.</span>signals</span>
+</h3>
+
+<div class="config-section">
+<div class="field-meta">
+<p><strong>Required:</strong> false</p>
+<p><strong>Default value:</strong> <code>"EXCLUDE_EVENT"</code></p>
+<p><strong>Options:</strong> <code>"ALLOW_EVENT"</code>, <code>"BLOCK_EVENT"</code>, <code>"BLOCK_KILL_PROCESS"</code>, <code>"BLOCK_KILL_PROCESS_KILL_PARENT"</code>, <code>"EXCLUDE_EVENT"</code></p>
+This feature defends protected processes from signals.<br>
+- Signals that are sent to non-protected processes are ignored by owLSM.<br>
+- Signals that are sent by the kernel, from pid 0/1, or from a protected process are ignored by owLSM.<br>
+- The rest of the signals that are sent to protected processes are handled and a <code>SIGNAL</code> event is sent (owLSM action depends on the option you specify).<br><br>
+<strong>Options</strong> represents the action taken when an unprotected process sends a signal to a protected process.<br>
 </div>
 
 ---

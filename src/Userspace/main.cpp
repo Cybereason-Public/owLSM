@@ -92,9 +92,14 @@ void setup(int argc, char *argv[])
     setupShellDetection();
     owlsm::globals::g_probe_manager = owlsm::CreateProbeObjects::createProbeManager();
     owlsm::globals::g_probe_manager.bpfOpen(organized_rules);
+
     auto excluded_pids = cmd_parser.getPids();
     excluded_pids.push_back(getpid());
-    owlsm::globals::g_probe_manager.bpfLoad(excluded_pids);
+
+    auto protected_pids = cmd_parser.getProtectedPids();
+    protected_pids.push_back(getpid());
+
+    owlsm::globals::g_probe_manager.bpfLoad(excluded_pids, protected_pids);
     owlsm::globals::g_probe_manager.bpfAttach();
 
 }

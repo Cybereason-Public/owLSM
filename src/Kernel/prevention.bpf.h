@@ -38,7 +38,8 @@ statfunc void kill_proccesses(enum rule_action action, struct event_t * event)
             return;
         }
 
-        if (bpf_map_update_elem(&parent_processes_to_kill, &event->process.ppid, &event->process.ppid, BPF_ANY) < 0)
+        unsigned int ppid = event->process.ppid;
+        if (bpf_map_update_elem(&parent_processes_to_kill, &ppid, &ppid, BPF_ANY) < 0)
         {
             REPORT_ERROR(GENERIC_ERROR, "bpf_map_update_elem. ppid: %d", event->process.ppid);
         }

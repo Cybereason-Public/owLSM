@@ -1,5 +1,6 @@
 #include "fill_event_structs.bpf.h"
 #include "pids_to_ignore.bpf.h"
+#include "protected_processes.bpf.h"
 #include "active_shells.bpf.h"
 
 SEC("fentry/do_exit")
@@ -22,6 +23,11 @@ int BPF_PROG(exit_hook, long code)
         return ALLOW; 
     }
     
+    if (is_current_pid_protected())
+    {
+        remove_current_pid_from_protected_processes();
+    }
+
     if(is_current_pid_related())
     {
         remove_current_pid_from_related_pids();

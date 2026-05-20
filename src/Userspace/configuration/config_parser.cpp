@@ -62,6 +62,18 @@ namespace owlsm::config {
         if (auto it = j.find("file_monitoring"); it != j.end()) { fromJson(*it, o.file_monitoring); }
         if (auto it = j.find("network_monitoring"); it != j.end()) { fromJson(*it, o.network_monitoring); }
         if (auto it = j.find("shell_commands_monitoring"); it != j.end()) { fromJson(*it, o.shell_commands_monitoring); }
+        if (auto it = j.find("anti_tampering"); it != j.end()) { fromJson(*it, o.anti_tampering); }
+    }
+
+    void ConfigParser::fromJson(const nlohmann::json& j, AntiTamperingConfig& o)
+    {
+        get_if_present(j, "enabled", o.enabled);
+        if (auto it = j.find("events"); it != j.end()) { fromJson(*it, o.events); }
+    }
+
+    void ConfigParser::fromJson(const nlohmann::json& j, AntiTamperingEventsConfig& o)
+    {
+        if (auto it = j.find("signals"); it != j.end()) { o.signals = get_enum<rule_action>(*it); }
     }
 
     void ConfigParser::fromJson(const nlohmann::json& j, NetworkMonitoringConfig& o)
