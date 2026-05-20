@@ -6,6 +6,7 @@ from common_steps.network_steps import *
 from common_steps.logger_steps import *
 from common_steps.db_steps import *
 from common_steps.signal_steps import *
+from common_steps.ptrace_steps import *
 from features.rules_generator_steps import *
 
 @scenario('on_chmod_test.feature', 'allowed_chmod')
@@ -334,4 +335,14 @@ def test_protected_process_kills_a_protected_process():
 
 @scenario('on_signal.feature', 'oom_kills_protected_process')
 def test_oom_kills_protected_process():
+    pass
+
+
+@scenario('on_ptrace.feature', 'ptrace_protection_disabled')
+def test_ptrace_protection_disabled():
+    pass
+
+
+@scenario('on_ptrace.feature', 'ptrace_on_protected_process_is_blocked')
+def test_ptrace_on_protected_process_is_blocked():
     pass

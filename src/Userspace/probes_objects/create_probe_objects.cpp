@@ -78,9 +78,17 @@ namespace owlsm
     void CreateProbeObjects::addAntiTamperingProbes(std::vector<std::shared_ptr<AbstractProbe>>& probes)
     {
         const auto& at = owlsm::globals::g_config.features.anti_tampering;
-        if (at.enabled && at.events.signals != EXCLUDE_EVENT)
+        if (!at.enabled)
+        {
+            return;
+        }
+        if (at.events.signals != EXCLUDE_EVENT)
         {
             probes.push_back(std::make_shared<LsmProbe>(SIGNAL));
+        }
+        if (at.events.ptrace != EXCLUDE_EVENT)
+        {
+            probes.push_back(std::make_shared<LsmProbe>(PTRACE));
         }
     }
 

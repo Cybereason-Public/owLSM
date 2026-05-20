@@ -28,6 +28,7 @@ namespace owlsm
                 break;
             }
             case SIGNAL: break;
+            case PTRACE: break;
             default: break;
         }
     }
@@ -54,6 +55,7 @@ namespace owlsm
                 break;
             }
             case SIGNAL: break;
+            case PTRACE: break;
             default: break;
         }
     }
@@ -87,6 +89,7 @@ namespace owlsm
                 break;
             }
             case SIGNAL: attachProbe(m_skel->progs.signal_hook, &m_skel->links.signal_hook); break;
+            case PTRACE: attachProbe(m_skel->progs.ptrace_hook, &m_skel->links.ptrace_hook); break;
             default: break;
         }
     }

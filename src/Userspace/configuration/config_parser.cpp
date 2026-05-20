@@ -74,6 +74,7 @@ namespace owlsm::config {
     void ConfigParser::fromJson(const nlohmann::json& j, AntiTamperingEventsConfig& o)
     {
         if (auto it = j.find("signals"); it != j.end()) { o.signals = get_enum<rule_action>(*it); }
+        if (auto it = j.find("ptrace"); it != j.end()) { o.ptrace = get_enum<rule_action>(*it); }
     }
 
     void ConfigParser::fromJson(const nlohmann::json& j, NetworkMonitoringConfig& o)

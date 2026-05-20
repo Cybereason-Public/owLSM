@@ -298,6 +298,34 @@ TEST_F(EventToFlatbufferTest, event_with_matched_rule)
         "Test rule: block shadow chmod");
 }
 
+TEST_F(EventToFlatbufferTest, ptrace_event_serialization)
+{
+    auto ev = makeBaseEvent(PTRACE, 77);
+    ev->action = BLOCK_EVENT;
+    owlsm::events::PtraceEventData ptrace_data;
+    ptrace_data.process.pid = 5555;
+    ptrace_data.process.file.filename.value = "owlsm";
+    ptrace_data.process.file.path.value = "/usr/bin/owlsm";
+    ptrace_data.process.cmd.value = "/usr/bin/owlsm";
+    ptrace_data.process.shell_command.value = "";
+    ptrace_data.mode = 3;
+    ev->data = ptrace_data;
+
+    std::vector<std::shared_ptr<owlsm::events::Event>> msgs = {ev};
+    m_event_serializer.buildOutputBuffer(msgs);
+
+    const auto* fb_ev = getSizePrefixedEvent(m_event_serializer.data());
+    ASSERT_NE(fb_ev, nullptr);
+    EXPECT_EQ(fb_ev->type(), owlsm::fb::EventType::PTRACE);
+    EXPECT_EQ(fb_ev->data_type(), owlsm::fb::EventData::PtraceEventData);
+    const auto* pd = fb_ev->data_as_PtraceEventData();
+    ASSERT_NE(pd, nullptr);
+    ASSERT_NE(pd->target(), nullptr);
+    ASSERT_NE(pd->target()->process(), nullptr);
+    EXPECT_EQ(pd->target()->process()->pid(), 5555u);
+    EXPECT_EQ(pd->mode(), 3u);
+}
+
 TEST_F(EventToFlatbufferTest, event_with_extended_matched_rule_metadata)
 {
     auto ev = makeBaseEvent(CHMOD, 21);

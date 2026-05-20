@@ -190,6 +190,16 @@ struct SignalEventData
         : process(e.process), signal(e.signal) {}
 };
 
+struct PtraceEventData
+{
+    Process process;
+    unsigned int mode = 0;
+
+    PtraceEventData() = default;
+    explicit PtraceEventData(const ptrace_event_t& e)
+        : process(e.process), mode(e.mode) {}
+};
+
 struct NetworkEventData
 {
     connection_direction direction = INCOMING;
@@ -230,7 +240,8 @@ using EventData = std::variant<
     GenericFileEventData,
     RenameEventData,
     NetworkEventData,
-    SignalEventData
+    SignalEventData,
+    PtraceEventData
 >;
 
 struct Event
@@ -272,6 +283,7 @@ struct Event
         case MKDIR: data = GenericFileEventData(ev.data.mkdir); break;
         case RMDIR: data = GenericFileEventData(ev.data.rmdir); break;
         case SIGNAL: data = SignalEventData(ev.data.signal); break;
+        case PTRACE: data = PtraceEventData(ev.data.ptrace); break;
         }
     }
 };

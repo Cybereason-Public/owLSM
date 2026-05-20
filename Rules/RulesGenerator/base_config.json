@@ -23,7 +23,8 @@
         "anti_tampering": {
             "enabled": false,
             "events": {
-                "signals": "EXCLUDE_EVENT"
+                "signals": "EXCLUDE_EVENT",
+                "ptrace": "EXCLUDE_EVENT"
             }
         }
     },

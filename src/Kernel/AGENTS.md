@@ -26,6 +26,8 @@ Kernel/
 │   │   ├── on_unlink.bpf.c      # File deletion
 │   │   ├── on_rename.bpf.c      # File rename
 │   │   ├── on_file_create.bpf.c # File creation
+│   │   ├── on_signal.bpf.c      # Anti-tampering: signals (LSM task_kill)
+│   │   ├── on_ptrace.bpf.c      # Anti-tampering: ptrace (LSM ptrace_access_check)
 │   │   └── on_syscall.bpf.c     # Generic syscall handler
 │   └── network/                 # Network hook programs
 │       ├── on_tcp_incomming.bpf.c

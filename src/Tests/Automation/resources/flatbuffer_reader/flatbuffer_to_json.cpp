@@ -229,6 +229,22 @@ FlatbufferToJson::json FlatbufferToJson::eventDataJson(const owlsm::fb::Event* e
             }},
         };
     }
+    if (const auto* s = ev->data_as_SignalEventData())
+    {
+        const auto* t = s->target();
+        return json{
+            {"target", json{{"process", processJson(t ? t->process() : nullptr)}}},
+            {"signal", s->signal()},
+        };
+    }
+    if (const auto* p = ev->data_as_PtraceEventData())
+    {
+        const auto* t = p->target();
+        return json{
+            {"target", json{{"process", processJson(t ? t->process() : nullptr)}}},
+            {"mode", p->mode()},
+        };
+    }
     return json::object();
 }
 

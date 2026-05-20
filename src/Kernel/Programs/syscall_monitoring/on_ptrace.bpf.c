@@ -3,27 +3,12 @@
 #include "protected_processes.bpf.h"
 #include "prevention.bpf.h"
 
-#define SEND_SIG_NOINFO ((struct kernel_siginfo *)0)
-#define SEND_SIG_PRIV   ((struct kernel_siginfo *)1)
+const volatile int anti_tampering_ptrace_action;
 
-const volatile int anti_tampering_signals_action;
-
-SEC("lsm/task_kill")
-int BPF_PROG(signal_hook, struct task_struct *p, struct kernel_siginfo *info, int sig, const struct cred *cred)
+SEC("lsm/ptrace_access_check")
+int BPF_PROG(ptrace_hook, struct task_struct *child, unsigned int mode)
 {
-    set_hook_name("signal_hook", 11);
-
-    if (info == SEND_SIG_NOINFO || info == SEND_SIG_PRIV)
-    {
-        return ALLOW;
-    }
-
-    int si_code = 0;
-    bpf_probe_read_kernel(&si_code, sizeof(si_code), &info->si_code);
-    if (si_code > 0)
-    {
-        return ALLOW;
-    }
+    set_hook_name("ptrace_hook", 11);
 
     unsigned int sender_pid = bpf_get_current_pid_tgid() >> 32;
     if (sender_pid <= 1)
@@ -31,7 +16,7 @@ int BPF_PROG(signal_hook, struct task_struct *p, struct kernel_siginfo *info, in
         return ALLOW;
     }
 
-    unsigned int receiver_pid = BPF_CORE_READ(p, tgid);
+    unsigned int receiver_pid = BPF_CORE_READ(child, tgid);
     if (is_pid_protected(receiver_pid) != TRUE)
     {
         return ALLOW;
@@ -49,9 +34,9 @@ int BPF_PROG(signal_hook, struct task_struct *p, struct kernel_siginfo *info, in
         return ALLOW;
     }
 
-    event->type = SIGNAL;
-    event->action = anti_tampering_signals_action;
-    event->data.signal.signal = sig;
+    event->type = PTRACE;
+    event->action = anti_tampering_ptrace_action;
+    event->data.ptrace.mode = mode;
 
     if (fill_event_process_from_cache(&event->process) != SUCCESS)
     {
@@ -60,7 +45,7 @@ int BPF_PROG(signal_hook, struct task_struct *p, struct kernel_siginfo *info, in
     }
     fill_event_parent_process_from_cache(&event->process, &event->parent_process);
 
-    if (fill_event_process_from_cache_for_task(&event->data.signal.process, p) != SUCCESS)
+    if (fill_event_process_from_cache_for_task(&event->data.ptrace.process, child) != SUCCESS)
     {
         REPORT_ERROR(GENERIC_ERROR, "fill_event_process_from_cache_for_task failed for receiver. pid: %d", receiver_pid);
         goto allow_event;

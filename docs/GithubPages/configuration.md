@@ -38,7 +38,8 @@ See [How to generate a config](https://github.com/cybereason-labs/owLSM/blob/mai
         "<a href="#features-anti_tampering" class="code-link">anti_tampering</a>": {
             "<a href="#features-anti_tampering-enabled" class="code-link">enabled</a>": false,
             "<a class="code-link">events</a>": {
-                "<a href="#features-anti_tampering-events-signals" class="code-link">signals</a>": "EXCLUDE_EVENT"
+                "<a href="#features-anti_tampering-events-signals" class="code-link">signals</a>": "EXCLUDE_EVENT",
+                "<a href="#features-anti_tampering-events-ptrace" class="code-link">ptrace</a>": "EXCLUDE_EVENT"
             }
         }
     },
@@ -294,7 +295,7 @@ Currently, only TCP connections are supported.
 <p><strong>Default value:</strong> <code>disabled</code></p>
 </div>
 
-Anti-tampering protects specified processes from being harmed by things like signals.<br><br>
+Anti-tampering protects specified processes from being harmed by things like signals and ptrace.<br><br>
 Use the <code>-p &lt;pid&gt;</code> commandline flag to specify which processes are protected.<br>
 owLSM is automatically protected when the anti-tampering flags are enabled.<br>
 Protection is <strong>inherited</strong> by child processes — but only for children created <em>after</em> owLSM has started monitoring.<br><br>
@@ -328,6 +329,22 @@ This feature defends protected processes from signals.<br>
 - Signals that are sent by the kernel, from pid 0/1, or from a protected process are ignored by owLSM.<br>
 - The rest of the signals that are sent to protected processes are handled and a <code>SIGNAL</code> event is sent (owLSM action depends on the option you specify).<br><br>
 <strong>Options</strong> represents the action taken when an unprotected process sends a signal to a protected process.<br>
+</div>
+
+<h3 id="features-anti_tampering-events-ptrace" class="section-anchor">
+  <span class="section-path">features<span class="dot">.</span>anti_tampering<span class="dot">.</span>events<span class="dot">.</span>ptrace</span>
+</h3>
+
+<div class="config-section">
+<div class="field-meta">
+<p><strong>Required:</strong> false</p>
+<p><strong>Default value:</strong> <code>"EXCLUDE_EVENT"</code></p>
+<p><strong>Options:</strong> <code>"ALLOW_EVENT"</code>, <code>"BLOCK_EVENT"</code>, <code>"BLOCK_KILL_PROCESS"</code>, <code>"BLOCK_KILL_PROCESS_KILL_PARENT"</code>, <code>"EXCLUDE_EVENT"</code></p>
+This feature defends protected processes from ptrace access.<br>
+- Ptrace attempts against non-protected processes are ignored by owLSM.<br>
+- Ptrace attempts from the kernel, from pid 0/1, or from a protected process are ignored by owLSM.<br>
+- Other ptrace attempts against protected processes are handled and a <code>PTRACE</code> event is emitted (action depends on the option you specify).<br><br>
+<strong>Options</strong> represents the action taken when an unprotected process tries to trace a protected process.<br>
 </div>
 
 ---
