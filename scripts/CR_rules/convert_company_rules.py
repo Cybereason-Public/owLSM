@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-"""Normalize company Sigma-like YAML: actions -> action, logsource -> events."""
-
 from __future__ import annotations
 
 import argparse
@@ -9,6 +7,27 @@ from pathlib import Path
 from typing import Any, Dict, List, Set
 
 import yaml
+
+_RULES_GENERATOR_DIR = Path(__file__).resolve().parent.parent.parent / "Rules" / "RulesGenerator"
+
+
+def _rules_generator_field_mapping():
+    if str(_RULES_GENERATOR_DIR) not in sys.path:
+        sys.path.insert(0, str(_RULES_GENERATOR_DIR))
+    from field_mapping import apply_field_mapping_to_detection, load_field_mapping_file  # type: ignore[import-not-found]
+
+    return apply_field_mapping_to_detection, load_field_mapping_file
+
+
+class FieldMappingConverter:
+
+    @staticmethod
+    def convert(rule_data: Dict[str, Any], mapping_path: Path) -> None:
+        apply_field_mapping_to_detection, load_field_mapping_file = _rules_generator_field_mapping()
+        mapping = load_field_mapping_file(str(mapping_path.resolve()))
+        if "detection" not in rule_data or not isinstance(rule_data["detection"], dict):
+            return
+        apply_field_mapping_to_detection(rule_data["detection"], mapping)
 
 
 class ActionsConverter:
@@ -101,13 +120,15 @@ def _write_yaml(path: Path, data: Dict[str, Any]) -> None:
 
 def main() -> None:
     try:
-        parser = argparse.ArgumentParser(description="Convert company actions/logsource to owLSM action/events YAML.")
+        parser = argparse.ArgumentParser(description="Convert company YAML to owLSM shape: actions/logsource/fields to owLSM YAML.")
         parser.add_argument("-i", "--input-directory", required=True, type=Path, help="Directory containing .yml / .yaml rules (searched recursively)")
         parser.add_argument("-o", required=True, type=Path, help="Directory to write converted rules (mirrors relative paths from input root)")
+        parser.add_argument("-m", "--field-mapping", type=Path, help="YAML file: external field name -> owLSM field (same format and validation as rules_generator -m)")
         args = parser.parse_args()
 
         input_dir = args.input_directory.resolve()
         output_dir = args.o.resolve()
+        field_mapping_path = args.field_mapping.resolve() if args.field_mapping else None
 
         if not input_dir.is_dir():
             raise Exception(f"Input directory does not exist or is not a directory: {input_dir}")
@@ -116,12 +137,17 @@ def main() -> None:
         if not rule_files:
             raise Exception(f"No .yml or .yaml files found under {input_dir}")
 
+        if field_mapping_path is not None and not field_mapping_path.is_file():
+            raise Exception(f"Field mapping file does not exist or is not a file: {field_mapping_path}")
+
         for src in rule_files:
             rel = src.relative_to(input_dir)
             dst = output_dir / rel
             rule_data = _load_yaml(src)
             ActionsConverter.convert(rule_data, str(src))
             LogsourceEventsConverter.convert(rule_data, str(src))
+            if field_mapping_path is not None:
+                FieldMappingConverter.convert(rule_data, field_mapping_path)
             _write_yaml(dst, rule_data)
 
     except Exception as e:
