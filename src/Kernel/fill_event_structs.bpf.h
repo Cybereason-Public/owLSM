@@ -83,28 +83,33 @@ statfunc int fill_current_process_t(struct process_t *process_event)
     return fill_process_t(process_event, task);
 }
 
-statfunc int fill_event_process_from_cache(struct process_t *process_event)
+statfunc int fill_event_process_from_cache_for_task(struct process_t *process_event, struct task_struct *task)
 {
-    u64 pid_tgid = bpf_get_current_pid_tgid();
-    u32 pid = pid_tgid >> 32;
+    u32 pid = BPF_CORE_READ(task, tgid);
     struct process_t *process = get_process_from_alive_process_cache(pid);
-    if(!process)
+    if (!process)
     {
-        // This will happen for processes that run before us.
-        int ret = fill_current_process_t(process_event);
-        if(ret == SUCCESS)
+        // This will happen for processes that ran before eBPF attached.
+        int ret = fill_process_t(process_event, task);
+        if (ret == SUCCESS)
         {
             ret = update_process_in_alive_process_cache(pid, process_event);
         }
         return ret;
     }
-    if(bpf_probe_read_kernel(process_event, sizeof(struct process_t), process) != SUCCESS)
+    if (bpf_probe_read_kernel(process_event, sizeof(struct process_t), process) != SUCCESS)
     {
         REPORT_ERROR(GENERIC_ERROR, "bpf_probe_read_kernel failed");
         process_event = NULL;
         return GENERIC_ERROR;
     }
     return SUCCESS;
+}
+
+statfunc int fill_event_process_from_cache(struct process_t *process_event)
+{
+    struct task_struct *task = (void *)bpf_get_current_task_btf();
+    return fill_event_process_from_cache_for_task(process_event, task);
 }
 
 statfunc struct process_t *get_or_update_parent_process_in_caches(const struct process_t *child_process)

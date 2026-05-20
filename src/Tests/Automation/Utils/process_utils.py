@@ -1,12 +1,14 @@
 import subprocess
 import os
 import signal
+import select
 import psutil
 import pexpect
 import time
-from typing import List, Union
+from typing import List, Optional, Union
 from Utils.logger_utils import logger
 from state_db.process_db import process_db
+from state_db.file_db import file_db
 from globals.system_related_globals import system_globals
 from globals.global_strings import global_strings
 
@@ -194,6 +196,38 @@ def fork_current_process():
 def get_pid_start_time(pid: int):
     return psutil.Process(pid).create_time()
 
+
+def is_subprocess_running(proc: Optional[subprocess.Popen]) -> bool:
+    if proc is None:
+        return False
+    return proc.poll() is None
+
+
+def wait_until_subprocess_exited(proc: Optional[subprocess.Popen], timeout_seconds: float) -> None:
+    if proc is None:
+        return
+    deadline = time.time() + float(timeout_seconds)
+    poll_interval = 0.5
+    while time.time() < deadline:
+        if not is_subprocess_running(proc):
+            logger.log_info(f"Subprocess pid={proc.pid} exited within timeout")
+            return
+        time.sleep(poll_interval)
+    assert not is_subprocess_running(proc), \
+        f"Subprocess (pid={proc.pid}) still running after {timeout_seconds}s timeout"
+
+
+def is_process_alive(pid, start_time=None):
+    if not psutil.pid_exists(pid):
+        return False
+    try:
+        proc = psutil.Process(pid)
+        if start_time is not None and abs(proc.create_time() - start_time) > 3.0:
+            return False
+        return proc.is_running() and proc.status() != psutil.STATUS_ZOMBIE
+    except psutil.NoSuchProcess:
+        return False
+
 def stop_owlsm_process():
     if system_globals.OWLSM_PROCESS_OBJECT:
         try:
@@ -220,7 +254,7 @@ def wait_for_owlsm_initialization(proc, custom_log_path=None):
     start_time = time.time()
 
     while time.time() - start_time < timeout:
-        if proc.poll() is not None:
+        if not is_subprocess_running(proc):
             logger.log_error(f"owLSM process exited prematurely with code {proc.returncode}")
             assert False, f"owLSM process exited prematurely with code {proc.returncode}"
 
@@ -268,3 +302,32 @@ def start_owlsm_process_with_stdin(config_path: str):
     with open(config_path, 'r') as f:
         config_data = f.read()
     start_owlsm_process(f"{system_globals.OWLSM_PATH} --stdin", stdin_data=config_data)
+
+
+def read_line_from_process(proc, timeout=5):
+    try:
+        ready, _, _ = select.select([proc.stdout], [], [], timeout)
+        if ready:
+            line = proc.stdout.readline().strip()
+            logger.log_info(f"Read '{line}' from process PID {proc.pid} stdout")
+            return line
+        logger.log_error(f"Timeout ({timeout}s) reading from process PID {proc.pid} stdout")
+        return None
+    except Exception as e:
+        logger.log_error(f"Failed to read from process PID {proc.pid} stdout: {e}")
+        return None
+
+
+def start_owlsm_with_flatbuffer_binary_streams(command: str) -> None:
+    events_bin = system_globals.AUTOMATION_ROOT_DIR / "owLSM_output_events.bin"
+    errors_bin = system_globals.AUTOMATION_ROOT_DIR / "owLSM_output_errors.bin"
+    for path in (events_bin, errors_bin):
+        if path.exists():
+            os.remove(path)
+    events_fd = open(events_bin, "wb")
+    errors_fd = open(errors_bin, "wb")
+    file_db.add(events_bin)
+    file_db.add(errors_bin)
+    start_owlsm_process(command, stdout_fd=events_fd, stderr_fd=errors_fd)
+    events_fd.close()
+    errors_fd.close()

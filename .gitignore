@@ -29,6 +29,8 @@ src/Tests/Automation/owlsm/*
 src/Tests/Automation/resources/stdio_redirection
 src/Tests/Automation/resources/flatbuffer_reader/flatbuffer_reader
 src/Tests/Automation/resources/related_process
+src/Tests/Automation/owLSM_output_errors.bin
+src/Tests/Automation/owLSM_output_events.bin
 
 # secrets and environment variables
 .env
@@ -40,3 +42,6 @@ docs/GithubPages/_site/*
 # docs
 docs/GithubPages/vendor/bundle/*
 docs/GithubPages/.bundle/*
+src/Tests/Automation/resources/OOM_kill_me
+src/Tests/Automation/resources/signal_sender
+src/Tests/Automation/resources/protected_process

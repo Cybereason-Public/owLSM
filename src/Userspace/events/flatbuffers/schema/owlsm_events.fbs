@@ -19,7 +19,8 @@ enum EventType : ubyte {
     WRITE,
     READ,
     RENAME,
-    NETWORK
+    NETWORK,
+    SIGNAL
 }
 
 enum Action : ubyte {
@@ -204,6 +205,13 @@ table NetworkEventData {
     network:NetworkInfo (required);
 }
 
+// Signal event
+// JSON: { "target": { "process": {...} }, "signal": ... }
+table SignalEventData {
+    target:Target (required);
+    signal:uint32;
+}
+
 union EventData {
     GenericFileEventData,
     ChownEventData,
@@ -212,7 +220,8 @@ union EventData {
     ForkEventData,
     ExitEventData,
     RenameEventData,
-    NetworkEventData
+    NetworkEventData,
+    SignalEventData
 }
 
 // ── Root tables ──────────────────────────────────────────────

@@ -23,6 +23,7 @@ namespace owlsm
         addFileMonitoringProbes(probes);
         addNetworkMonitoringProbes(probes);
         addShellCommandsMonitoringProbes(probes);
+        addAntiTamperingProbes(probes);
         return probes;
     }
 
@@ -71,6 +72,15 @@ namespace owlsm
         for (const auto& shell : shells)
         {
             probes.push_back(std::make_shared<UprobeProbe>(shell.path, shell.shell_type));
+        }
+    }
+
+    void CreateProbeObjects::addAntiTamperingProbes(std::vector<std::shared_ptr<AbstractProbe>>& probes)
+    {
+        const auto& at = owlsm::globals::g_config.features.anti_tampering;
+        if (at.enabled && at.events.signals != EXCLUDE_EVENT)
+        {
+            probes.push_back(std::make_shared<LsmProbe>(SIGNAL));
         }
     }
 

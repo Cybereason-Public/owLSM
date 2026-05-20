@@ -19,6 +19,9 @@ Using EBPF hooks it monitors the system and prevents malicious behavior.
 ### README.md files 
 Always read README.md files in relevant directories before making changes
 
+### Event JSON / FlatBuffers shape
+When you add or change an event type or its `data` payload, keep these aligned: `src/Userspace/events/event_schema.json` (Valijson validation), `src/Userspace/events/flatbuffers/schema/owlsm_events.fbs` (run `scripts/flatbuffers_compile.sh` after edits), `src/Userspace/events/event_to_json.cpp` / `event_to_flatbuffer`, and `docs/GithubPages/events.md` examples.
+
 ---
 
 ## Project Structure

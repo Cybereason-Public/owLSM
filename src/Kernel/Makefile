@@ -42,6 +42,7 @@ BPF_SRC        := common_maps.bpf.c \
                   Programs/syscall_monitoring/on_read.bpf.c \
                   Programs/syscall_monitoring/on_unlink.bpf.c \
                   Programs/syscall_monitoring/on_rename.bpf.c \
+                  Programs/syscall_monitoring/on_signal.bpf.c \
                   Programs/network/on_tcp_incomming.bpf.c \
                   Programs/network/on_tcp_outgoing.bpf.c \
                   Programs/shell_command_monitoring/bash_shell_command.bpf.c \

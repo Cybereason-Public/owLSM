@@ -1,5 +1,6 @@
 #include "fill_event_structs.bpf.h"
 #include "pids_to_ignore.bpf.h"
+#include "protected_processes.bpf.h"
 
 SEC("fentry/wake_up_new_task")
 int BPF_PROG(fork_hook, struct task_struct *child_task)
@@ -17,6 +18,11 @@ int BPF_PROG(fork_hook, struct task_struct *child_task)
     if (ppid == pid)
     {
         return ALLOW; // New thread.
+    }
+
+    if (is_current_pid_protected() == TRUE)
+    {
+        add_pid_to_protected_processes(pid);
     }
 
     if(is_current_pid_related() == TRUE)

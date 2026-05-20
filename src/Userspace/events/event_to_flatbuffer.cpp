@@ -103,6 +103,7 @@ fb::EventType EventToFlatbuffer<MessageType>::toFbEventType(event_type et)
         case READ:        return fb::EventType::READ;
         case RENAME:      return fb::EventType::RENAME;
         case NETWORK:     return fb::EventType::NETWORK;
+        case SIGNAL:      return fb::EventType::SIGNAL;
         default:          return fb::EventType::EXEC;
     }
 }
@@ -296,6 +297,13 @@ void EventToFlatbuffer<MessageType>::serializeEvent(const Event& ev)
                 d.protocol, d.ip_type);
             data_type = fb::EventData::NetworkEventData;
             data_off = fb::CreateNetworkEventData(m_builder, network_info_off).Union();
+        }
+        else if constexpr (std::is_same_v<T, SignalEventData>)
+        {
+            auto proc_off = serializeProcess(m_builder, d.process);
+            auto target_off = fb::CreateTarget(m_builder, 0, proc_off);
+            data_type = fb::EventData::SignalEventData;
+            data_off = fb::CreateSignalEventData(m_builder, target_off, d.signal).Union();
         }
     }, ev.data);
 
