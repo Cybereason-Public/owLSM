@@ -324,6 +324,8 @@ Master switch for anti-tampering. When <code>false</code>, all the anti-tamperin
 <p><strong>Required:</strong> false</p>
 <p><strong>Default value:</strong> <code>"EXCLUDE_EVENT"</code></p>
 <p><strong>Options:</strong> <code>"ALLOW_EVENT"</code>, <code>"BLOCK_EVENT"</code>, <code>"BLOCK_KILL_PROCESS"</code>, <code>"BLOCK_KILL_PROCESS_KILL_PARENT"</code>, <code>"EXCLUDE_EVENT"</code></p>
+</div>
+
 This feature defends protected processes from signals.<br>
 - Signals that are sent to non-protected processes are ignored by owLSM.<br>
 - Signals that are sent by the kernel, from pid 0/1, or from a protected process are ignored by owLSM.<br>
@@ -340,6 +342,8 @@ This feature defends protected processes from signals.<br>
 <p><strong>Required:</strong> false</p>
 <p><strong>Default value:</strong> <code>"EXCLUDE_EVENT"</code></p>
 <p><strong>Options:</strong> <code>"ALLOW_EVENT"</code>, <code>"BLOCK_EVENT"</code>, <code>"BLOCK_KILL_PROCESS"</code>, <code>"BLOCK_KILL_PROCESS_KILL_PARENT"</code>, <code>"EXCLUDE_EVENT"</code></p>
+</div>
+
 This feature defends protected processes from ptrace access.<br>
 - Ptrace attempts against non-protected processes are ignored by owLSM.<br>
 - Ptrace attempts from the kernel, from pid 0/1, or from a protected process are ignored by owLSM.<br>
