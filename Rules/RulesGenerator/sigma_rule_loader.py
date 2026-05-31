@@ -23,6 +23,7 @@ from constants import (
     COMPARISON_TYPE_REGEX,
     RULE_SEVERITIES,
     RULE_SEVERITY_UNKNOWN,
+    RULE_STATUSES,
 )
 from regex_dfa import validate_regex_or_raise
 from field_mapping import apply_field_mapping_to_detection
@@ -137,6 +138,22 @@ def validate_optional_severity(rule_data: Dict[str, Any], rule_file: str) -> str
     return severity
 
 
+def validate_optional_status(rule_data: Dict[str, Any], rule_file: str) -> str:
+    if "status" not in rule_data:
+        return ""
+
+    status = rule_data["status"]
+    if not isinstance(status, str):
+        raise Exception(
+            f"Validation error in '{rule_file}': Field 'status' must be a string, got {type(status).__name__}"
+        )
+    if status not in RULE_STATUSES:
+        raise Exception(
+            f"Validation error in '{rule_file}': Invalid status '{status}'. Allowed values: {sorted(RULE_STATUSES)}"
+        )
+    return status
+
+
 def validate_optional_mitre_tags(rule_data: Dict[str, Any], rule_file: str) -> List[str]:
     if "mitre_tags" not in rule_data:
         return []
@@ -178,6 +195,7 @@ class SigmaRule:
     mitre_tags: List[str] = field(default_factory=list)
     name: str = ""
     author: str = ""
+    status: str = ""
     min_version: Optional[str] = None
     max_version: Optional[str] = None
 
@@ -699,6 +717,7 @@ def validate_rule(rule_data: Dict[str, Any], rule_file: str) -> SigmaRule:
     mitre_tags = validate_optional_mitre_tags(rule_data, rule_file)
     name = validate_optional_string_field(rule_data, "name", rule_file)
     author = validate_optional_string_field(rule_data, "author", rule_file)
+    status = validate_optional_status(rule_data, rule_file)
     
     action = rule_data["action"]
     if not isinstance(action, str):
@@ -731,6 +750,7 @@ def validate_rule(rule_data: Dict[str, Any], rule_file: str) -> SigmaRule:
         mitre_tags=mitre_tags,
         name=name,
         author=author,
+        status=status,
         min_version=min_version,
         max_version=max_version
     )

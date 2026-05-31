@@ -880,7 +880,8 @@ struct RuleMetadata FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_SEVERITY = 8,
     VT_MITRE_TAGS = 10,
     VT_NAME = 12,
-    VT_AUTHOR = 14
+    VT_AUTHOR = 14,
+    VT_STATUS = 16
   };
   const ::flatbuffers::String *description() const {
     return GetPointer<const ::flatbuffers::String *>(VT_DESCRIPTION);
@@ -900,6 +901,9 @@ struct RuleMetadata FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const ::flatbuffers::String *author() const {
     return GetPointer<const ::flatbuffers::String *>(VT_AUTHOR);
   }
+  const ::flatbuffers::String *status() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_STATUS);
+  }
   template <bool B = false>
   bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -915,6 +919,8 @@ struct RuleMetadata FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.VerifyString(name()) &&
            VerifyOffset(verifier, VT_AUTHOR) &&
            verifier.VerifyString(author()) &&
+           VerifyOffset(verifier, VT_STATUS) &&
+           verifier.VerifyString(status()) &&
            verifier.EndTable();
   }
 };
@@ -941,6 +947,9 @@ struct RuleMetadataBuilder {
   void add_author(::flatbuffers::Offset<::flatbuffers::String> author) {
     fbb_.AddOffset(RuleMetadata::VT_AUTHOR, author);
   }
+  void add_status(::flatbuffers::Offset<::flatbuffers::String> status) {
+    fbb_.AddOffset(RuleMetadata::VT_STATUS, status);
+  }
   explicit RuleMetadataBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -959,8 +968,10 @@ inline ::flatbuffers::Offset<RuleMetadata> CreateRuleMetadata(
     owlsm::fb::RuleSeverity severity = owlsm::fb::RuleSeverity::UNKNOWN,
     ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<::flatbuffers::String>>> mitre_tags = 0,
     ::flatbuffers::Offset<::flatbuffers::String> name = 0,
-    ::flatbuffers::Offset<::flatbuffers::String> author = 0) {
+    ::flatbuffers::Offset<::flatbuffers::String> author = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> status = 0) {
   RuleMetadataBuilder builder_(_fbb);
+  builder_.add_status(status);
   builder_.add_author(author);
   builder_.add_name(name);
   builder_.add_mitre_tags(mitre_tags);
@@ -977,12 +988,14 @@ inline ::flatbuffers::Offset<RuleMetadata> CreateRuleMetadataDirect(
     owlsm::fb::RuleSeverity severity = owlsm::fb::RuleSeverity::UNKNOWN,
     const std::vector<::flatbuffers::Offset<::flatbuffers::String>> *mitre_tags = nullptr,
     const char *name = nullptr,
-    const char *author = nullptr) {
+    const char *author = nullptr,
+    const char *status = nullptr) {
   auto description__ = description ? _fbb.CreateString(description) : 0;
   auto title__ = title ? _fbb.CreateString(title) : 0;
   auto mitre_tags__ = mitre_tags ? _fbb.CreateVector<::flatbuffers::Offset<::flatbuffers::String>>(*mitre_tags) : 0;
   auto name__ = name ? _fbb.CreateString(name) : 0;
   auto author__ = author ? _fbb.CreateString(author) : 0;
+  auto status__ = status ? _fbb.CreateString(status) : 0;
   return owlsm::fb::CreateRuleMetadata(
       _fbb,
       description__,
@@ -990,7 +1003,8 @@ inline ::flatbuffers::Offset<RuleMetadata> CreateRuleMetadataDirect(
       severity,
       mitre_tags__,
       name__,
-      author__);
+      author__,
+      status__);
 }
 
 struct Target FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {

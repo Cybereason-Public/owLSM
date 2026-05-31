@@ -332,6 +332,9 @@
                 },
                 "author": {
                     "type": "string"
+                },
+                "status": {
+                    "type": "string"
                 }
             }
         },

@@ -197,6 +197,7 @@ void EventToFlatbuffer<MessageType>::serializeEvent(const Event& ev)
         auto title_off = m_builder.CreateString(ev.matched_rule_metadata.title);
         auto name_off = m_builder.CreateString(ev.matched_rule_metadata.name);
         auto author_off = m_builder.CreateString(ev.matched_rule_metadata.author);
+        auto status_off = m_builder.CreateString(ev.matched_rule_metadata.status);
 
         std::vector<flatbuffers::Offset<flatbuffers::String>> mitre_tag_offsets;
         mitre_tag_offsets.reserve(ev.matched_rule_metadata.mitre_tags.size());
@@ -213,7 +214,8 @@ void EventToFlatbuffer<MessageType>::serializeEvent(const Event& ev)
             toFbRuleSeverity(ev.matched_rule_metadata.severity),
             mitre_tags_off,
             name_off,
-            author_off
+            author_off,
+            status_off
         );
     }
 

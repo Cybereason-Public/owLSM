@@ -60,6 +60,10 @@ void to_json(nlohmann::json& j, const RuleMetadata& metadata)
     {
         j["author"] = metadata.author;
     }
+    if (!metadata.status.empty())
+    {
+        j["status"] = metadata.status;
+    }
 }
 }
 

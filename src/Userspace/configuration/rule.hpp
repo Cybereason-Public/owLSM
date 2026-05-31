@@ -45,6 +45,7 @@ struct RuleMetadata
     std::vector<std::string> mitre_tags;
     std::string name;
     std::string author;
+    std::string status;
 
     bool hasAnyValue() const
     {
@@ -53,7 +54,8 @@ struct RuleMetadata
             severity != RULE_SEVERITY_UNKNOWN ||
             !mitre_tags.empty() ||
             !name.empty() ||
-            !author.empty();
+            !author.empty() ||
+            !status.empty();
     }
 
     bool operator==(const RuleMetadata& other) const
@@ -63,7 +65,8 @@ struct RuleMetadata
             severity == other.severity &&
             mitre_tags == other.mitre_tags &&
             name == other.name &&
-            author == other.author;
+            author == other.author &&
+            status == other.status;
     }
 };
 

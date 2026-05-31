@@ -118,7 +118,7 @@ Every event shares a common top-level structure. The `data` field varies dependi
 <h3 id="matched-rule-metadata-object" class="section-anchor">Matched Rule Metadata Object</h3>
 
 <details class="field-dropdown">
-<summary><strong>Matched Rule Metadata Object</strong> — Optional metadata copied from the matched rule</summary>
+<summary><strong>Matched Rule Metadata Object</strong> — Metadata is copied from the matched rule</summary>
 <div class="field-content">
 <p>Present only when at least one metadata field is set in the matched rule.</p>
 
@@ -139,7 +139,8 @@ Every event shares a common top-level structure. The `data` field varies dependi
         "attack.t1059.004"
     ],
     "name": "suspicious_chmod",
-    "author": "Security Team"
+    "author": "Security Team",
+    "status": "stable"
 }</code></pre>
     </div>
   </div>
@@ -156,6 +157,7 @@ Every event shares a common top-level structure. The `data` field varies dependi
     <tr><td><code>mitre_tags</code></td><td>array of strings</td><td>Sigma-style MITRE tags</td></tr>
     <tr><td><code>name</code></td><td>string</td><td>Machine-readable rule name</td></tr>
     <tr><td><code>author</code></td><td>string</td><td>Rule author</td></tr>
+    <tr><td><code>status</code></td><td>string (<code>stable</code>, <code>test</code>, <code>experimental</code>, <code>deprecated</code>,  <code>unsupported</code>)</td><td>Rule lifecycle status</td></tr>
     </tbody>
     </table>
   </div>

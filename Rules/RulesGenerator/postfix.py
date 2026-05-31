@@ -36,6 +36,7 @@ class PostfixRule:
     mitre_tags: List[str]
     name: str
     author: str
+    status: str
     action: str
     applied_events: List[str]
     tokens: List[Token]
@@ -105,6 +106,7 @@ def convert_rule_to_postfix(parsed_rule: ParsedRule) -> PostfixRule:
         mitre_tags=parsed_rule.mitre_tags,
         name=parsed_rule.name,
         author=parsed_rule.author,
+        status=parsed_rule.status,
         action=parsed_rule.action,
         applied_events=parsed_rule.applied_events,
         tokens=tokens,

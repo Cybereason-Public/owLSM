@@ -297,6 +297,10 @@ std::string FlatbufferToJson::jsonLineFromFlatbufferEvent(const owlsm::fb::Event
         {
             meta["author"] = fbStr(m->author());
         }
+        if (m->status())
+        {
+            meta["status"] = fbStr(m->status());
+        }
 
         if (!meta.empty())
         {

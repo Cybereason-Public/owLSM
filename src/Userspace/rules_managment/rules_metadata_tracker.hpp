@@ -29,6 +29,7 @@ namespace std
             }
             hash_combine(std::hash<std::string>{}(m.name));
             hash_combine(std::hash<std::string>{}(m.author));
+            hash_combine(std::hash<std::string>{}(m.status));
             return seed;
         }
     };
