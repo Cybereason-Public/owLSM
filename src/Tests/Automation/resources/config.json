@@ -19,6 +19,13 @@
     },
     "shell_commands_monitoring": {
       "enabled": true
+    },
+    "anti_tampering": {
+      "enabled": false,
+      "events": {
+        "signals": "EXCLUDE_EVENT",
+        "ptrace": "EXCLUDE_EVENT"
+      }
     }
   },
   "userspace": {
@@ -451,6 +458,14 @@
       "104": {
         "value": "ch\\w+",
         "string_type": 2
+      },
+      "105": {
+        "value": "/owlsm_test_nevermatch",
+        "string_type": 0
+      },
+      "106": {
+        "value": "owlsm_test_nevermatch",
+        "string_type": 1
       }
     },
     "id_to_predicate": {
@@ -2329,6 +2344,27 @@
         "string_idx": 102,
         "numerical_value": -1,
         "fieldref": "FIELD_TYPE_NONE"
+      },
+      "268": {
+        "field": "process.file.path",
+        "comparison_type": "endswith",
+        "string_idx": 105,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "269": {
+        "field": "process.file.path",
+        "comparison_type": "contains",
+        "string_idx": 106,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "270": {
+        "field": "process.file.filename",
+        "comparison_type": "exactmatch",
+        "string_idx": 106,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
       }
     },
     "id_to_ip": {
@@ -2352,7 +2388,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_EVENT",
         "applied_events": [
@@ -2488,7 +2525,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_EVENT",
         "applied_events": [
@@ -2638,7 +2676,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_EVENT",
         "applied_events": [
@@ -2729,7 +2768,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_EVENT",
         "applied_events": [
@@ -2787,7 +2827,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_KILL_PROCESS",
         "applied_events": [
@@ -2865,7 +2906,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_KILL_PROCESS_KILL_PARENT",
         "applied_events": [
@@ -2901,7 +2943,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_EVENT",
         "applied_events": [
@@ -2943,7 +2986,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_EVENT",
         "applied_events": [
@@ -3013,7 +3057,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_EVENT",
         "applied_events": [
@@ -3062,7 +3107,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_EVENT",
         "applied_events": [
@@ -3104,7 +3150,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_EVENT",
         "applied_events": [
@@ -3153,7 +3200,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_EVENT",
         "applied_events": [
@@ -3209,7 +3257,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_KILL_PROCESS",
         "applied_events": [
@@ -3265,7 +3314,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_EVENT",
         "applied_events": [
@@ -3300,7 +3350,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_EVENT",
         "applied_events": [
@@ -3342,7 +3393,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_EVENT",
         "applied_events": [
@@ -3384,7 +3436,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "EXCLUDE_EVENT",
         "applied_events": [
@@ -3419,7 +3472,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_EVENT",
         "applied_events": [
@@ -3447,7 +3501,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_EVENT",
         "applied_events": [
@@ -3491,7 +3546,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "EXCLUDE_EVENT",
         "applied_events": [
@@ -3536,7 +3592,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_EVENT",
         "applied_events": [
@@ -3571,7 +3628,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_EVENT",
         "applied_events": [
@@ -3592,7 +3650,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_EVENT",
         "applied_events": [
@@ -3641,7 +3700,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_EVENT",
         "applied_events": [
@@ -3865,7 +3925,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_EVENT",
         "applied_events": [
@@ -4089,7 +4150,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "ALLOW_EVENT",
         "applied_events": [
@@ -4243,7 +4305,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "ALLOW_EVENT",
         "applied_events": [
@@ -4397,7 +4460,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "ALLOW_EVENT",
         "applied_events": [
@@ -4551,7 +4615,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "ALLOW_EVENT",
         "applied_events": [
@@ -4733,7 +4798,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "ALLOW_EVENT",
         "applied_events": [
@@ -4915,7 +4981,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_EVENT",
         "applied_events": [
@@ -4937,7 +5004,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_EVENT",
         "applied_events": [
@@ -4979,7 +5047,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "EXCLUDE_EVENT",
         "applied_events": [
@@ -5014,7 +5083,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_EVENT",
         "applied_events": [
@@ -5056,7 +5126,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "EXCLUDE_EVENT",
         "applied_events": [
@@ -5091,7 +5162,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_EVENT",
         "applied_events": [
@@ -5126,7 +5198,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_EVENT",
         "applied_events": [
@@ -5157,7 +5230,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_EVENT",
         "applied_events": [
@@ -5188,7 +5262,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_EVENT",
         "applied_events": [
@@ -5209,7 +5284,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_EVENT",
         "applied_events": [
@@ -5652,7 +5728,8 @@
             "attack.t1059.004"
           ],
           "name": "fieldref_chmod_rule",
-          "author": "Automation Team"
+          "author": "Automation Team",
+          "status": "test"
         },
         "action": "BLOCK_EVENT",
         "applied_events": [
@@ -5718,7 +5795,8 @@
             "attack.t1070.010"
           ],
           "name": "fieldref_rename_rule",
-          "author": "Automation Team"
+          "author": "Automation Team",
+          "status": ""
         },
         "action": "BLOCK_EVENT",
         "applied_events": [
@@ -5767,7 +5845,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_EVENT",
         "applied_events": [
@@ -5847,7 +5926,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_EVENT",
         "applied_events": [
@@ -5886,6 +5966,42 @@
           },
           {
             "operator_type": "OPERATOR_AND"
+          },
+          {
+            "operator_type": "OPERATOR_AND"
+          },
+          {
+            "operator_type": "OPERATOR_AND"
+          }
+        ]
+      },
+      {
+        "id": 52,
+        "metadata": {
+          "description": "Field mapping automation test - uses all 3 custom field mappings",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "EXEC"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 268
+          },
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 269
+          },
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 270
           },
           {
             "operator_type": "OPERATOR_AND"

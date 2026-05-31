@@ -99,7 +99,8 @@
           "severity": "unknown",
           "mitre_tags": [],
           "name": "",
-          "author": ""
+          "author": "",
+          "status": ""
         },
         "action": "BLOCK_EVENT",
         "applied_events": [

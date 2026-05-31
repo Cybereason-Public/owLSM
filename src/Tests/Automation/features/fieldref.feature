@@ -22,6 +22,7 @@ Scenario: chmod_blocked_with_multiple_numeric_and_string_fieldrefs
         | matched_rule_metadata.mitre_tags  | ['attack.execution', 'attack.t1059.004']                                  |
         | matched_rule_metadata.name        | fieldref_chmod_rule                                                       |
         | matched_rule_metadata.author      | Automation Team                                                           |
+        | matched_rule_metadata.status      | test                                                                      |
 
 
 Scenario: rename_blocked_with_multiple_numeric_and_string_fieldrefs
@@ -46,3 +47,4 @@ Scenario: rename_blocked_with_multiple_numeric_and_string_fieldrefs
         | matched_rule_metadata.mitre_tags  | ['attack.defense-evasion', 'attack.t1070.010']                                                          |
         | matched_rule_metadata.name        | fieldref_rename_rule                                                                                    |
         | matched_rule_metadata.author      | Automation Team                                                                                         |
+        | matched_rule_metadata.status      | None                                                                                                    |

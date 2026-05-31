@@ -108,6 +108,7 @@ For more examples, see [`Rules/RuleExamples`](https://github.com/cybereason-labs
     - attack.t1059.004
 <a href="#rule-name" class="code-link">name</a>: suspicious_chmod_sensitive_path
 <a href="#rule-author" class="code-link">author</a>: Security Team
+<a href="#rule-status" class="code-link">status</a>: stable
 <a href="#rule-action" class="code-link">action</a>: "BLOCK_EVENT"
 <a href="#rule-events" class="code-link">events</a>:
     - CHMOD
@@ -223,6 +224,19 @@ Machine-readable rule name.
 </div>
 
 Rule author.
+</div>
+
+<h3 id="rule-status" class="section-anchor">
+  <span class="section-path">status</span>
+</h3>
+
+<div class="rule-section">
+<div class="field-meta">
+<p><strong>Required:</strong> false</p>
+<p><strong>Options:</strong> <code>stable</code>, <code>test</code>, <code>experimental</code>, <code>deprecated</code>, <code>unsupported</code></p>
+</div>
+
+Rule lifecycle status, matching the <a href="https://github.com/SigmaHQ/sigma-specification/blob/main/specification/sigma-rules-specification.md#status">Sigma status field</a>.<br>
 </div>
 
 <h3 id="rule-action" class="section-anchor">

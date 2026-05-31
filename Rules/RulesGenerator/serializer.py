@@ -36,6 +36,7 @@ def serialize_rule_metadata(rule: PostfixRule) -> Dict[str, Any]:
         "mitre_tags": rule.mitre_tags,
         "name": rule.name,
         "author": rule.author,
+        "status": rule.status,
     }
 
 

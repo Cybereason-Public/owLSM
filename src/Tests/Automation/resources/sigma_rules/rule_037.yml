@@ -19,6 +19,7 @@ mitre_tags:
     - attack.t1059.004
 name: "fieldref_chmod_rule"
 author: "Automation Team"
+status: test
 action: "BLOCK_EVENT"
 events:
     - CHMOD

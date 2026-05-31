@@ -358,7 +358,8 @@ constexpr std::string_view REAL_SCHEMA_4 = R"(
                     "items": { "type": "string" }
                 },
                 "name": { "type": "string" },
-                "author": { "type": "string" }
+                "author": { "type": "string" },
+                "status": { "type": "string" }
             }
         },
         "rule_t": {

@@ -1345,7 +1345,6 @@ detection:
 RULE_WITH_ALL_EXTRA_SIGMA_FIELDS = """
 title: "Detect Suspicious chmod on /etc"
 id: 5000
-status: stable
 description: "Detects suspicious chmod on sensitive paths"
 author: "Test Author (Test Organization)"
 date: 2024-01-15
@@ -1407,7 +1406,7 @@ detection:
 
 
 class TestExtraSigmaFieldsIgnored:
-    """Tests that standard Sigma metadata fields (title, status, level, author,
+    """Tests that standard Sigma metadata fields (title, level, author,
     date, modified, references, tags, falsepositives, logsource, related,
     simulation) are silently ignored and do not affect rule loading, parsing,
     or serialization."""
@@ -1444,7 +1443,7 @@ class TestExtraSigmaFieldsIgnored:
         assert rule.author == "Test Author (Test Organization)"
 
         extra_field_names = [
-            "status", "level", "date", "modified",
+            "level", "date", "modified",
             "references", "tags", "logsource", "falsepositives", "related",
             "simulation",
         ]

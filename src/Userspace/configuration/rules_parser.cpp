@@ -97,6 +97,7 @@ namespace owlsm::config
             get_if_present(metadata, "mitre_tags", o.metadata.mitre_tags);
             get_if_present(metadata, "name", o.metadata.name);
             get_if_present(metadata, "author", o.metadata.author);
+            get_if_present(metadata, "status", o.metadata.status);
 
             if (auto severity_it = metadata.find("severity"); severity_it != metadata.end())
             {

@@ -30,6 +30,31 @@ class FieldMappingConverter:
         apply_field_mapping_to_detection(rule_data["detection"], mapping)
 
 
+class StatusValidator:
+
+    ALLOWED_STATUSES: Set[str] = {"stable", "test", "experimental"}
+    REPORT_ONLY_STATUSES: Set[str] = {"test", "experimental"}
+
+    @staticmethod
+    def validate(rule_data: Dict[str, Any], rule_file: str) -> None:
+        if "status" not in rule_data:
+            raise Exception(f"Validation error in '{rule_file}': missing required field 'status'")
+
+        status = rule_data["status"]
+        if not isinstance(status, str):
+            raise Exception(f"Validation error in '{rule_file}': field 'status' must be a string, got {type(status).__name__}")
+
+        if status not in StatusValidator.ALLOWED_STATUSES:
+            raise Exception( f"Validation error in '{rule_file}': status must be one of {sorted(StatusValidator.ALLOWED_STATUSES)}, got {status!r}")
+
+        if status in StatusValidator.REPORT_ONLY_STATUSES:
+            actions = rule_data.get("actions", [])
+            if isinstance(actions, list):
+                for idx, item in enumerate(actions):
+                    if isinstance(item, dict) and item.get("mode") != "report":
+                        raise Exception(f"Validation error in '{rule_file}': status {status!r} requires all actions[*].mode to be 'report', got {item.get('mode')!r} at index {idx}")
+
+
 class ActionsConverter:
 
     @staticmethod
@@ -55,7 +80,7 @@ class ActionsConverter:
 
             if mode not in ("prevent", "report"):
                 raise Exception(f"Validation error in '{rule_file}': actions[{idx}].mode must be 'prevent' or 'report', got {mode!r}")
-           
+
             modes.add(mode)
 
         if "prevent" in modes:
@@ -144,6 +169,7 @@ def main() -> None:
             rel = src.relative_to(input_dir)
             dst = output_dir / rel
             rule_data = _load_yaml(src)
+            StatusValidator.validate(rule_data, str(src))
             ActionsConverter.convert(rule_data, str(src))
             LogsourceEventsConverter.convert(rule_data, str(src))
             if field_mapping_path is not None:

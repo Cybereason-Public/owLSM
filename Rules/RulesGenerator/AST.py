@@ -111,6 +111,7 @@ class ParsedRule:
     mitre_tags: List[str]
     name: str
     author: str
+    status: str
     action: str
     applied_events: List[str]
     condition_expr: ConditionExpr
@@ -879,6 +880,7 @@ def _convert_single_rule(rule: SigmaRule, pysigma_rule: PySigmaRule, ctx: Parsed
         mitre_tags=rule.mitre_tags,
         name=rule.name,
         author=rule.author,
+        status=rule.status,
         action=rule.action,
         applied_events=applied_events,
         condition_expr=results[0],

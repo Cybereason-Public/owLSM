@@ -112,6 +112,7 @@ table RuleMetadata {
     mitre_tags:[string];
     name:string;
     author:string;
+    status:string;
 }
 
 // ── Nested structures to match JSON output format ────────────
