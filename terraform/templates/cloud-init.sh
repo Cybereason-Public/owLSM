@@ -9,7 +9,6 @@ set -e
 
 # === CONFIGURATION (injected by Terraform templatefile) ===
 RUNNER_USER="${runner_user}"
-RUNNER_VERSION="${runner_version}"
 RUNNER_URL="${github_repo_url}"
 
 # GitHub PAT with 'repo' scope for repository runners
@@ -169,7 +168,15 @@ chown -R "$RUNNER_USER:$RUNNER_USER" "$RUNNER_DIR"
 # =============================================================================
 # STEP 4: Download and Extract Runner
 # =============================================================================
-log_info "Downloading GitHub Actions Runner v$RUNNER_VERSION..."
+log_info "Fetching latest GitHub Actions Runner version..."
+RUNNER_VERSION=$(curl -s https://api.github.com/repos/actions/runner/releases/latest \
+    | jq -r '.tag_name' | sed 's/^v//')
+
+if [ -z "$RUNNER_VERSION" ] || [ "$RUNNER_VERSION" = "null" ]; then
+    log_error "Failed to fetch latest runner version from GitHub API"
+    exit 1
+fi
+log_info "Latest runner version: $RUNNER_VERSION"
 
 cd "$RUNNER_DIR"
 RUNNER_TAR="actions-runner-linux-x64-$${RUNNER_VERSION}.tar.gz"
