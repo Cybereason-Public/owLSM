@@ -433,7 +433,7 @@ For <code>MKDIR</code> and <code>RMDIR</code>, the file <code>type</code> will b
     "mode": 1
 }</code></pre>
 </div>
-<p><code>mode</code> is the kernel <code>PTRACE_MODE_*</code> flags passed to the LSM hook (unsigned integer).</p>
+<p><code>mode</code> is the kernel <code>PTRACE_MODE_*</code> flags passed to the LSM hook (unsigned integer). Only attach attempts (<code>PTRACE_MODE_ATTACH</code>) against protected processes produce this event; read-only ptrace checks are ignored.</p>
 </div>
 </details>
 
