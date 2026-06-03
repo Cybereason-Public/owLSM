@@ -3,12 +3,19 @@
 #include "protected_processes.bpf.h"
 #include "prevention.bpf.h"
 
+#define PTRACE_MODE_ATTACH 0x02
+
 const volatile int anti_tampering_ptrace_action;
 
 SEC("lsm/ptrace_access_check")
 int BPF_PROG(ptrace_hook, struct task_struct *child, unsigned int mode)
 {
     set_hook_name("ptrace_hook", 11);
+
+    if (!(mode & PTRACE_MODE_ATTACH))
+    {
+        return ALLOW;
+    }
 
     unsigned int sender_pid = bpf_get_current_pid_tgid() >> 32;
     if (sender_pid <= 1)

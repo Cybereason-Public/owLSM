@@ -344,10 +344,11 @@ This feature defends protected processes from signals.<br>
 <p><strong>Options:</strong> <code>"ALLOW_EVENT"</code>, <code>"BLOCK_EVENT"</code>, <code>"BLOCK_KILL_PROCESS"</code>, <code>"BLOCK_KILL_PROCESS_KILL_PARENT"</code>, <code>"EXCLUDE_EVENT"</code></p>
 </div>
 
-This feature defends protected processes from ptrace access.<br>
-- Ptrace attempts against non-protected processes are ignored by owLSM.<br>
-- Ptrace attempts from the kernel, from pid 0/1, or from a protected process are ignored by owLSM.<br>
-- Other ptrace attempts against protected processes are handled and a <code>PTRACE</code> event is emitted (action depends on the option you specify).<br><br>
+This feature defends protected processes from ptrace attach (write access).<br>
+- ptrace attempts without the <code>PTRACE_MODE_ATTACH</code> are ignored.<br>
+- Ptrace attach attempts against non-protected processes are ignored.<br>
+- Ptrace attach attempts from the kernel, from pid 0/1, or from a protected process are ignored.<br>
+- Other ptrace attach attempts against protected processes are handled and a <code>PTRACE</code> event is emitted (action depends on the option you specify).<br><br>
 <strong>Options</strong> represents the action taken when an unprotected process tries to trace a protected process.<br>
 </div>
 
