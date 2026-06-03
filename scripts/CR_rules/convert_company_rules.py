@@ -93,6 +93,11 @@ class ActionsConverter:
 
 class LogsourceEventsConverter:
 
+    # core_4.0 event.action values that correspond to the legacy process_creation
+    # category. owLSM supports process-creation rules only today, so both logsource
+    # forms map to the same single event.
+    PROCESS_CREATION_ACTIONS: Set[str] = {"process_created", "process_fork", "process_replacement"}
+
     @staticmethod
     def convert(rule_data: Dict[str, Any], rule_file: str) -> None:
         if "logsource" not in rule_data:
@@ -102,12 +107,23 @@ class LogsourceEventsConverter:
         if not isinstance(logsource, dict):
             raise Exception(f"Validation error in '{rule_file}': field 'logsource' must be a mapping, got {type(logsource).__name__}")
 
-        if "category" not in logsource:
-            raise Exception(f"Validation error in '{rule_file}': logsource missing 'category'")
-
-        category = logsource["category"]
-        if category != "process_creation":
-            raise Exception(f"Validation error in '{rule_file}': logsource.category must be 'process_creation', got {category!r}")
+        # Two accepted logsource forms:
+        #   legacy core_3.x: logsource.category: process_creation
+        #   core_4.0:        logsource.event.action: <process-creation action>
+        #                    (common.host.os_type may sit alongside; ignored like product)
+        if "category" in logsource:
+            category = logsource["category"]
+            if category != "process_creation":
+                raise Exception(f"Validation error in '{rule_file}': logsource.category must be 'process_creation', got {category!r}")
+        elif "event.action" in logsource:
+            action = logsource["event.action"]
+            if action not in LogsourceEventsConverter.PROCESS_CREATION_ACTIONS:
+                raise Exception(
+                    f"Validation error in '{rule_file}': logsource.event.action must be one of "
+                    f"{sorted(LogsourceEventsConverter.PROCESS_CREATION_ACTIONS)}, got {action!r}"
+                )
+        else:
+            raise Exception(f"Validation error in '{rule_file}': logsource must contain 'category' or 'event.action'")
 
         del rule_data["logsource"]
         rule_data["events"] = ["EXEC"]
