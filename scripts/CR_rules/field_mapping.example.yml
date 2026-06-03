@@ -16,6 +16,7 @@ event.target_process.user.effective.group.id: target.process.egid
 event.target_process.suid: target.process.suid
 event.target_process.ptrace_flags: target.process.ptrace_flags
 event.target_process.command_line: target.process.cmd
+event.target_process.shell_command: target.process.shell_command
 event.target_process.file.path: target.process.file.path
 event.target_process.file.name: target.process.file.filename
 event.target_process.file.uid: target.process.file.owner.uid
@@ -34,6 +35,7 @@ event.process.user.effective.group.id: process.egid
 event.process.suid: process.suid
 event.process.ptrace_flags: process.ptrace_flags
 event.process.command_line: process.cmd
+event.process.shell_command: process.shell_command
 event.process.file.path: process.file.path
 event.process.file.name: process.file.filename
 event.process.file.uid: process.file.owner.uid
@@ -52,6 +54,7 @@ event.process.parent.user.effective.group.id: parent_process.egid
 event.process.parent.suid: parent_process.suid
 event.process.parent.ptrace_flags: parent_process.ptrace_flags
 event.process.parent.command_line: parent_process.cmd
+event.process.parent.shell_command: parent_process.shell_command
 event.process.parent.file.path: parent_process.file.path
 event.process.parent.file.name: parent_process.file.filename
 event.process.parent.file.uid: parent_process.file.owner.uid
