@@ -12,7 +12,12 @@ _RULES_GENERATOR_DIR = Path(__file__).resolve().parent.parent.parent / "Rules" /
 
 
 def _rules_generator_field_mapping():
-    if str(_RULES_GENERATOR_DIR) not in sys.path:
+    # When frozen by PyInstaller (--onefile), field_mapping and its own
+    # dependency `constants` are bundled as top-level modules (see
+    # build_py_to_bin.sh: --paths/--hidden-import), so they import directly and
+    # the __file__-relative path below does not exist inside the extraction dir.
+    # When running from source, prepend the RulesGenerator dir so the import resolves.
+    if not getattr(sys, "frozen", False) and str(_RULES_GENERATOR_DIR) not in sys.path:
         sys.path.insert(0, str(_RULES_GENERATOR_DIR))
     from field_mapping import apply_field_mapping_to_detection, load_field_mapping_file  # type: ignore[import-not-found]
 
@@ -110,8 +115,8 @@ class LogsourceEventsConverter:
             raise Exception(f"Validation error in '{rule_file}': logsource missing 'event.action' (or 'category')")
 
         value = logsource[field_name]
-        if value != "process_created":
-            raise Exception(f"Validation error in '{rule_file}': logsource.{field_name} must be 'process_created', got {value!r}")
+        if value != "process_created" and value != "process_creation":
+            raise Exception(f"Validation error in '{rule_file}': logsource.{field_name} must be 'process_created' or 'process_creation', got {value!r}")
 
         del rule_data["logsource"]
         rule_data["events"] = ["EXEC"]
