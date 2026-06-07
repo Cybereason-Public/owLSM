@@ -1,2 +1,0 @@
-pyinstaller==6.20.0
-pyyaml==6.0.3
