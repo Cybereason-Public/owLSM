@@ -102,12 +102,16 @@ class LogsourceEventsConverter:
         if not isinstance(logsource, dict):
             raise Exception(f"Validation error in '{rule_file}': field 'logsource' must be a mapping, got {type(logsource).__name__}")
 
-        if "category" not in logsource:
-            raise Exception(f"Validation error in '{rule_file}': logsource missing 'category'")
+        if "event.action" in logsource:
+            field_name = "event.action"
+        elif "category" in logsource:
+            field_name = "category"
+        else:
+            raise Exception(f"Validation error in '{rule_file}': logsource missing 'event.action' (or 'category')")
 
-        category = logsource["category"]
-        if category != "process_creation":
-            raise Exception(f"Validation error in '{rule_file}': logsource.category must be 'process_creation', got {category!r}")
+        value = logsource[field_name]
+        if value != "process_created":
+            raise Exception(f"Validation error in '{rule_file}': logsource.{field_name} must be 'process_created', got {value!r}")
 
         del rule_data["logsource"]
         rule_data["events"] = ["EXEC"]
