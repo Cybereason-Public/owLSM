@@ -12,9 +12,10 @@ on:
 permissions:
   contents: read
 
-# Serialize per-tag so two runs cannot push the same ghcr reference at once.
+# Serialize all runs: every run pushes to the same releases branch, so they
+# must not overlap (the publish step also retries defensively).
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.inputs.tag }}
+  group: ${{ github.workflow }}
   cancel-in-progress: false
 
 env:
@@ -25,8 +26,7 @@ jobs:
     name: Build Cybereason Release
     runs-on: ["OCI", "owLSM"]
     permissions:
-      contents: read
-      packages: write
+      contents: write   # push the tarball onto the owlsm_cybereason_releases branch
     steps:
       # ---------------------------------------------------------------
       # (a) Checkout
@@ -55,7 +55,6 @@ jobs:
           echo "asset=$ASSET"                          >> "$GITHUB_OUTPUT"
           echo "out_tarball=owlsm-${VERSION}-cybereason.tar.gz" >> "$GITHUB_OUTPUT"
           echo "artifact_name=owlsm-${VERSION}-cybereason"      >> "$GITHUB_OUTPUT"
-          echo "ghcr_ref=ghcr.io/cybereason-public/owlsm-cybereason:${VERSION}" >> "$GITHUB_OUTPUT"
           echo "Tag: $TAG | Version: $VERSION | Asset: $ASSET"
 
       # ---------------------------------------------------------------
@@ -175,28 +174,68 @@ jobs:
           ls -lh "$OUT"
 
       # ---------------------------------------------------------------
-      # (j) Install ORAS and push the tarball permanently to ghcr.io
+      # (j) Publish the tarball onto the dedicated releases branch.
+      #     The branch is assumed to already exist (orphan branch holding
+      #     only release tarballs). Served anonymously via raw.githubusercontent.com;
+      #     NOT a GitHub Release. Uses the built-in GITHUB_TOKEN (contents: write).
       # ---------------------------------------------------------------
-      - name: Set up ORAS
-        uses: oras-project/setup-oras@v1
-
-      - name: Push artifact to GHCR with ORAS
-        env:
-          REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish tarball to releases branch
         run: |
           OUT="${{ steps.meta.outputs.out_tarball }}"
-          REF="${{ steps.meta.outputs.ghcr_ref }}"
+          BRANCH="owlsm_cybereason_releases"
+          WORKTREE="${{ runner.temp }}/cyber-rel"
 
-          # Token via stdin, never echoed to the logs.
-          echo "$REGISTRY_PASSWORD" | oras login ghcr.io \
-            -u "${{ github.actor }}" --password-stdin
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          oras push "$REF" \
-            --artifact-type "application/vnd.cybereason.owlsm.release.layer.v1+tar" \
-            "${OUT}:application/vnd.cybereason.owlsm.release.layer.v1+tar"
+          # Fetch the (assumed-existing) branch; fail clearly if it is missing.
+          if ! git fetch origin "$BRANCH"; then
+            echo "::error::Branch '$BRANCH' not found on origin. Create it once before running this workflow."
+            exit 1
+          fi
 
-          # Drop cached credentials.
-          oras logout ghcr.io || true
+          # Work on the branch in an isolated worktree so the main checkout
+          # is left untouched.
+          SRC="${{ github.workspace }}/$OUT"
+          rm -rf "$WORKTREE"
+          git worktree add -f "$WORKTREE" "origin/$BRANCH"
+
+          # Build the commit fresh against the current remote tip each attempt
+          # and reapply (rather than rebasing a delete-heavy commit), so a
+          # concurrent update is handled by a clean retry.
+          published=""
+          for attempt in 1 2 3; do
+            git -C "$WORKTREE" fetch origin "$BRANCH"
+            git -C "$WORKTREE" reset --hard "origin/$BRANCH"
+
+            # Releases-only hygiene: this branch must hold nothing but release
+            # tarballs. If it was seeded from the UI (a copy of main), strip
+            # every tracked file that is not a *.tar.gz. Idempotent/self-healing.
+            git -C "$WORKTREE" ls-files -z -- ':(exclude)*.tar.gz' \
+              | xargs -0 -r git -C "$WORKTREE" rm -q -- || true
+
+            cp "$SRC" "$WORKTREE/$OUT"
+            git -C "$WORKTREE" add -- "$OUT"
+
+            if git -C "$WORKTREE" diff --cached --quiet; then
+              echo "==> $OUT already current on $BRANCH; nothing to publish."
+              published=1; break
+            fi
+
+            git -C "$WORKTREE" commit -m "Publish $OUT (${{ steps.meta.outputs.tag }})"
+            if git -C "$WORKTREE" push origin "HEAD:$BRANCH"; then
+              echo "==> Published $OUT to $BRANCH"
+              published=1; break
+            fi
+            echo "==> Push rejected (attempt $attempt); refreshing $BRANCH and retrying..."
+          done
+
+          git worktree remove --force "$WORKTREE" || true
+
+          if [ -z "$published" ]; then
+            echo "::error::Failed to publish $OUT to $BRANCH after 3 attempts."
+            exit 1
+          fi
 
       # ---------------------------------------------------------------
       # (k) Surface results in the UI and as job outputs
@@ -206,24 +245,28 @@ jobs:
         run: |
           ARTIFACT_NAME="${{ steps.meta.outputs.artifact_name }}"
           OUT="${{ steps.meta.outputs.out_tarball }}"
-          REF="${{ steps.meta.outputs.ghcr_ref }}"
-          PKG_URL="https://github.com/orgs/Cybereason-Public/packages/container/package/owlsm-cybereason"
+          BRANCH="owlsm_cybereason_releases"
+          REPO="${{ github.repository }}"
+          DOWNLOAD_URL="https://raw.githubusercontent.com/${REPO}/${BRANCH}/${OUT}"
 
           echo "artifact_name=$ARTIFACT_NAME" >> "$GITHUB_OUTPUT"
           echo "tarball=$OUT"                 >> "$GITHUB_OUTPUT"
-          echo "ghcr_ref=$REF"                >> "$GITHUB_OUTPUT"
-          echo "package_url=$PKG_URL"         >> "$GITHUB_OUTPUT"
+          echo "download_url=$DOWNLOAD_URL"   >> "$GITHUB_OUTPUT"
 
           {
-            echo "## Cybereason Release Published"
+            echo "## Cybereason Artifact Published"
             echo ""
             echo "| Property | Value |"
             echo "|----------|-------|"
             echo "| Artifact | $ARTIFACT_NAME |"
             echo "| Tarball | $OUT |"
-            echo "| GHCR reference | \`$REF\` |"
-            echo "| Pull command | \`oras pull $REF\` |"
-            echo "| Package page | $PKG_URL |"
+            echo "| Branch | \`$BRANCH\` |"
+            echo "| Download URL | <$DOWNLOAD_URL> |"
+            echo ""
+            echo "Anonymous download (browser or curl):"
+            echo '```'
+            echo "curl -L -O $DOWNLOAD_URL"
+            echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
       # ---------------------------------------------------------------
@@ -241,5 +284,4 @@ jobs:
     outputs:
       artifact_name: ${{ steps.summary.outputs.artifact_name }}
       tarball: ${{ steps.summary.outputs.tarball }}
-      ghcr_ref: ${{ steps.summary.outputs.ghcr_ref }}
-      package_url: ${{ steps.summary.outputs.package_url }}
+      download_url: ${{ steps.summary.outputs.download_url }}
