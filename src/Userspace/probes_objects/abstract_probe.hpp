@@ -38,6 +38,7 @@ public:
     virtual void bpfDetach() {};
     virtual void bpfDestroy() {};
     virtual void setSkel(const std::shared_ptr<all_bpf>& skel) { m_skel = skel; }
+    probe_type getProbeType() const { return m_type; }
 
 protected:
     explicit AbstractProbe(probe_type type) : m_type(type) {}

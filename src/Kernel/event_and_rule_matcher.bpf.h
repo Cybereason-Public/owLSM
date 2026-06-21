@@ -123,7 +123,8 @@ statfunc int compare_numeric(const struct event_t *current_event, int event_valu
 
 statfunc struct string_utils_ctx * create_sctx(const char *haystack, unsigned char haystack_length, unsigned char haystack_max_length, struct predicate_t *pred)
 {
-    struct rule_string_t *str = bpf_map_lookup_elem(&rules_strings_map, &pred->string_idx);
+    int string_idx = pred->string_idx;
+    struct rule_string_t *str = bpf_map_lookup_elem(&rules_strings_map, &string_idx);
     if (!str)
     {
         REPORT_ERROR(GENERIC_ERROR, "string lookup failed for idx %d", pred->string_idx);
@@ -202,7 +203,8 @@ statfunc int compare_string(const char *haystack, unsigned char haystack_length,
 
 statfunc int eval_ip(const struct network_event_t *event, struct predicate_t *pred)
 {
-    struct rule_ip_t *ip = bpf_map_lookup_elem(&rules_ips_map, &pred->numerical_value);
+    int ip_key = pred->numerical_value;
+    struct rule_ip_t *ip = bpf_map_lookup_elem(&rules_ips_map, &ip_key);
     if(!ip)
     {
         REPORT_ERROR(GENERIC_ERROR, "ip lookup failed for idx %d", pred->numerical_value);

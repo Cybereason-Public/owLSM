@@ -17,6 +17,8 @@ public:
     virtual void bpfLoad() override;
     virtual void bpfAttach() override;
 
+    event_type getEventType() const { return m_event_type; }
+
 private:
 
     enum event_type m_event_type;

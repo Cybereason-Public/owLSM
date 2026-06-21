@@ -44,6 +44,7 @@ SRC            := main.cpp $(filter-out ./main.cpp, $(shell find . -name "*.cpp"
 
 # ---- Dependencies --------------------------------------------
 BPF_SKEL       := ../Kernel/Programs/syscall_monitoring/all_bpf.skel.h
+FEATURES_TEST_SKEL := ../Kernel/features_test.skel.h
 SHARED_HDR     := ../Shared/events_structs.h
 SCHEMA_INC     := configuration/schema.inc
 
@@ -58,7 +59,7 @@ all: $(BINARY)
 $(SCHEMA_INC): configuration/schema.json
 	cd configuration && cp -a schema.json g_schema.json && xxd -i g_schema.json > schema.inc && rm -f g_schema.json
 
-$(BINARY): $(SRC) $(BPF_SKEL) $(SHARED_HDR) $(SCHEMA_INC)
+$(BINARY): $(SRC) $(BPF_SKEL) $(FEATURES_TEST_SKEL) $(SHARED_HDR) $(SCHEMA_INC)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(SRC) -o $@ $(LDFLAGS) $(LDLIBS)
 
 clean:

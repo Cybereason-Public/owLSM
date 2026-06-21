@@ -63,7 +63,8 @@ statfunc int update_process_in_alive_process_cache(u32 pid, const struct process
 
 statfunc int add_process_to_dead_proccesses_lru(const struct process_t *p)
 {
-    return update_process_in_cache(&p->unique_process_id, p, &dead_process_cache_lru_map);
+    unsigned long long key = p->unique_process_id;
+    return update_process_in_cache(&key, p, &dead_process_cache_lru_map);
 }
 
 // TODO - This function has a race condition. Another CPU can delete/update the value of ent until bpf_probe_read_kernel finishes. Find a way to solve race.  

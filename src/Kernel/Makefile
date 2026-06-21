@@ -53,11 +53,13 @@ BPF_SRC        := common_maps.bpf.c \
 BPF_OBJ        := $(BPF_SRC:.bpf.c=.bpf.o)
 BPF_MERGED     := Programs/syscall_monitoring/all_bpf.o
 BPF_SKEL       := Programs/syscall_monitoring/all_bpf.skel.h
+FEATURES_TEST_BPF_OBJ := features_test.bpf.o
+FEATURES_TEST_SKEL := features_test.skel.h
 
 # ---- Build Rules ---------------------------------------------
 .PHONY: all clean verifier_start verifier_end generate_constants
 
-all: $(BPF_SKEL)
+all: $(BPF_SKEL) $(FEATURES_TEST_SKEL)
 
 verifier_end:
 	@rm -rf /sys/fs/bpf/dummy
@@ -84,5 +86,8 @@ $(BPF_MERGED): $(BPF_OBJ)
 $(BPF_SKEL): $(BPF_MERGED)
 	bpftool gen skeleton $< > $@
 
+$(FEATURES_TEST_SKEL): $(FEATURES_TEST_BPF_OBJ)
+	bpftool gen skeleton $< > $@
+
 clean:
-	$(RM) $(BPF_OBJ) $(BPF_MERGED) $(BPF_SKEL)
+	$(RM) $(BPF_OBJ) $(BPF_MERGED) $(BPF_SKEL) $(FEATURES_TEST_BPF_OBJ) $(FEATURES_TEST_SKEL)

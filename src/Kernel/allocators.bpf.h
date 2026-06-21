@@ -4,6 +4,23 @@
 #include "preprocessor_definitions/defs.bpf.h"
 
 
+statfunc struct printed_message* allocate_empty_printed_message(void)
+{
+    u32 key = 0;
+    struct printed_message *message = bpf_map_lookup_elem(&printed_message_map, &key);
+    if (!message)
+    {
+        bpf_printk("bpf_map_lookup_elem failed in allocate_empty_printed_message");
+        return NULL;
+    }
+    if (bpf_probe_read_kernel(message, sizeof(*message), &empty_printed_message) != SUCCESS)
+    {
+        bpf_printk("bpf_probe_read_kernel failed in allocate_empty_printed_message");
+        return NULL;
+    }
+    return message;
+}
+
 statfunc struct string_buffer* allocate_string_buffer(void)
 {
     u32 key = 0;
