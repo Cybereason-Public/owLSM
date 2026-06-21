@@ -2,13 +2,22 @@
 #include "bpf_header_includes.h"
 #include "rules_structs.h"
 
-#define MAX_PERCPU_ARRAY_SIZE 1024     
+#define MAX_PERCPU_ARRAY_SIZE 1024
 
-struct string_buffer { 
+struct ebpf_features {
+    bool chown_hook_available;
+    bool ringbuffer_map_value_available;
+};
+
+struct printed_message {
+    char value[512];
+};
+
+struct string_buffer {
         unsigned char data[MAX_PERCPU_ARRAY_SIZE];
 };
 
-struct string_utils_ctx 
+struct string_utils_ctx
 {
     unsigned char haystack_max_length;
     unsigned char haystack_length;

@@ -10,10 +10,11 @@
 
 namespace owlsm
 {
-    ProbeManager CreateProbeObjects::createProbeManager()
+    ProbeManager CreateProbeObjects::createProbeManager(const ebpf_features& features)
     {
         std::vector<std::shared_ptr<AbstractProbe>> probes = createProbes();
-        return ProbeManager(std::move(probes));
+        removeUnavailableProbes(probes, features);
+        return ProbeManager(std::move(probes), features);
     }
 
     std::vector<std::shared_ptr<AbstractProbe>> CreateProbeObjects::createProbes()
@@ -25,6 +26,28 @@ namespace owlsm
         addShellCommandsMonitoringProbes(probes);
         addAntiTamperingProbes(probes);
         return probes;
+    }
+
+    void CreateProbeObjects::removeUnavailableProbes(std::vector<std::shared_ptr<AbstractProbe>>& probes,
+                                                     const ebpf_features& features)
+    {
+        if (features.chown_hook_available)
+        {
+            return;
+        }
+
+        probes.erase(
+            std::remove_if(probes.begin(), probes.end(),
+                [](const std::shared_ptr<AbstractProbe>& probe) {
+                    if (probe->getProbeType() != probe_type::LSM)
+                    {
+                        return false;
+                    }
+
+                    const auto lsm_probe = std::static_pointer_cast<LsmProbe>(probe);
+                    return lsm_probe->getEventType() == CHOWN;
+                }),
+            probes.end());
     }
 
     void CreateProbeObjects::addBasicProbes(std::vector<std::shared_ptr<AbstractProbe>>& probes)

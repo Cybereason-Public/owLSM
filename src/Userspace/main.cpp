@@ -1,3 +1,4 @@
+#include "check_bpf_feature_availability.hpp"
 #include "globals/global_strings.hpp"
 #include "cmd_parser.hpp"
 #include "logger.hpp"
@@ -83,14 +84,16 @@ void setup(int argc, char *argv[])
     }
     owlsm::Logger::applyConfiguredLogLocation(owlsm::globals::g_config.userspace.log_location);
     owlsm::Logger::getInstance().setLogLevel(owlsm::globals::g_config.userspace.log_level);
-    libbpf_set_print(libbpfLogCallback);
 
     owlsm::RulesOrganizer::add_end_rules(owlsm::globals::g_config.rules_config.rules);
     auto organized_rules = owlsm::RulesOrganizer::organize_rules(owlsm::globals::g_config.rules_config.rules);
 
     owlsm::SystemSetup::start();
     setupShellDetection();
-    owlsm::globals::g_probe_manager = owlsm::CreateProbeObjects::createProbeManager();
+    libbpf_set_print(NULL);
+    const auto detected_features = owlsm::CheckBpfFeatureAvailability().getFeatures();
+    libbpf_set_print(libbpfLogCallback);
+    owlsm::globals::g_probe_manager = owlsm::CreateProbeObjects::createProbeManager(detected_features);
     owlsm::globals::g_probe_manager.bpfOpen(organized_rules);
 
     auto excluded_pids = cmd_parser.getPids();

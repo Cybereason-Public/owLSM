@@ -21,6 +21,8 @@ extern const struct error_report_t   empty_error_report_t                  SEC("
 extern const struct string_utils_ctx string_utils_ctx_empty                SEC(".rodata");
 extern const char                    empty_hook_name[HOOK_NAME_MAX_LENGTH] SEC(".rodata");
 extern const struct command_line_t   empty_command_line_t                  SEC(".rodata");
+extern const struct printed_message  empty_printed_message                 SEC(".rodata");
+extern const volatile struct ebpf_features g_ebpf_features                 SEC(".rodata");
 
 #ifndef DEFINE_MAPS
 extern
@@ -113,6 +115,17 @@ struct {
     __type(key, u32);
     __type(value, struct event_t);
 } currently_handled_event SEC(".maps");
+
+
+#ifndef DEFINE_MAPS
+extern
+#endif
+struct {
+    __uint(type, BPF_MAP_TYPE_PERCPU_ARRAY);
+    __uint(max_entries, 1);
+    __type(key, u32);
+    __type(value, struct printed_message);
+} printed_message_map SEC(".maps");
 
 
 #ifndef DEFINE_MAPS

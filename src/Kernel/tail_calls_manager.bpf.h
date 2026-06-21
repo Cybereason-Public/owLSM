@@ -251,11 +251,31 @@ statfunc void do_tail_call(void* ctx, void* prog_array)
 statfunc int store_currently_handled_event(struct event_t* e)
 {
     u32 key = 0;
-    if(bpf_map_update_elem(&currently_handled_event, &key, e, BPF_ANY) != SUCCESS)
+
+    if (g_ebpf_features.ringbuffer_map_value_available)
     {
-        REPORT_ERROR(GENERIC_ERROR, "bpf_map_update_elem failed");
-        return GENERIC_ERROR;
+        if (bpf_map_update_elem(&currently_handled_event, &key, e, BPF_ANY) != SUCCESS)
+        {
+            REPORT_ERROR(GENERIC_ERROR, "bpf_map_update_elem failed");
+            return GENERIC_ERROR;
+        }
     }
+    else
+    {
+        struct event_t *slot = bpf_map_lookup_elem(&currently_handled_event, &key);
+        if (!slot)
+        {
+            REPORT_ERROR(GENERIC_ERROR, "bpf_map_lookup_elem failed");
+            return GENERIC_ERROR;
+        }
+
+        if (bpf_probe_read_kernel(slot, sizeof(*slot), e) != SUCCESS)
+        {
+            REPORT_ERROR(GENERIC_ERROR, "bpf_probe_read_kernel failed");
+            return GENERIC_ERROR;
+        }
+    }
+
     return SUCCESS;
 }
 

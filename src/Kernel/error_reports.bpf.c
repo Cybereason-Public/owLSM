@@ -1,4 +1,5 @@
 #include "error_reports.bpf.h"
+#include "allocators.bpf.h"
 
 const volatile enum log_level log_level_to_print;
 
@@ -53,7 +54,7 @@ int report_error(int error_code, const char * location, const char * details)
     char comm[TASK_COMM_LEN];
     bpf_get_current_comm(comm, TASK_COMM_LEN);
     unsigned int current_pid = bpf_get_current_pid_tgid() >> 32;
-    bpf_printk("[ERROR_REPORT][%s:%s][%s:%d]: %s", error->hook_name, error->location, comm, current_pid, error->details);
+    bpf_log_printk("[ERROR_REPORT][%s:%s][%s:%d]: %s", error->hook_name, error->location, comm, current_pid, error->details);
     bpf_ringbuf_submit(error, 0);
     return SUCCESS;
 }

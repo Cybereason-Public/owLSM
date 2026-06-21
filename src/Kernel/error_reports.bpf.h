@@ -5,6 +5,29 @@
 
 extern const volatile enum log_level log_level_to_print;
 int report_error(int error_code, const char *location, const char *details);
+statfunc struct printed_message* allocate_empty_printed_message(void);
+struct printed_message;
+
+enum bpf_func_id___x { BPF_FUNC_trace_vprintk___x = 177 };
+
+#define bpf_has_trace_vprintk() bpf_core_enum_value_exists(enum bpf_func_id___x, BPF_FUNC_trace_vprintk___x)
+
+#define bpf_log_printk(fmt, ...)                                                    \
+do {                                                                                 \
+    if (bpf_has_trace_vprintk())                                                     \
+    {                                                                                \
+        bpf_printk(fmt, ##__VA_ARGS__);                                              \
+    }                                                                                \
+    else                                                                             \
+    {                                                                                \
+        struct printed_message *message = allocate_empty_printed_message();          \
+        if (message)                                                                 \
+        {                                                                            \
+            BPF_SNPRINTF(message->value, sizeof(message->value), fmt, ##__VA_ARGS__); \
+            bpf_printk("%s", message->value);                                        \
+        }                                                                            \
+    }                                                                                \
+} while (0)
 
 #define REPORT_ERROR(CODE, FMT, ...)                                                \
 do {                                                                                 \
@@ -25,7 +48,7 @@ do {                                                                            
     {                                                                                \
         unsigned int key = 0;                                                        \
         char *hook_name = bpf_map_lookup_elem(&hook_names, &key);                    \
-        bpf_printk("[DEBUG][%s:%s:%d] " FMT, hook_name, __func__, __LINE__, ##__VA_ARGS__);        \
+        bpf_log_printk("[DEBUG][%s:%s:%d] " FMT, hook_name, __func__, __LINE__, ##__VA_ARGS__); \
     }                                                                                \
 } while (0)
 
@@ -36,7 +59,7 @@ do {                                                                            
     {                                                                                \
         unsigned int key = 0;                                                        \
         char *hook_name = bpf_map_lookup_elem(&hook_names, &key);                    \
-        bpf_printk("[INFO][%s:%s:%d] " FMT, hook_name, __func__, __LINE__, ##__VA_ARGS__);         \
+        bpf_log_printk("[INFO][%s:%s:%d] " FMT, hook_name, __func__, __LINE__, ##__VA_ARGS__); \
     }                                                                                \
 } while (0)
 

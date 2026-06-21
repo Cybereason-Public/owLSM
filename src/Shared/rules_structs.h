@@ -37,7 +37,7 @@ struct token_t {
 struct predicate_result_t {
     enum token_result result;
     unsigned long long time;
-};
+} __attribute__((packed));
 
 struct rule_t {
     unsigned int id;

@@ -126,7 +126,8 @@ Monitor chmod syscall
 <p><strong>Options:</strong> <code>true</code>, <code>false</code></p>
 </div>
 
-Monitor chown syscall
+Monitor chown syscall.<br>
+<strong>Note:</strong> Not available on all kernels; owLSM disables it automatically when <code>lsm/path_chown</code> cannot load (<a href="https://github.com/iovisor/bcc/issues/3657">kernel limitation</a>).
 </div>
 
 <h3 id="features-file_monitoring-events-file_create" class="section-anchor">

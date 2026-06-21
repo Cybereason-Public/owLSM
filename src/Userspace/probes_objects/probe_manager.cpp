@@ -37,8 +37,11 @@ namespace owlsm
         m_skel->rodata->log_level_to_print = owlsm::globals::g_config.kernel.log_level;
         m_skel->rodata->anti_tampering_signals_action = static_cast<int>(owlsm::globals::g_config.features.anti_tampering.events.signals);
         m_skel->rodata->anti_tampering_ptrace_action = static_cast<int>(owlsm::globals::g_config.features.anti_tampering.events.ptrace);
+        m_skel->rodata->g_ebpf_features = m_ebpf_features;
+        
+        disableUnavailableProbes();
 
-        for (auto& probe : m_probes) 
+        for (auto& probe : m_probes)
         {
             probe->setSkel(m_skel);
             probe->bpfOpen();
@@ -170,5 +173,14 @@ namespace owlsm
         probe->bpfAttach();
         std::lock_guard<std::mutex> lock(m_probes_mutex);
         m_probes.push_back(std::move(probe));
+    }
+
+    void ProbeManager::disableUnavailableProbes()
+    {
+        if (!m_ebpf_features.chown_hook_available)
+        {
+            bpf_program__set_autoload(m_skel->progs.chown_hook, false);
+            bpf_program__set_autoload(m_skel->progs.chown_hook_2, false);
+        }
     }
 }
