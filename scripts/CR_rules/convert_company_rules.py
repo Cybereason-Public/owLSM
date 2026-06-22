@@ -98,6 +98,22 @@ class ActionsConverter:
 
 class LogsourceEventsConverter:
 
+    EVENT_MAPPING: Dict[str, str] = {
+        "process_created": "EXEC",
+        "process_creation": "EXEC",
+        "process_ended": "EXIT",
+        "file_created": "FILE_CREATE",
+        "file_deleted": "UNLINK",
+        "file_modified": "WRITE",
+        "file_read": "READ",
+        "file_renamed": "RENAME",
+        "file_permission_changed": "CHMOD",
+        "file_owner_changed": "CHOWN",
+        "directory_created": "MKDIR",
+        "directory_deleted": "RMDIR",
+        "network_connection_attempted": "NETWORK",
+    }
+
     @staticmethod
     def convert(rule_data: Dict[str, Any], rule_file: str) -> None:
         if "logsource" not in rule_data:
@@ -115,11 +131,11 @@ class LogsourceEventsConverter:
             raise Exception(f"Validation error in '{rule_file}': logsource missing 'event.action' (or 'category')")
 
         value = logsource[field_name]
-        if value != "process_created" and value != "process_creation":
-            raise Exception(f"Validation error in '{rule_file}': logsource.{field_name} must be 'process_created' or 'process_creation', got {value!r}")
+        if value not in LogsourceEventsConverter.EVENT_MAPPING:
+            raise Exception(f"Validation error in '{rule_file}': logsource.{field_name} must be one of {sorted(LogsourceEventsConverter.EVENT_MAPPING)}, got {value!r}")
 
         del rule_data["logsource"]
-        rule_data["events"] = ["EXEC"]
+        rule_data["events"] = [LogsourceEventsConverter.EVENT_MAPPING[value]]
 
 
 def _find_rule_files(input_dir: Path) -> List[Path]:
