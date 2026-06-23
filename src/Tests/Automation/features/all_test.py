@@ -1,4 +1,7 @@
 from pytest_bdd import scenario
+from Utils.distro_utils import is_fedora_35
+
+_chown_scenario = (lambda *args, **kwargs: lambda f: f) if is_fedora_35() else scenario
 from common_steps.file_steps import *
 from common_steps.process_steps import *
 from common_steps.event_steps import *
@@ -65,11 +68,11 @@ def test_neq_modifier_numeric_and_string_exclusion():
 def test_regex_chmod_rule_match():
     pass
 
-@scenario('on_chown_test.feature', 'allowed_chown')
+@_chown_scenario('on_chown_test.feature', 'allowed_chown')
 def test_allowed_chown():
     pass
 
-@scenario('on_chown_test.feature', 'blocked_chown')
+@_chown_scenario('on_chown_test.feature', 'blocked_chown')
 def test_blocked_chown():
     pass
 

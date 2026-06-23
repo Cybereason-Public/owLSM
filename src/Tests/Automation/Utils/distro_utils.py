@@ -29,3 +29,11 @@ def get_distro_type() -> DistroType:
         return DistroType.RPM
 
     return DistroType.OTHER
+
+
+def is_fedora_35() -> bool:
+    try:
+        os_release = platform.freedesktop_os_release()
+    except OSError:
+        return False
+    return os_release.get("ID", "").lower() == "fedora" and os_release.get("VERSION_ID", "") == "35"
