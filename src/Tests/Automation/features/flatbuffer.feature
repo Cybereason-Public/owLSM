@@ -33,6 +33,7 @@ Scenario: flatbuffer_output_events_and_errors
     And I stop the owLSM process
     And The owLSM process is not running
     And I run flatbuffer_reader async for "errors" stream and save pid
+    And I SSH to localhost as test user
     And I ensure that output file consists of at least "1" valid error message
     And I check that the async resource process is still running
     And I start the owLSM process

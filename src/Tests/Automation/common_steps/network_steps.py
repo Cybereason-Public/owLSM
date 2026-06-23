@@ -105,3 +105,17 @@ def get_client(protocol, port, expected_connection, timeout):
 @then(parsers.parse('I ensure the socket "{path}" exists'))
 def I_ensure_the_socket_exists(path):
     assert create_socket(path), f"Failed to create socket: {path}"
+
+
+@given('I SSH to localhost as test user')
+@when('I SSH to localhost as test user')
+@then('I SSH to localhost as test user')
+def ssh_to_localhost_as_test_user():
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    try:
+        client.connect('127.0.0.1', username=system_globals.USER_NAME, password=system_globals.PASSWORD, timeout=5)
+    except Exception:
+        pass
+    finally:
+        client.close()
