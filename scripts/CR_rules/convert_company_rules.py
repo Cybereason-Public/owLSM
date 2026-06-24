@@ -29,9 +29,9 @@ class FieldMappingConverter:
     @staticmethod
     def convert(rule_data: Dict[str, Any], mapping_path: Path) -> None:
         apply_field_mapping_to_detection, load_field_mapping_file = _rules_generator_field_mapping()
-        mapping = load_field_mapping_file(str(mapping_path.resolve()))
         if "detection" not in rule_data or not isinstance(rule_data["detection"], dict):
             return
+        mapping = load_field_mapping_file(str(mapping_path.resolve()))
         apply_field_mapping_to_detection(rule_data["detection"], mapping)
 
 
@@ -173,7 +173,7 @@ def main() -> None:
         parser = argparse.ArgumentParser(description="Convert company YAML to owLSM shape: actions/logsource/fields to owLSM YAML.")
         parser.add_argument("-i", "--input-directory", required=True, type=Path, help="Directory containing .yml / .yaml rules (searched recursively)")
         parser.add_argument("-o", required=True, type=Path, help="Directory to write converted rules (mirrors relative paths from input root)")
-        parser.add_argument("-m", "--field-mapping", type=Path, help="YAML file: external field name -> owLSM field (same format and validation as rules_generator -m)")
+        parser.add_argument("-m", "--field-mapping", type=Path, help="YAML file: field name and enum value mappings (supports 'fields:' and 'enums:' sections)")
         args = parser.parse_args()
 
         input_dir = args.input_directory.resolve()

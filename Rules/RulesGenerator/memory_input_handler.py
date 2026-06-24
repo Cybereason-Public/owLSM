@@ -7,8 +7,12 @@ from typing import Any, Dict, List, Optional
 import jsonschema
 import yaml
 
-from constants import RULE_FIELD_TYPES
-from field_mapping import apply_field_mapping_to_detection
+from field_mapping import (
+    FieldMapping,
+    apply_field_mapping_to_detection,
+    parse_field_mapping_data,
+    parse_value_mapping_data,
+)
 from placeholder_expander import expand_detection_placeholders
 from sigma_rule_loader import SigmaRule, validate_rule, validate_rules_per_event_limit
 
@@ -66,7 +70,7 @@ class MemoryInputHandler:
             return None
         return _parse_placeholders_yaml(self._memory_input.placeholders_yml)
 
-    def get_field_mapping(self) -> Optional[Dict[str, str]]:
+    def get_field_mapping(self) -> Optional[FieldMapping]:
         if not self._memory_input.field_mapping_yml.strip():
             return None
         return _parse_field_mapping_yaml(self._memory_input.field_mapping_yml)
@@ -161,37 +165,18 @@ def _parse_placeholders_yaml(yaml_text: str) -> Dict[str, List]:
     return data
 
 
-def _parse_field_mapping_yaml(yaml_text: str) -> Dict[str, str]:
+_STDIN_MAPPING_SOURCE = "Field mapping input 'stdin.field_mapping_yml'"
+
+
+def _parse_field_mapping_yaml(yaml_text: str) -> FieldMapping:
     try:
         data = yaml.safe_load(yaml_text)
     except Exception as e:
-        raise Exception(f"Field mapping input 'stdin.field_mapping_yml': {e}") from e
-
-    if data is None:
-        return {}
-
-    if not isinstance(data, dict):
-        raise Exception(
-            "Field mapping input 'stdin.field_mapping_yml': expected a YAML mapping at root, "
-            f"got {type(data).__name__}")
-
-    allowed_destinations = {key for key, value in RULE_FIELD_TYPES.items() if value != "none"}
-    mapping: Dict[str, str] = {}
-
-    for source, dest in data.items():
-        if not isinstance(source, str) or not isinstance(dest, str):
-            raise Exception(
-                "Field mapping input 'stdin.field_mapping_yml': mapping keys and values must be strings, "
-                f"got {type(source).__name__} and {type(dest).__name__}"
-            )
-        if dest not in allowed_destinations:
-            raise Exception(
-                "Field mapping input 'stdin.field_mapping_yml': "
-                f"destination field '{dest}' is not a valid owLSM rule field"
-            )
-        mapping[source] = dest
-
-    return mapping
+        raise Exception(f"{_STDIN_MAPPING_SOURCE}: {e}") from e
+    return FieldMapping(
+        fields=parse_field_mapping_data(data, _STDIN_MAPPING_SOURCE),
+        enums=parse_value_mapping_data(data, _STDIN_MAPPING_SOURCE),
+    )
 
 
 def _validate_memory_input_schema(payload: Any) -> None:
