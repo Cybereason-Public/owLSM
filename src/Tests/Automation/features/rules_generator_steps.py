@@ -59,7 +59,7 @@ _CORRUPT_PAYLOADS = {
     "bad mapping": (
         {
             "placeholders_yml": "",
-            "field_mapping_yml": "event.custom: nonexistent.owlsm.field\n",
+            "field_mapping_yml": "fields:\n  event.custom: nonexistent.owlsm.field\n",
             "rules": [_VALID_RULE],
         },
         "not a valid owLSM rule field",
