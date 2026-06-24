@@ -86,10 +86,11 @@ statfunc void set_cached_pred_result(unsigned int pred_idx, enum token_result pr
         return;
     }
 
-    struct predicate_result_t result = {
-        .time = event->time,
-        .result = pred_result
-    };
+    struct predicate_result_t result;
+    // Zero the whole struct (including padding) so the indirect read by bpf_map_update_elem sees a fully-initialized stack region. Older verifiers reject the helper call if the struct's padding is left uninitialized by a designated initializer.
+    __builtin_memset(&result, 0, sizeof(result));
+    result.time = event->time;
+    result.result = pred_result;
     if(bpf_map_update_elem(&predicates_results_cache, &pred_idx, &result, BPF_ANY) != SUCCESS)
     {
         REPORT_ERROR(GENERIC_ERROR, "bpf_map_update_elem failed");
