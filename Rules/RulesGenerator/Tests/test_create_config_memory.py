@@ -24,7 +24,7 @@ detection:
 def test_memory_input_handler_parses_stdin(monkeypatch):
     payload = {
         "placeholders_yml": "shell_names:\n  - bash\n  - zsh\n",
-        "field_mapping_yml": "Image: process.file.filename\n",
+        "field_mapping_yml": "fields:\n  Image: process.file.filename\n",
         "rules": [VALID_RULE_YAML],
     }
     monkeypatch.setattr(sys, "stdin", io.StringIO(json.dumps(payload)))

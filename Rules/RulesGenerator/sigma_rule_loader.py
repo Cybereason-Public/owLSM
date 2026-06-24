@@ -800,7 +800,7 @@ def load_sigma_rules(
 ) -> List[SigmaRule]:
     if not os.path.isdir(directory):
         raise Exception(f"Directory does not exist: {directory}")
-    
+
     yml_files = find_yml_files(directory)
 
     if placeholder_file:
@@ -809,10 +809,10 @@ def load_sigma_rules(
 
     if not yml_files:
         raise Exception(f"No .yml files found in {directory}")
-    
+
     rules: List[SigmaRule] = []
     id_to_file: Dict[int, str] = {}
-    
+
     for file_path in yml_files:
         rule_data = load_rule_file(file_path)
 

@@ -9,13 +9,13 @@ from sigma_rule_loader import load_sigma_rules
 class TestLoadFieldMappingFile:
     def test_rejects_invalid_destination(self, tmp_path):
         p = tmp_path / "map.yml"
-        p.write_text("CustomX: not_a_real_owlsm_field\n")
+        p.write_text("fields:\n  CustomX: not_a_real_owlsm_field\n")
         with pytest.raises(Exception, match="not a valid owLSM rule field"):
             load_field_mapping_file(str(p))
 
     def test_accepts_valid_destination(self, tmp_path):
         p = tmp_path / "map.yml"
-        p.write_text("VendorImage: process.file.filename\n")
+        p.write_text("fields:\n  VendorImage: process.file.filename\n")
         m = load_field_mapping_file(str(p))
         assert m == {"VendorImage": "process.file.filename"}
 
@@ -37,15 +37,36 @@ class TestLoadFieldMappingFile:
 
     def test_rejects_non_string_key(self, tmp_path):
         p = tmp_path / "bad.yml"
-        p.write_text("1: process.pid\n")
+        p.write_text("fields:\n  1: process.pid\n")
         with pytest.raises(Exception, match="mapping keys and values must be strings"):
             load_field_mapping_file(str(p))
 
     def test_rejects_non_string_value(self, tmp_path):
         p = tmp_path / "bad.yml"
-        p.write_text("VendorX: 99\n")
+        p.write_text("fields:\n  VendorX: 99\n")
         with pytest.raises(Exception, match="must be strings"):
             load_field_mapping_file(str(p))
+
+    def test_rejects_flat_format(self, tmp_path):
+        p = tmp_path / "flat.yml"
+        p.write_text("VendorImage: process.file.filename\n")
+        with pytest.raises(Exception, match="sectioned format"):
+            load_field_mapping_file(str(p))
+
+    def test_enums_only_file_returns_empty_field_mapping(self, tmp_path):
+        p = tmp_path / "enums_only.yml"
+        p.write_text("enums:\n  DIR: DIRECTORY\n")
+        assert load_field_mapping_file(str(p)) == {}
+
+    def test_fields_and_enums_sections_both_loaded(self, tmp_path):
+        p = tmp_path / "combined.yml"
+        p.write_text(
+            "fields:\n  VendorImage: process.file.filename\n"
+            "enums:\n  DIR: DIRECTORY\n"
+        )
+        m = load_field_mapping_file(str(p))
+        assert dict(m) == {"VendorImage": "process.file.filename"}
+        assert m.enums == {"DIR": "DIRECTORY"}
 
 
 class TestApplyFieldMapping:
@@ -224,8 +245,9 @@ class TestLoadSigmaRulesWithMapping:
         rules_dir.mkdir()
         map_path = tmp_path / "fields.yml"
         map_path.write_text(
-            "VendorImage: process.file.filename\n"
-            "VendorParentImage: parent_process.file.filename\n"
+            "fields:\n"
+            "  VendorImage: process.file.filename\n"
+            "  VendorParentImage: parent_process.file.filename\n"
         )
         (rules_dir / "rule.yml").write_text(
             """
@@ -256,8 +278,9 @@ detection:
         rules_dir.mkdir()
         map_path = tmp_path / "map.yml"
         map_path.write_text(
-            "malware: process.cmd\n"
-            "VendorImage: process.file.filename\n"
+            "fields:\n"
+            "  malware: process.cmd\n"
+            "  VendorImage: process.file.filename\n"
         )
         (rules_dir / "rule.yml").write_text(
             '''
@@ -282,8 +305,9 @@ detection:
         rules_dir.mkdir()
         map_path = tmp_path / "map.yml"
         map_path.write_text(
-            "ExtLeft: process.file.path\n"
-            "ExtRight: parent_process.file.path\n"
+            "fields:\n"
+            "  ExtLeft: process.file.path\n"
+            "  ExtRight: parent_process.file.path\n"
         )
         (rules_dir / "rule.yml").write_text(
             """
@@ -308,7 +332,7 @@ detection:
         rules_dir = tmp_path / "rules_only"
         rules_dir.mkdir()
         map_path = tmp_path / "map.yml"
-        map_path.write_text("ExtCmd: process.cmd\n")
+        map_path.write_text("fields:\n  ExtCmd: process.cmd\n")
         (rules_dir / "rule.yml").write_text(
             r"""
 id: 92102
@@ -332,8 +356,9 @@ detection:
         rules_dir.mkdir()
         map_path = tmp_path / "map.yml"
         map_path.write_text(
-            "ExtCmd: process.cmd\n"
-            "MapRegexKey: process.file.filename\n"
+            "fields:\n"
+            "  ExtCmd: process.cmd\n"
+            "  MapRegexKey: process.file.filename\n"
         )
         (rules_dir / "rule.yml").write_text(
             """
@@ -358,8 +383,9 @@ detection:
         rules_dir.mkdir()
         map_path = tmp_path / "map.yml"
         map_path.write_text(
-            "ExtCmd: process.cmd\n"
-            "MapStrKey: process.file.filename\n"
+            "fields:\n"
+            "  ExtCmd: process.cmd\n"
+            "  MapStrKey: process.file.filename\n"
         )
         (rules_dir / "rule.yml").write_text(
             """
@@ -388,8 +414,9 @@ detection:
         rules_dir.mkdir()
         map_path = tmp_path / "map.yml"
         map_path.write_text(
-            "filePath: process.file.path\n"
-            "ProcessfilePath: parent_process.file.path\n"
+            "fields:\n"
+            "  filePath: process.file.path\n"
+            "  ProcessfilePath: parent_process.file.path\n"
         )
         (rules_dir / "rule.yml").write_text(
             """

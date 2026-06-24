@@ -124,7 +124,7 @@ def generate_rules_json(rules_directory, placeholder_file=None, mapping_file=Non
         if mapping_file:
             log_info(f"Loading field mapping from: {mapping_file}")
             field_mapping = load_field_mapping_file(mapping_file)
-            log_info(f"Loaded {len(field_mapping)} field alias(es)")
+            log_info(f"Loaded {len(field_mapping)} field alias(es), {len(field_mapping.enums)} enum mapping(s)")
 
         rules = load_sigma_rules(
             rules_directory,
@@ -148,7 +148,7 @@ def generate_rules_json_from_memory(memory_input_handler: MemoryInputHandler):
 
         field_mapping = memory_input_handler.get_field_mapping()
         if field_mapping is not None:
-            log_info(f"Loaded {len(field_mapping)} field alias(es) from stdin")
+            log_info(f"Loaded {len(field_mapping)} field alias(es), {len(field_mapping.enums)} enum mapping(s) from stdin")
 
         rules = memory_input_handler.load_rules(
             placeholders=placeholders,

@@ -899,8 +899,9 @@ Instead of doing it manually, you can create a YAML file (outside of your rules 
 The file content is very straightforward, for example `field_mapping.yml`:
 
 ```yaml
-ImagePath: process.file.path
-ParentCommandLine: parent_process.cmd
+fields:
+  ImagePath: process.file.path
+  ParentCommandLine: parent_process.cmd
 ```
 
 Then pass that file to the [rules generator](https://github.com/Cybereason-Public/owLSM/blob/main/Rules/README.md):
@@ -911,3 +912,18 @@ rules_generator -m field_mapping.yml -d /path/to/rules -c base_config.json -o fu
 
 This translates in memory all of the fields, including `fieldref`, `keywords`, etc'
 Mapping is **case-sensitive**.
+
+### Enum value mapping {#enum-value-mapping}
+If your rules also use different names for enum values (e.g. `DIR` instead of `DIRECTORY`, or `INBOUND` instead of `INCOMING`), you can add an `enums:` section to the same mapping file.  
+
+```yaml
+fields:
+  ImagePath: process.file.path
+  ParentCommandLine: parent_process.cmd
+
+enums:
+  DIR: DIRECTORY
+  FILE: REGULAR_FILE
+  INBOUND: INCOMING
+  OUTBOUND: OUTGOING
+```
