@@ -109,10 +109,44 @@ class LogsourceEventsConverter:
         "file_renamed": "RENAME",
         "file_permission_changed": "CHMOD",
         "file_owner_changed": "CHOWN",
-        "directory_created": "MKDIR",
-        "directory_deleted": "RMDIR",
         "network_connection_attempted": "NETWORK",
     }
+
+    # file_created/file_deleted become directory events when event.file.type is a directory
+    DIRECTORY_EVENT: Dict[str, str] = {"file_created": "MKDIR", "file_deleted": "RMDIR"}
+    DIRECTORY_TYPE_VALUES: Set[str] = {"DIRECTORY", "DIR"}
+
+    @staticmethod
+    def _collect_file_type_values(detection: Any) -> List[Any]:
+        values: List[Any] = []
+        if not isinstance(detection, dict):
+            return values
+        for name, selection in detection.items():
+            if name == "condition":
+                continue
+            entries = selection if isinstance(selection, list) else [selection]
+            for entry in entries:
+                if isinstance(entry, dict):
+                    for key, val in entry.items():
+                        if key.split("|")[0] == "event.file.type":
+                            values.append(val)
+        return values
+
+    @staticmethod
+    def _resolve_file_event(logsource_value: str, default_event: str, detection: Any, rule_file: str) -> str:
+        file_types = LogsourceEventsConverter._collect_file_type_values(detection)
+        if len(file_types) > 1:
+            raise Exception(f"Validation error in '{rule_file}': rule has {len(file_types)} 'event.file.type' fields; at most one is allowed")
+        if len(file_types) == 0:
+            return default_event
+        value = file_types[0]
+        if isinstance(value, list):
+            if any(v in LogsourceEventsConverter.DIRECTORY_TYPE_VALUES for v in value):
+                raise Exception(f"Validation error in '{rule_file}': 'event.file.type' list must not contain {sorted(LogsourceEventsConverter.DIRECTORY_TYPE_VALUES)}")
+            return default_event
+        if value in LogsourceEventsConverter.DIRECTORY_TYPE_VALUES:
+            return LogsourceEventsConverter.DIRECTORY_EVENT[logsource_value]
+        return default_event
 
     @staticmethod
     def convert(rule_data: Dict[str, Any], rule_file: str) -> None:
@@ -134,8 +168,12 @@ class LogsourceEventsConverter:
         if value not in LogsourceEventsConverter.EVENT_MAPPING:
             raise Exception(f"Validation error in '{rule_file}': logsource.{field_name} must be one of {sorted(LogsourceEventsConverter.EVENT_MAPPING)}, got {value!r}")
 
+        event = LogsourceEventsConverter.EVENT_MAPPING[value]
+        if value in LogsourceEventsConverter.DIRECTORY_EVENT:
+            event = LogsourceEventsConverter._resolve_file_event(value, event, rule_data.get("detection"), rule_file)
+
         del rule_data["logsource"]
-        rule_data["events"] = [LogsourceEventsConverter.EVENT_MAPPING[value]]
+        rule_data["events"] = [event]
 
 
 def _find_rule_files(input_dir: Path) -> List[Path]:
