@@ -174,7 +174,10 @@ def run_command_sync_as_grandchild(command: str, timeout: int = None, user: str 
         logger.log_info(f"running command as grandchild: {command}")
         child_pid = fork_current_process()
         if child_pid == 0:
-            run_command_sync(command, timeout, user=user)
+            try:
+                run_command_sync(command, timeout, user=user)
+            finally:
+                os._exit(0)
         else:
             os.waitpid(child_pid, 0)
             return True

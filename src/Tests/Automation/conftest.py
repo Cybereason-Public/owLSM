@@ -35,6 +35,7 @@ def pytest_collection_modifyitems(config, items):
 
 def pytest_sessionstart(session):
     logger.log_info("pytest_sessionstart")
+    system_globals.PYTEST_SESSION_PID = os.getpid()
     ensure_automation_running_as_root()
     assert create_local_user(system_globals.USER_NAME, system_globals.PASSWORD), f"Failed to create {system_globals.USER_NAME} user"
     assert create_local_user(system_globals.NO_SUDO_USER_NAME, system_globals.NO_SUDO_PASSWORD), f"Failed to create {system_globals.NO_SUDO_USER_NAME} user"
@@ -43,6 +44,8 @@ def pytest_sessionstart(session):
 
 
 def pytest_sessionfinish(session, exitstatus):
+    if system_globals.PYTEST_SESSION_PID is not None and os.getpid() != system_globals.PYTEST_SESSION_PID:
+        os._exit(0)
     logger.log_info("pytest_sessionfinish")
     stop_owlsm_process()
     delete_user(system_globals.USER_NAME)

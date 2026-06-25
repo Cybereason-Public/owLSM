@@ -20,11 +20,11 @@ def I_setup_the_fake_network():
     assert os.path.exists(f"/var/run/netns/{system_globals.networking_globals.NS_NAME}"), f"Network namespace '{system_globals.networking_globals.NS_NAME}' file does not exist"
     run_command_sync(f"ip link add {system_globals.networking_globals.VETH_HOST} type veth peer name {system_globals.networking_globals.VETH_NS}")
     run_command_sync(f"ip addr add {system_globals.networking_globals.SERVER_IP} dev {system_globals.networking_globals.VETH_HOST}")
-    run_command_sync(f"ip -6 addr add {system_globals.networking_globals.SERVER_IPv6} dev {system_globals.networking_globals.VETH_HOST}")
+    run_command_sync(f"ip -6 addr add {system_globals.networking_globals.SERVER_IPv6} dev {system_globals.networking_globals.VETH_HOST} nodad")
     run_command_sync(f"ip link set {system_globals.networking_globals.VETH_HOST} up")
     run_command_sync(f"ip link set {system_globals.networking_globals.VETH_NS} netns {system_globals.networking_globals.NS_NAME}")
     run_command_sync(f"ip netns exec {system_globals.networking_globals.NS_NAME} ip addr add {system_globals.networking_globals.CLIENT_IP} dev {system_globals.networking_globals.VETH_NS}")
-    run_command_sync(f"ip netns exec {system_globals.networking_globals.NS_NAME} ip -6 addr add {system_globals.networking_globals.CLIENT_IPv6} dev {system_globals.networking_globals.VETH_NS}")
+    run_command_sync(f"ip netns exec {system_globals.networking_globals.NS_NAME} ip -6 addr add {system_globals.networking_globals.CLIENT_IPv6} dev {system_globals.networking_globals.VETH_NS} nodad")
     run_command_sync(f"ip netns exec {system_globals.networking_globals.NS_NAME} ip link set {system_globals.networking_globals.VETH_NS} up")
     run_command_sync(f"ip netns exec {system_globals.networking_globals.NS_NAME} ip link set lo up")
     run_command_sync(f"ip -6 addr show ")
