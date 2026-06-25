@@ -59,6 +59,7 @@ class SystemGlobals:
         self.RESOURCES_PATH = self.AUTOMATION_ROOT_DIR / "resources"
         self.OWLSM_DB_PATH = self.AUTOMATION_ROOT_DIR / "owlsm" / "resources" / "owlsm.db"
         self.OWLSM_PROCESS_OBJECT = None
+        self.PYTEST_SESSION_PID = None
         self.OWLSM_SETUP_TIME_IN_SECONDS = 60
         self.USER_NAME = "automation_test_user"
         self.PASSWORD = self.USER_NAME
