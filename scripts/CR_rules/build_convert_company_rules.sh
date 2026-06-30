@@ -8,18 +8,22 @@ set -euo pipefail
 # Usage: build_convert_company_rules.sh
 # Output: scripts/CR_rules/convert_company_rules
 #
-# Note: convert_company_rules imports `field_mapping` at runtime, which in turn
-# imports `constants`. Both live in Rules/RulesGenerator and are reached via a
-# __file__-relative sys.path hack that does not exist inside a --onefile bundle,
-# so we make them importable at build time (--paths) and bundle them as hidden
-# imports. constants.py reads constants.json from sys._MEIPASS when frozen,
-# hence --add-data for it.
+# Note: convert_company_rules imports `field_mapping` at runtime (which imports
+# `constants`), and in --memory mode also `memory_input_handler` (which pulls in
+# `placeholder_expander`, `sigma_rule_loader`, `regex_dfa` and the pysigma/
+# jsonschema/greenery stack). These live in Rules/RulesGenerator and are reached
+# via a __file__-relative sys.path hack that does not exist inside a --onefile
+# bundle, so we make them importable at build time (--paths) and bundle them as
+# hidden imports. constants.py reads constants.json from sys._MEIPASS when frozen
+# and memory_input_handler reads memory_json_schema.json the same way, hence the
+# --add-data for both.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 RULES_GENERATOR_DIR="${PROJECT_ROOT}/Rules/RulesGenerator"
 CONSTANTS_FILE="${PROJECT_ROOT}/src/Shared/constants.json"
+MEMORY_SCHEMA_FILE="${RULES_GENERATOR_DIR}/memory_json_schema.json"
 
 ENTRYPOINT="${SCRIPT_DIR}/convert_company_rules.py"
 REQUIREMENTS="${SCRIPT_DIR}/requirements.txt"
@@ -34,8 +38,13 @@ for f in \
     "${ENTRYPOINT}" \
     "${REQUIREMENTS}" \
     "${CONSTANTS_FILE}" \
+    "${MEMORY_SCHEMA_FILE}" \
     "${RULES_GENERATOR_DIR}/field_mapping.py" \
-    "${RULES_GENERATOR_DIR}/constants.py"; do
+    "${RULES_GENERATOR_DIR}/constants.py" \
+    "${RULES_GENERATOR_DIR}/memory_input_handler.py" \
+    "${RULES_GENERATOR_DIR}/placeholder_expander.py" \
+    "${RULES_GENERATOR_DIR}/sigma_rule_loader.py" \
+    "${RULES_GENERATOR_DIR}/regex_dfa.py"; do
     if [[ ! -f "${f}" ]]; then
         echo "Required file not found: ${f}" >&2
         exit 1
@@ -64,7 +73,13 @@ python -m PyInstaller \
     --paths "${RULES_GENERATOR_DIR}" \
     --hidden-import field_mapping \
     --hidden-import constants \
+    --hidden-import memory_input_handler \
+    --hidden-import placeholder_expander \
+    --hidden-import sigma_rule_loader \
+    --hidden-import regex_dfa \
+    --collect-submodules sigma \
     --add-data "${CONSTANTS_FILE}:." \
+    --add-data "${MEMORY_SCHEMA_FILE}:." \
     --exclude-module pytest \
     --exclude-module _pytest \
     --exclude-module pytest_bdd \

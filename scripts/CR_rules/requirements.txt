@@ -1,2 +1,5 @@
 pyinstaller==6.20.0
 pyyaml==6.0.3
+jsonschema==4.26.0
+pysigma==1.0.1
+greenery==4.2.2
