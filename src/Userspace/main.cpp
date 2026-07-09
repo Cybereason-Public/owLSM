@@ -91,6 +91,7 @@ void setup(int argc, char *argv[])
     owlsm::SystemSetup::start();
     setupShellDetection();
     libbpf_set_print(NULL);
+    owlsm::CheckBpfFeatureAvailability::validateExecArgvOffsets();
     const auto detected_features = owlsm::CheckBpfFeatureAvailability().getFeatures();
     libbpf_set_print(libbpfLogCallback);
     owlsm::globals::g_probe_manager = owlsm::CreateProbeObjects::createProbeManager(detected_features);

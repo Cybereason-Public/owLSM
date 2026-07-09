@@ -10,6 +10,7 @@ namespace owlsm::globals
     constexpr const char* LOG_FILE_NAME = "owlsm.log";
     constexpr const char* DB_FILE_NAME = "owlsm.db";
     constexpr const char* RESOURCES_DIR_NAME = "resources";
+    constexpr const char* TRACE_FS_SYSCALLS_DIR = "/sys/kernel/tracing/events/syscalls";
 
     extern const std::string CURRENT_PROCESS_DIR;
     extern const std::string DB_PATH;

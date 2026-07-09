@@ -10,16 +10,16 @@ namespace owlsm
     {
         switch (m_event_type)
         {
-            case CHMOD:         bpf_program__set_autoattach(m_skel->progs.chmod_hook_2, false);       break;
-            case CHOWN:         bpf_program__set_autoattach(m_skel->progs.chown_hook_2, false);       break;
-            case EXEC:          bpf_program__set_autoattach(m_skel->progs.exec_hook_2, false);        break;
-            case FILE_CREATE:   bpf_program__set_autoattach(m_skel->progs.fc_hook_2, false);          break;
-            case WRITE:         bpf_program__set_autoattach(m_skel->progs.write_hook_2, false);       break;
-            case READ:          bpf_program__set_autoattach(m_skel->progs.read_hook_2, false);        break;
-            case UNLINK:        bpf_program__set_autoattach(m_skel->progs.unlink_hook_2, false);      break;
-            case RENAME:        bpf_program__set_autoattach(m_skel->progs.rename_hook_2, false);      break;
-            case MKDIR:         bpf_program__set_autoattach(m_skel->progs.mkdir_hook_2, false);      break;
-            case RMDIR:         bpf_program__set_autoattach(m_skel->progs.rmdir_hook_2, false);      break;
+            case CHMOD:         bpf_program__set_autoattach(m_skel->progs.chmod_hook_2, false);            break;
+            case CHOWN:         bpf_program__set_autoattach(m_skel->progs.chown_hook_2, false);            break;
+            case EXEC:          bpf_program__set_autoattach(m_skel->progs.bprm_creds_from_file_2, false);  break;
+            case FILE_CREATE:   bpf_program__set_autoattach(m_skel->progs.fc_hook_2, false);               break;
+            case WRITE:         bpf_program__set_autoattach(m_skel->progs.write_hook_2, false);            break;
+            case READ:          bpf_program__set_autoattach(m_skel->progs.read_hook_2, false);             break;
+            case UNLINK:        bpf_program__set_autoattach(m_skel->progs.unlink_hook_2, false);           break;
+            case RENAME:        bpf_program__set_autoattach(m_skel->progs.rename_hook_2, false);           break;
+            case MKDIR:         bpf_program__set_autoattach(m_skel->progs.mkdir_hook_2, false);            break;
+            case RMDIR:         bpf_program__set_autoattach(m_skel->progs.rmdir_hook_2, false);            break;
             case NETWORK:
             {
                 bpf_program__set_autoattach(m_skel->progs.connect_hook_2, false);
@@ -37,16 +37,16 @@ namespace owlsm
     {
         switch (m_event_type)
         {
-            case CHMOD:         addProgramToArray(m_skel->progs.chmod_hook_2, m_skel->maps.chmod_prog_array);   break;
-            case CHOWN:         addProgramToArray(m_skel->progs.chown_hook_2, m_skel->maps.chown_prog_array);   break;
-            case EXEC:          addProgramToArray(m_skel->progs.exec_hook_2, m_skel->maps.exec_prog_array);     break;
-            case FILE_CREATE:   addProgramToArray(m_skel->progs.fc_hook_2, m_skel->maps.fc_prog_array);         break;
-            case WRITE:         addProgramToArray(m_skel->progs.write_hook_2, m_skel->maps.write_prog_array);   break;
-            case READ:          addProgramToArray(m_skel->progs.read_hook_2, m_skel->maps.read_prog_array);     break;
-            case UNLINK:        addProgramToArray(m_skel->progs.unlink_hook_2, m_skel->maps.unlink_prog_array); break;
-            case RENAME:        addProgramToArray(m_skel->progs.rename_hook_2, m_skel->maps.rename_prog_array); break;
-            case MKDIR:         addProgramToArray(m_skel->progs.mkdir_hook_2, m_skel->maps.mkdir_prog_array); break;
-            case RMDIR:         addProgramToArray(m_skel->progs.rmdir_hook_2, m_skel->maps.rmdir_prog_array); break;
+            case CHMOD:         addProgramToArray(m_skel->progs.chmod_hook_2, m_skel->maps.chmod_prog_array);           break;
+            case CHOWN:         addProgramToArray(m_skel->progs.chown_hook_2, m_skel->maps.chown_prog_array);           break;
+            case EXEC:          addProgramToArray(m_skel->progs.bprm_creds_from_file_2, m_skel->maps.exec_prog_array);  break;
+            case FILE_CREATE:   addProgramToArray(m_skel->progs.fc_hook_2, m_skel->maps.fc_prog_array);                 break;
+            case WRITE:         addProgramToArray(m_skel->progs.write_hook_2, m_skel->maps.write_prog_array);           break;
+            case READ:          addProgramToArray(m_skel->progs.read_hook_2, m_skel->maps.read_prog_array);             break;
+            case UNLINK:        addProgramToArray(m_skel->progs.unlink_hook_2, m_skel->maps.unlink_prog_array);         break;
+            case RENAME:        addProgramToArray(m_skel->progs.rename_hook_2, m_skel->maps.rename_prog_array);         break;
+            case MKDIR:         addProgramToArray(m_skel->progs.mkdir_hook_2, m_skel->maps.mkdir_prog_array);           break;
+            case RMDIR:         addProgramToArray(m_skel->progs.rmdir_hook_2, m_skel->maps.rmdir_prog_array);           break;
             case NETWORK:
             {
                 addProgramToArray(m_skel->progs.connect_hook_2, m_skel->maps.connect_prog_array);
@@ -75,9 +75,7 @@ namespace owlsm
             case RMDIR:       attachProbe(m_skel->progs.rmdir_hook, &m_skel->links.rmdir_hook); break;
             case EXEC:
             {
-                attachProbe(m_skel->progs.bprm_creds_for_exec,&m_skel->links.bprm_creds_for_exec);
-                attachProbe(m_skel->progs.bprm_committed_creds,&m_skel->links.bprm_committed_creds);
-                attachProbe(m_skel->progs.exec_hook,&m_skel->links.exec_hook);
+                attachProbe(m_skel->progs.bprm_creds_from_file,&m_skel->links.bprm_creds_from_file);
                 break;
             }
             case NETWORK:

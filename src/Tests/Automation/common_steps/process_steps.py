@@ -17,6 +17,13 @@ def I_run_the_command_sync(command):
     assert run_command_sync(command), f"Failed to run command: {command}"
 
 
+@given(parsers.parse('I run the command "{command}" sync and expect it to be blocked'))
+@when(parsers.parse('I run the command "{command}" sync and expect it to be blocked'))
+@then(parsers.parse('I run the command "{command}" sync and expect it to be blocked'))
+def I_run_the_command_sync_and_expect_it_to_be_blocked(command):
+    assert not run_command_sync(command), f"Command was expected to be blocked but ran successfully: {command}"
+
+
 @given(parsers.parse('I run the command "{command}" async'))
 @when(parsers.parse('I run the command "{command}" async'))
 @then(parsers.parse('I run the command "{command}" async'))

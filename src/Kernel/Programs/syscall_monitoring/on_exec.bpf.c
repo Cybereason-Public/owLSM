@@ -6,96 +6,108 @@
 #include "tail_calls_manager.bpf.h"
 
 struct {
-    __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries, PID_MAX_LIMIT);
+    __uint(type, BPF_MAP_TYPE_PERCPU_ARRAY);
+    __uint(max_entries, 1);
     __type(key, u32);
-    __type(value, u8);
-} exec_pids SEC(".maps");
+    __type(value, struct command_line_t);
+} cmd_scratch SEC(".maps");
 
-SEC("lsm/bprm_creds_for_exec")
-int BPF_PROG(bprm_creds_for_exec, struct linux_binprm *bprm)
+statfunc void capture_execve_cmd(const char *const *argv)
 {
-    set_hook_name("bprm_creds_for_exec", 19);
+    int key = 0;
+    struct command_line_t *temp_cmd = bpf_map_lookup_elem(&cmd_scratch, &key);
+    if(!temp_cmd)
+    {
+        REPORT_ERROR(GENERIC_ERROR, "bpf_map_lookup_elem failed");
+        return;
+    }
+    if(bpf_probe_read_kernel(temp_cmd, sizeof(struct command_line_t), &empty_command_line_t) != SUCCESS)
+    {
+        REPORT_ERROR(GENERIC_ERROR, "bpf_probe_read_kernel(empty_command_line_t) failed");
+        return;
+    }
+
+    if(get_cmd_from_user_argv(temp_cmd, argv) != SUCCESS)
+    {
+        return;
+    }
 
     struct task_struct *task = (struct task_struct *)bpf_get_current_task();
     pid_t pid = BPF_CORE_READ(task, tgid);
 
-    if(is_current_pid_related())
+    if(bpf_map_update_elem(&pid_to_exec_cmd_map, &pid, temp_cmd, BPF_ANY) != SUCCESS)
     {
-        return ALLOW;
+        REPORT_ERROR(GENERIC_ERROR, "bpf_map_update_elem failed. pid: %d", pid);
+        return;
     }
+}
 
-    if(is_system_task())
-    {
-        return ALLOW;
-    }
-    if(!is_task_with_mm()) // for kworkers without relevant flags in task->flags 
-    {
-        if(bpf_map_update_elem(&kthread_exec_pids, &pid, &pid, BPF_ANY) != SUCCESS)
-        {
-            REPORT_ERROR(GENERIC_ERROR, "bpf_map_update_elem failed. pid: %d", pid);
-        }
-        return ALLOW;
-    }
-
+statfunc void ensure_old_process_in_process_cache(pid_t pid)
+{
     if(is_process_in_alive_process_cache(pid) == TRUE)
     {
-        return ALLOW;
+        return;
     }
 
     struct process_t * old_process = allocate_process_t();
     if(!old_process)
     {
-        REPORT_ERROR(GENERIC_ERROR, "allocate_process_t failed. pid: %d", pid);
-        return ALLOW;
+        return;
     }
 
     if (fill_current_process_t(old_process) != SUCCESS)
     {
-        REPORT_ERROR(GENERIC_ERROR, "fill_current_process_t failed pid: %d", pid);
-        return ALLOW;
+        return;
     }
 
-    if(update_process_in_alive_process_cache(pid, old_process) != SUCCESS)
-    {
-        REPORT_ERROR(GENERIC_ERROR, "update_process_in_alive_process_cache failed pid: %d", pid);
-    }
-
-    return ALLOW;
+    update_process_in_alive_process_cache(pid, old_process);
 }
 
-SEC("lsm/bprm_committed_creds")
-int BPF_PROG(bprm_committed_creds, struct linux_binprm *bprm)
+statfunc void sys_enter_exec(const char *const *argv)
 {
-    set_hook_name("bprm_committed_creds", 20);
     if(!is_userspace_program())
     {
-        return ALLOW;
+        return;
     }
 
     if(is_current_pid_related())
     {
-        return ALLOW;
+        return;
     }
+
+    struct task_struct *task = (struct task_struct *)bpf_get_current_task();
+    pid_t pid = BPF_CORE_READ(task, tgid);
+
+    capture_execve_cmd(argv);
+    ensure_old_process_in_process_cache(pid);
+}
+
+SEC("tracepoint/syscalls/sys_enter_execve")
+int handle_sys_enter_execve(struct trace_event_raw_sys_enter *ctx)
+{
+    set_hook_name("sys_enter_execve", 16);
+    sys_enter_exec(get_execve_argv_from_ctx(ctx));
+    return 0;
+}
+
+SEC("tracepoint/syscalls/sys_enter_execveat")
+int handle_sys_enter_execveat(struct trace_event_raw_sys_enter *ctx)
+{
+    set_hook_name("sys_enter_execveat", 18);
+    sys_enter_exec(get_execveat_argv_from_ctx(ctx));
+    return 0;
+}
+
+SEC("lsm/bprm_creds_from_file")
+int BPF_PROG(bprm_creds_from_file, struct linux_binprm *bprm)
+{
+    set_hook_name("bprm_creds_from_file", 20);
     
     struct task_struct *task = (struct task_struct *)bpf_get_current_task();
     pid_t pid = BPF_CORE_READ(task, tgid);
-    char useless_value = 0;
-    if(bpf_map_update_elem(&exec_pids, &pid, &useless_value, BPF_NOEXIST) < 0)
-    {
-        REPORT_ERROR(GENERIC_ERROR, "bpf_map_update_elem failed. pid: %d", pid);
-    }
 
-    return ALLOW;
-}
-
-SEC("lsm/file_open")
-int BPF_PROG(exec_hook, struct file *file)
-{
-    set_hook_name("exec_hook", 9);
-    struct task_struct *task = (struct task_struct *)bpf_get_current_task();
-    pid_t pid = BPF_CORE_READ(task, tgid);
-    if(!bpf_map_lookup_elem(&exec_pids, &pid))
+    struct command_line_t * cmd = bpf_map_lookup_elem(&pid_to_exec_cmd_map, &pid);
+    if(!cmd)
     {
         return ALLOW;
     }
@@ -114,7 +126,6 @@ int BPF_PROG(exec_hook, struct file *file)
         REPORT_ERROR(GENERIC_ERROR, "get_process_from_alive_process_cache retuned null. pid: %d", pid);
         goto allow_event;
     }
-    
     if(bpf_probe_read_kernel(&event->process, sizeof(struct process_t), old_process) != SUCCESS)
     {
         REPORT_ERROR(GENERIC_ERROR, "bpf_probe_read_kernel failed pid: %d", pid);
@@ -122,9 +133,9 @@ int BPF_PROG(exec_hook, struct file *file)
     }
     fill_event_parent_process_from_cache(&event->process, &event->parent_process);
 
-    if(fill_current_process_t(&event->data.exec.new_process) != SUCCESS)
+    if(fill_process_t_from_bprm(&event->data.exec.new_process, bprm, cmd) != SUCCESS)
     {
-        REPORT_ERROR(GENERIC_ERROR, "fill_current_process_t failed pid: %d", pid);
+        REPORT_ERROR(GENERIC_ERROR, "fill_process_t_from_bprm failed pid: %d", pid);
         goto allow_event;
     }
 
@@ -137,8 +148,9 @@ int BPF_PROG(exec_hook, struct file *file)
         REPORT_ERROR(GENERIC_ERROR, "update_process_in_alive_process_cache failed pid: %d", pid);
         goto allow_event;
     }
-    bpf_map_delete_elem(&exec_pids, &pid);
-    
+
+    bpf_map_delete_elem(&pid_to_exec_cmd_map, &pid);
+
     store_currently_handled_event(event);
     bpf_ringbuf_discard(event, 0);
     reset_tail_counter();
@@ -150,11 +162,11 @@ allow_event:
     return ALLOW;
 }
 
-SEC("lsm/file_open")
-int BPF_PROG(exec_hook_2, struct file *file)
+SEC("lsm/bprm_creds_from_file")
+int BPF_PROG(bprm_creds_from_file_2, struct linux_binprm *bprm)
 {
-    set_hook_name("exec_hook_2", 11);
-    return generic_tail_call();   
+    set_hook_name("bprm_creds_from_file_2", 22);
+    return generic_tail_call();
 }
 
 char LICENSE[] SEC("license") = "GPL";

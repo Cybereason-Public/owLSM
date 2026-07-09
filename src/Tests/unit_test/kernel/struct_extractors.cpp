@@ -5,6 +5,9 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <vector>
+#include <unistd.h>
+#include <sys/wait.h>
 
 struct StructExtractorsGetPathFromPathTestCase 
 { 
@@ -141,10 +144,120 @@ bool executeBpfProgramGetCmdFromTask(auto* skel, const std::string& cmd, bool sh
     return result;
 }
 
-TEST_F(BpfTestBase, StructExtractors_GetCmdFromTask) 
+TEST_F(BpfTestBase, StructExtractors_GetCmdFromTask)
 {
     EXPECT_TRUE(executeBpfProgramGetCmdFromTask(skel, R"(-t -f /d *#^@%"!  \"rbz./1b~`c)"));
     EXPECT_TRUE(executeBpfProgramGetCmdFromTask(skel, R"(this is the RULE_CMD_MAX length!)"));
     EXPECT_TRUE(executeBpfProgramGetCmdFromTask(skel, R"(aaa)"));
     EXPECT_FALSE(executeBpfProgramGetCmdFromTask(skel, R"(aaa)", false));
+}
+
+// ---- get_cmd_from_user_argv -------------------------------------------------
+// The command line that get_cmd_from_user_argv produces is the argv components
+// joined by a single space. Each helper call drives one real execve of /bin/true
+// with a fully controlled argv. The BPF program reconstructs the command line of
+// every execve on the system but sets `found` only on an exact match with the
+// expected string we pass in, so unrelated execs can never affect the result.
+
+// Mirrors MAX_ARGV_COMPONENTS in struct_extractors.bpf.h (a BPF-only header not includable here).
+static constexpr int kMaxArgvComponents = 32;
+
+static std::string joinWithSpaces(const std::vector<std::string>& argv)
+{
+    std::string joined;
+    for (size_t i = 0; i < argv.size(); ++i)
+    {
+        if (i != 0)
+        {
+            joined += ' ';
+        }
+        joined += argv[i];
+    }
+    return joined;
+}
+
+static bool execveCmdMatches(auto* skel, const std::vector<std::string>& argv, const std::string& expected)
+{
+    const int map_fd = bpf_map__fd(skel->maps.get_cmd_from_user_argv_test_map);
+    struct bpf_link* link = bpf_program__attach(skel->progs.test_get_cmd_from_user_argv);
+    if (!link)
+    {
+        throw std::runtime_error("test_get_cmd_from_user_argv attach failed");
+    }
+
+    struct get_cmd_from_user_argv_test t = {};
+    std::strncpy(t.expected, expected.c_str(), CMD_MAX - 1);
+    t.expected_length = expected.size();
+    unsigned int key = 0;
+    bpf_map_update_elem(map_fd, &key, &t, BPF_ANY);
+
+    pid_t child = fork();
+    if (child < 0)
+    {
+        bpf_link__destroy(link);
+        throw std::runtime_error("fork failed");
+    }
+    if (child == 0)
+    {
+        std::vector<char*> c_argv;
+        for (const auto& arg : argv)
+        {
+            c_argv.push_back(const_cast<char*>(arg.c_str()));
+        }
+        c_argv.push_back(nullptr);
+
+        char* empty_env[] = { nullptr };
+        execve("/bin/true", c_argv.data(), empty_env); // /bin/true ignores argv and exits 0
+        _exit(127);                                     // only reached if execve fails
+    }
+
+    waitpid(child, nullptr, 0);
+    bpf_map_lookup_elem(map_fd, &key, &t);
+    bpf_link__destroy(link);
+
+    return t.found;
+}
+
+// A single argv component is reconstructed verbatim, with no separators added.
+TEST_F(BpfTestBase, StructExtractors_GetCmdFromUserArgv_SingleArgument)
+{
+    const std::vector<std::string> argv = {"solo-argument"};
+    EXPECT_TRUE(execveCmdMatches(skel, argv, joinWithSpaces(argv)));
+}
+
+// Multiple argv components are joined by exactly one space each.
+TEST_F(BpfTestBase, StructExtractors_GetCmdFromUserArgv_MultipleArgumentsJoinedBySpaces)
+{
+    const std::vector<std::string> argv = {"alpha", "beta", "gamma"};
+    EXPECT_TRUE(execveCmdMatches(skel, argv, joinWithSpaces(argv)));
+}
+
+// Special characters and spaces *inside* a single component are preserved byte-for-byte.
+TEST_F(BpfTestBase, StructExtractors_GetCmdFromUserArgv_PreservesSpecialCharactersAndInnerSpaces)
+{
+    const std::vector<std::string> argv = {"cmd-x", "--path=/a b/c", R"(weird!@#$%^&*()_+)"};
+    EXPECT_TRUE(execveCmdMatches(skel, argv, joinWithSpaces(argv)));
+}
+
+// A command line longer than CMD_MAX is truncated to exactly CMD_MAX-1 bytes (tests the clamp).
+TEST_F(BpfTestBase, StructExtractors_GetCmdFromUserArgv_TruncatesAtCmdMax)
+{
+    const std::vector<std::string> argv = {std::string(200, 'a'), std::string(100, 'b')};
+    const std::string expected = joinWithSpaces(argv).substr(0, CMD_MAX - 1);
+    EXPECT_TRUE(execveCmdMatches(skel, argv, expected));
+}
+
+// Only the first MAX_ARGV_COMPONENTS components are read; the rest are dropped.
+TEST_F(BpfTestBase, StructExtractors_GetCmdFromUserArgv_StopsAtMaxArgvComponents)
+{
+    std::vector<std::string> argv(kMaxArgvComponents + 3, "a"); // more components than the loop reads
+    const std::vector<std::string> captured(argv.begin(), argv.begin() + kMaxArgvComponents);
+    EXPECT_TRUE(execveCmdMatches(skel, argv, joinWithSpaces(captured)));
+}
+
+// The match is exact: a different expected string is not reported as found
+// (guards against the harness trivially passing everything).
+TEST_F(BpfTestBase, StructExtractors_GetCmdFromUserArgv_NoFalseMatch)
+{
+    EXPECT_FALSE(execveCmdMatches(skel, {"negative-control"}, "something completely different"));
 }

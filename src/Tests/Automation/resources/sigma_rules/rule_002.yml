@@ -30,7 +30,7 @@ detection:
         process.cmd|contains: "pytest"
 
     alt_direct:
-        target.process.cmd|endswith: "test"
+        target.process.cmd|endswith: "complex_exec_test"
 
     filter_excluded:
         - target.process.cmd|contains: "excluded"

@@ -92,6 +92,7 @@ MAIN_SRC           := $(CURDIR)/main.cpp
 USERSPACE_IMPL_SRC := $(USERSPACE_SRC_DIR)/logger.cpp \
                       $(USERSPACE_SRC_DIR)/cmd_parser.cpp \
                       $(USERSPACE_SRC_DIR)/system_setup.cpp \
+                      $(USERSPACE_SRC_DIR)/check_bpf_feature_availability.cpp \
                       $(USERSPACE_SRC_DIR)/raii_temp_files.cpp \
                       $(USERSPACE_SRC_DIR)/configuration/config_parser.cpp \
                       $(USERSPACE_SRC_DIR)/configuration/rules_parser.cpp \

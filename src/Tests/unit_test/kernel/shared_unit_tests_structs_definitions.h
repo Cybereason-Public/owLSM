@@ -14,12 +14,19 @@ struct string_utils_test {
     int  actual_result;       
 };
 
-struct struct_extractors_test 
+struct struct_extractors_test
 {
     char path_to_find[PATH_MAX];
     char cmd_to_find[CMD_MAX];
     unsigned char cmd_length;
     int dfa_id;
+    int found;
+};
+
+struct get_cmd_from_user_argv_test
+{
+    char expected[CMD_MAX]; // expected reconstructed command line (null-terminated)
+    short expected_length;  // without null character
     int found;
 };
 
