@@ -86,4 +86,55 @@ end_unit_test:
     return ALLOW;
 }
 
+struct {
+    __uint(type, BPF_MAP_TYPE_HASH);
+    __uint(max_entries, 1);
+    __type(key,   u32);
+    __type(value, struct get_cmd_from_user_argv_test);
+} get_cmd_from_user_argv_test_map SEC(".maps");
+
+SEC("tracepoint/syscalls/sys_enter_execve")
+int test_get_cmd_from_user_argv(struct trace_event_raw_sys_enter *ctx)
+{
+    u32 key = 0;
+    struct get_cmd_from_user_argv_test *t = bpf_map_lookup_elem(&get_cmd_from_user_argv_test_map, &key);
+    if (!t)
+    {
+        return 0;
+    }
+
+    struct event_t *event = allocate_event_with_basic_stats();
+    if (!event)
+    {
+        return 0;
+    }
+
+    if (get_cmd_from_user_argv(&event->process.cmd, get_execve_argv_from_ctx(ctx)) != SUCCESS)
+    {
+        goto end_unit_test;
+    }
+
+    if (event->process.cmd.length != t->expected_length)
+    {
+        goto end_unit_test;
+    }
+    for (int i = 0; i < CMD_MAX; i++)
+    {
+        char c = event->process.cmd.value[i];
+        if (c != t->expected[i])
+        {
+            goto end_unit_test;
+        }
+        if (c == '\0')
+        {
+            break;
+        }
+    }
+    t->found = TRUE;
+
+end_unit_test:
+    bpf_ringbuf_discard(event, 0);
+    return 0;
+}
+
 char LICENSE[] SEC("license") = "GPL";

@@ -4,13 +4,48 @@
 #include "allocators.bpf.h"
 #include "string_utils.bpf.h"
 #include "preprocessor_definitions/stat.bpf.h"
+#include "syscall_tracepoint_layout.h"
 
 #define TMPFS_MAGIC            0x01021994
 #define MEMFD_WITH_NULL_LENGTH 6
 #define MAX_PATH_COMPONENT_LEN FILENAME_MAX_LENGTH
-#define MAX_PATH_COMPONENTS    20  
+#define MAX_PATH_COMPONENTS 20
+#define MAX_ARGV_COMPONENTS 32
 #define HALF_PERCPU_ARRAY_SIZE (MAX_PERCPU_ARRAY_SIZE >> 1)
 #define LIMIT_HALF_PERCPU_ARRAY_SIZE(x) ((x) & (HALF_PERCPU_ARRAY_SIZE - 1))
+#define LIMIT_CMD_SIZE(x) ((x) & (CMD_MAX - 1))
+
+struct sys_enter_execve_record {
+    unsigned long long _common;   // 0
+    unsigned long long _nr;       // 8
+    const char *filename;         // 16
+    const char *const *argv;      // 24
+    const char *const *envp;      // 32
+};
+
+struct sys_enter_execveat_record {
+    unsigned long long _common;   // 0
+    unsigned long long _nr;       // 8
+    unsigned long long fd;        // 16
+    const char *filename;         // 24
+    const char *const *argv;      // 32
+    const char *const *envp;      // 40
+};
+
+_Static_assert(__builtin_offsetof(struct sys_enter_execve_record, argv) == SYS_ENTER_EXECVE_ARGV_OFFSET,
+               "sys_enter_execve_record.argv must be at SYS_ENTER_EXECVE_ARGV_OFFSET");
+_Static_assert(__builtin_offsetof(struct sys_enter_execveat_record, argv) == SYS_ENTER_EXECVEAT_ARGV_OFFSET,
+               "sys_enter_execveat_record.argv must be at SYS_ENTER_EXECVEAT_ARGV_OFFSET");
+
+statfunc const char *const *get_execve_argv_from_ctx(const void *ctx)
+{
+    return ((const struct sys_enter_execve_record *)ctx)->argv;
+}
+
+statfunc const char *const *get_execveat_argv_from_ctx(const void *ctx)
+{
+    return ((const struct sys_enter_execveat_record *)ctx)->argv;
+}
 
 statfunc long get_cmd_from_task(struct task_struct * task, struct command_line_t  *output_cmd)
 {
@@ -51,6 +86,59 @@ statfunc long get_cmd_from_task(struct task_struct * task, struct command_line_t
         REPORT_ERROR(GENERIC_ERROR, "get_cmd_from_task arg_end <= arg_start. pid: %d", pid);
         return GENERIC_ERROR;
     }
+    return SUCCESS;
+}
+
+statfunc long get_cmd_from_user_argv(struct command_line_t *cmd, const char *const *argv)
+{
+    struct string_buffer *out_buf = allocate_string_buffer();
+    if(!out_buf)
+    {
+        return GENERIC_ERROR;
+    }
+
+    unsigned int offset = 0;
+    for(int i = 0; i < MAX_ARGV_COMPONENTS; i++)
+    {
+        const char *argp = NULL;
+        if(bpf_probe_read_user(&argp, sizeof(argp), &argv[i]) != SUCCESS)
+        {
+            break;
+        }
+        if(!argp)
+        {
+            break; // NULL terminator -> end of argv
+        }
+        if(offset >= CMD_MAX - 1)
+        {
+            break;
+        }
+
+        unsigned int idx = offset;
+        barrier_var(idx);
+        long read_len = bpf_probe_read_user_str(&out_buf->data[LIMIT_HALF_PERCPU_ARRAY_SIZE(idx)], CMD_MAX - 1, argp);
+        if(read_len <= 0)
+        {
+            break;
+        }
+        offset += read_len;
+        out_buf->data[LIMIT_HALF_PERCPU_ARRAY_SIZE(offset - 1)] = ' ';
+    }
+    if(offset == 0)
+    {
+        REPORT_ERROR(GENERIC_ERROR, "get_cmd_from_user_argv: offset is 0");
+        return GENERIC_ERROR;
+    }
+
+    unsigned int length = offset - 1;
+    if(length > CMD_MAX - 1)
+    {
+        length = CMD_MAX - 1;
+    }
+    bpf_probe_read(cmd->value, length, &out_buf->data[0]);
+    cmd->value[LIMIT_CMD_SIZE(length)] = '\0';
+    cmd->length = length;
+
     return SUCCESS;
 }
 

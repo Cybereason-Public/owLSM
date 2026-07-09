@@ -14,6 +14,8 @@ venv/
 # IDE
 .vscode/
 .idea/
+compile_commands.json
+*.idx
 
 # OS
 .DS_Store

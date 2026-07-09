@@ -41,7 +41,7 @@ statfunc unsigned long long build_process_unique_id(unsigned long pid, unsigned 
     return ((__u64)pid << 32) | (start_time >> 32);
 }
 
-// should only be directly used only by bprm_committed_creds and fill_process_t()
+// should only be directly used only by fill_process_t()
 statfunc void fill_process_t_numeric_values(struct process_t *process_event, struct task_struct *task)
 {
     process_event->pid = BPF_CORE_READ(task, tgid);
@@ -156,6 +156,40 @@ statfunc int fill_event_parent_process_from_cache(struct process_t *child_proces
         REPORT_ERROR(GENERIC_ERROR, "bpf_probe_read_kernel failed");
         return GENERIC_ERROR;
     }
+    return SUCCESS;
+}
+
+statfunc int fill_process_t_from_bprm(struct process_t *process_event, struct linux_binprm *bprm, const struct command_line_t *cmd)
+{
+    struct file *exe_file = BPF_CORE_READ(bprm, file);
+    if(!exe_file)
+    {
+        REPORT_ERROR(GENERIC_ERROR, "Failed to get file from bprm");
+        return GENERIC_ERROR;
+    }
+    fill_file_t(&process_event->file, &exe_file->f_path);
+    bpf_probe_read_kernel(&process_event->cmd, sizeof(process_event->cmd), cmd);
+
+    struct task_struct *task = (void *)bpf_get_current_task_btf();
+    process_event->pid = BPF_CORE_READ(task, tgid);
+    process_event->ppid = BPF_CORE_READ(task, real_parent, tgid);
+    process_event->start_time = BPF_CORE_READ(task, start_time);
+    process_event->cgroup_id = bpf_get_current_cgroup_id();
+    process_event->ptrace_flags = BPF_CORE_READ(task, ptrace);
+    process_event->ruid = BPF_CORE_READ(bprm, cred, uid.val);
+    process_event->euid = BPF_CORE_READ(bprm, cred, euid.val);
+    process_event->rgid = BPF_CORE_READ(bprm, cred, gid.val);
+    process_event->egid = BPF_CORE_READ(bprm, cred, egid.val);
+    get_stdio_file_descriptors_at_process_creation_from_task(task, &process_event->stdio_file_descriptors_at_process_creation);
+    process_event->unique_process_id = build_process_unique_id(process_event->pid, process_event->start_time);
+    process_event->unique_ppid_id = build_process_unique_id(process_event->ppid, BPF_CORE_READ(task, real_parent, start_time));
+    
+    /*
+    suid is NOT final at this hook: for a setuid binary bprm->cred->suid still holds the caller's saved-uid. 
+    But execve always sets the saved-uid to the new effective uid, so the correct value is euid.
+    */
+    process_event->suid = process_event->euid;
+
     return SUCCESS;
 }
 

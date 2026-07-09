@@ -14,7 +14,6 @@ int BPF_PROG(exit_hook, long code)
     
     if(!is_userspace_program())
     {
-        bpf_map_delete_elem(&kthread_exec_pids, &pid);
         return ALLOW;
     }
 

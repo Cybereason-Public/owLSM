@@ -1,0 +1,4 @@
+#pragma once
+
+#define SYS_ENTER_EXECVE_ARGV_OFFSET   24
+#define SYS_ENTER_EXECVEAT_ARGV_OFFSET 32
