@@ -59,6 +59,7 @@ struct FeaturesConfig
     NetworkMonitoringConfig network_monitoring;
     ShellCommandsMonitoringConfig shell_commands_monitoring;
     AntiTamperingConfig anti_tampering;
+    bool legacy_exec = false;
 };
 
 struct UserspaceConfig 

@@ -63,6 +63,9 @@ statfunc void reset_tail_counter()
 #endif // CHOWN_EVENT
 
 #ifdef EXEC_EVENT
+    #ifdef EXEC_MAPS_EXTERN
+    extern
+    #endif
     struct {
         __uint(type, BPF_MAP_TYPE_PROG_ARRAY);
         __uint(max_entries, 1);
@@ -70,6 +73,9 @@ statfunc void reset_tail_counter()
         __type(value, u32);
     } exec_prog_array SEC(".maps");
 
+    #ifdef EXEC_MAPS_EXTERN
+    extern
+    #endif
     struct {
         __uint(type,       BPF_MAP_TYPE_ARRAY);
         __uint(max_entries, MAX_RULES_PER_MAP_PLUS1);

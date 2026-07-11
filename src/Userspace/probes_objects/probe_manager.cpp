@@ -38,8 +38,10 @@ namespace owlsm
         m_skel->rodata->anti_tampering_signals_action = static_cast<int>(owlsm::globals::g_config.features.anti_tampering.events.signals);
         m_skel->rodata->anti_tampering_ptrace_action = static_cast<int>(owlsm::globals::g_config.features.anti_tampering.events.ptrace);
         m_skel->rodata->g_ebpf_features = m_ebpf_features;
-        
+        m_skel->rodata->legacy_exec_enabled = owlsm::globals::g_config.features.legacy_exec;
+
         disableUnavailableProbes();
+        setupLegacyExecHooks();
 
         for (auto& probe : m_probes)
         {
@@ -182,5 +184,22 @@ namespace owlsm
             bpf_program__set_autoload(m_skel->progs.chown_hook, false);
             bpf_program__set_autoload(m_skel->progs.chown_hook_2, false);
         }
+    }
+
+    void ProbeManager::setupLegacyExecHooks()
+    {
+        if (owlsm::globals::g_config.features.legacy_exec)
+        {
+            bpf_program__set_autoload(m_skel->progs.handle_sys_enter_execve, false);
+            bpf_program__set_autoload(m_skel->progs.handle_sys_enter_execveat, false);
+            bpf_program__set_autoload(m_skel->progs.bprm_creds_from_file, false);
+            bpf_program__set_autoload(m_skel->progs.bprm_creds_from_file_2, false);
+            return;
+        }
+
+        bpf_program__set_autoload(m_skel->progs.bprm_creds_for_exec, false);
+        bpf_program__set_autoload(m_skel->progs.bprm_committed_creds, false);
+        bpf_program__set_autoload(m_skel->progs.exec_hook, false);
+        bpf_program__set_autoload(m_skel->progs.exec_hook_2, false);
     }
 }

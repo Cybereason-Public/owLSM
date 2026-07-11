@@ -96,6 +96,18 @@ def test_blocked_exec():
 def test_complex_exec_rule__match_one_event_dont_match_other_events_due_to_not_and_condition():
     pass
 
+@scenario('legacy_on_exec_test.feature', 'legacy_allowed_exec')
+def test_legacy_allowed_exec():
+    pass
+
+@scenario('legacy_on_exec_test.feature', 'legacy_blocked_exec_alerts_without_blocking')
+def test_legacy_blocked_exec_alerts_without_blocking():
+    pass
+
+@scenario('legacy_on_exec_test.feature', 'legacy_complex_exec_rule__match_one_event_dont_match_other_events_due_to_not_and_condition')
+def test_legacy_complex_exec_rule__match_one_event_dont_match_other_events_due_to_not_and_condition():
+    pass
+
 @scenario('on_file_create.feature', 'allowed_file_create')
 def test_allowed_file_create():
     pass

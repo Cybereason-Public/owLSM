@@ -3,6 +3,7 @@
 #include "all_bpf.skel.h"
 
 #include "lsm_probe.hpp"
+#include "globals/global_objects.hpp"
 
 namespace owlsm
 {
@@ -12,7 +13,12 @@ namespace owlsm
         {
             case CHMOD:         bpf_program__set_autoattach(m_skel->progs.chmod_hook_2, false);            break;
             case CHOWN:         bpf_program__set_autoattach(m_skel->progs.chown_hook_2, false);            break;
-            case EXEC:          bpf_program__set_autoattach(m_skel->progs.bprm_creds_from_file_2, false);  break;
+            case EXEC:
+            {
+                bpf_program__set_autoattach(m_skel->progs.bprm_creds_from_file_2, false);
+                bpf_program__set_autoattach(m_skel->progs.exec_hook_2, false);
+                break;
+            }
             case FILE_CREATE:   bpf_program__set_autoattach(m_skel->progs.fc_hook_2, false);               break;
             case WRITE:         bpf_program__set_autoattach(m_skel->progs.write_hook_2, false);            break;
             case READ:          bpf_program__set_autoattach(m_skel->progs.read_hook_2, false);             break;
@@ -39,7 +45,18 @@ namespace owlsm
         {
             case CHMOD:         addProgramToArray(m_skel->progs.chmod_hook_2, m_skel->maps.chmod_prog_array);           break;
             case CHOWN:         addProgramToArray(m_skel->progs.chown_hook_2, m_skel->maps.chown_prog_array);           break;
-            case EXEC:          addProgramToArray(m_skel->progs.bprm_creds_from_file_2, m_skel->maps.exec_prog_array);  break;
+            case EXEC:
+            {
+                if (globals::g_config.features.legacy_exec)
+                {
+                    addProgramToArray(m_skel->progs.exec_hook_2, m_skel->maps.exec_prog_array);
+                }
+                else
+                {
+                    addProgramToArray(m_skel->progs.bprm_creds_from_file_2, m_skel->maps.exec_prog_array);
+                }
+                break;
+            }
             case FILE_CREATE:   addProgramToArray(m_skel->progs.fc_hook_2, m_skel->maps.fc_prog_array);                 break;
             case WRITE:         addProgramToArray(m_skel->progs.write_hook_2, m_skel->maps.write_prog_array);           break;
             case READ:          addProgramToArray(m_skel->progs.read_hook_2, m_skel->maps.read_prog_array);             break;
@@ -75,7 +92,16 @@ namespace owlsm
             case RMDIR:       attachProbe(m_skel->progs.rmdir_hook, &m_skel->links.rmdir_hook); break;
             case EXEC:
             {
-                attachProbe(m_skel->progs.bprm_creds_from_file,&m_skel->links.bprm_creds_from_file);
+                if (globals::g_config.features.legacy_exec)
+                {
+                    attachProbe(m_skel->progs.bprm_creds_for_exec,&m_skel->links.bprm_creds_for_exec);
+                    attachProbe(m_skel->progs.bprm_committed_creds,&m_skel->links.bprm_committed_creds);
+                    attachProbe(m_skel->progs.exec_hook,&m_skel->links.exec_hook);
+                }
+                else
+                {
+                    attachProbe(m_skel->progs.bprm_creds_from_file,&m_skel->links.bprm_creds_from_file);
+                }
                 break;
             }
             case NETWORK:

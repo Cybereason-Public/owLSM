@@ -26,7 +26,8 @@
                 "signals": "EXCLUDE_EVENT",
                 "ptrace": "EXCLUDE_EVENT"
             }
-        }
+        },
+        "legacy_exec": false
     },
     "userspace": {
         "max_events_queue_size": 10000,
