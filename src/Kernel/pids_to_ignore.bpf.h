@@ -56,7 +56,18 @@ statfunc int is_task_with_mm(void)
     return BPF_CORE_READ(task, mm) != NULL ? TRUE : FALSE; // No virtual memory manager context, means kthread.
 }
 
+statfunc int is_in_kthread_exec_pids(void)
+{
+    if(!legacy_exec_enabled)
+    {
+        return FALSE;
+    }
+    struct task_struct *task = (struct task_struct *)bpf_get_current_task();
+    pid_t pid = BPF_CORE_READ(task, pid);
+    return bpf_map_lookup_elem(&kthread_exec_pids, &pid) != NULL ? TRUE : FALSE;
+}
+
 statfunc int is_userspace_program(void)
 {
-    return is_task_with_mm() && !is_system_task();
+    return is_task_with_mm() && !is_system_task() && !is_in_kthread_exec_pids();
 }

@@ -23,6 +23,7 @@ extern const char                    empty_hook_name[HOOK_NAME_MAX_LENGTH] SEC("
 extern const struct command_line_t   empty_command_line_t                  SEC(".rodata");
 extern const struct printed_message  empty_printed_message                 SEC(".rodata");
 extern const volatile struct ebpf_features g_ebpf_features                 SEC(".rodata");
+extern const volatile int            legacy_exec_enabled                   SEC(".rodata");
 
 #ifndef DEFINE_MAPS
 extern
@@ -330,3 +331,14 @@ struct {
     __type(key, u32);
     __type(value, struct command_line_t);
 } pid_to_exec_cmd_map SEC(".maps");
+
+#ifndef DEFINE_MAPS
+extern
+#endif
+struct {
+        __uint(type,       BPF_MAP_TYPE_HASH);
+        __uint(max_entries, PID_MAX_LIMIT);
+        __uint(map_flags,   BPF_F_NO_PREALLOC);
+        __type(key,        u32);
+        __type(value,      unsigned char);
+} kthread_exec_pids SEC(".maps");

@@ -200,9 +200,20 @@ TEST_F(ConfigParserTest, empty_id_to_predicate_fails_validation)
     EXPECT_ANY_THROW(owlsm::config::ConfigParser parser(json_str, schema_str));
 }
 
-TEST_F(ConfigParserTest, empty_id_to_string_passes_validation) 
+TEST_F(ConfigParserTest, empty_id_to_string_passes_validation)
 {
     const std::string json_str(VALID_EMPTY_ID_TO_STRING_JSON);
     const std::string schema_str(REAL_SCHEMA_4);
     EXPECT_NO_THROW(owlsm::config::ConfigParser parser(json_str, schema_str));
+}
+
+TEST_F(ConfigParserTest, legacy_exec_defaults_to_false_and_is_parsed)
+{
+    const std::string schema_str(reinterpret_cast<const char*>(g_schema_json), g_schema_json_len);
+
+    owlsm::config::ConfigParser default_parser(std::string(CONFIG_JSON_ONLY_FEATURES_4), schema_str);
+    EXPECT_FALSE(default_parser.getConfig().features.legacy_exec);
+
+    owlsm::config::ConfigParser enabled_parser(R"({"features": {"legacy_exec": true}})", schema_str);
+    EXPECT_TRUE(enabled_parser.getConfig().features.legacy_exec);
 }

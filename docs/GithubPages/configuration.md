@@ -41,7 +41,8 @@ See [How to generate a config](https://github.com/cybereason-labs/owLSM/blob/mai
                 "<a href="#features-anti_tampering-events-signals" class="code-link">signals</a>": "EXCLUDE_EVENT",
                 "<a href="#features-anti_tampering-events-ptrace" class="code-link">ptrace</a>": "EXCLUDE_EVENT"
             }
-        }
+        },
+        "<a href="#features-legacy_exec" class="code-link">legacy_exec</a>": false
     },
     "<a href="#userspace" class="code-link">userspace</a>": {
         "<a href="#userspace-max_events_queue_size" class="code-link">max_events_queue_size</a>": 10000,
@@ -351,6 +352,26 @@ This feature defends protected processes from ptrace attach (write access).<br>
 - Ptrace attach attempts from the kernel, from pid 0/1, or from a protected process are ignored.<br>
 - Other ptrace attach attempts against protected processes are handled and a <code>PTRACE</code> event is emitted (action depends on the option you specify).<br><br>
 <strong>Options</strong> represents the action taken when an unprotected process tries to trace a protected process.<br>
+</div>
+
+<h3 id="features-legacy_exec" class="section-anchor">
+  <span class="section-path">features<span class="dot">.</span>legacy_exec</span>
+</h3>
+
+<div class="config-section">
+<div class="field-meta">
+<p><strong>Required:</strong> false</p>
+<p><strong>Default value:</strong> <code>false</code></p>
+<p><strong>Options:</strong> <code>true</code>, <code>false</code></p>
+</div>
+
+Switches exec monitoring back to the legacy hooks.<br><br>
+In the past owLSM was blocking exec calls at the first <code>open()</code> call after the execve itself. This was safe as 99.99% of the times the process would call <code>open()</code> before it would even reach the <code>main()</code> of the program. And even for that 0.01%, almost nothing malicious can be done without an <code>open()</code> call.<br>
+This allowed us to have a bit more visibility, and block more malicious activity like <a href="https://github.com/Cybereason-Public/owLSM/blob/main/Rules/RuleExamples/ExploitsMitigations/CopyFail-CVE-2026-31431/README.md">copy.fail</a>.<br><br>
+However it came with cons as well:<br>
+- <code>lsm/open_file</code> hook is called a lot, thus more CPU usage.<br>
+- <code>BLOCK_EVENT</code> wasn't effective, you had to use <code>BLOCK_KILL_PROCESS</code> to really "stop" the process.<br><br>
+Today we set <code>legacy_exec</code> flag to false on most systems. But both options are great!
 </div>
 
 ---

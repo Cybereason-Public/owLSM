@@ -63,6 +63,7 @@ namespace owlsm::config {
         if (auto it = j.find("network_monitoring"); it != j.end()) { fromJson(*it, o.network_monitoring); }
         if (auto it = j.find("shell_commands_monitoring"); it != j.end()) { fromJson(*it, o.shell_commands_monitoring); }
         if (auto it = j.find("anti_tampering"); it != j.end()) { fromJson(*it, o.anti_tampering); }
+        get_if_present(j, "legacy_exec", o.legacy_exec);
     }
 
     void ConfigParser::fromJson(const nlohmann::json& j, AntiTamperingConfig& o)

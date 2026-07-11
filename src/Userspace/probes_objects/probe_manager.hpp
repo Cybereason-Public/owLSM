@@ -42,6 +42,7 @@ private:
     void addProgramRelatedPids(const std::vector<unsigned int>& excluded_pids);
     void addProtectedPids(const std::vector<unsigned int>& protected_pids);
     void disableUnavailableProbes();
+    void setupLegacyExecHooks();
 
     using AbstractProbe::bpfOpen;
     using AbstractProbe::bpfLoad;

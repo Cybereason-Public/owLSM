@@ -41,7 +41,7 @@ statfunc unsigned long long build_process_unique_id(unsigned long pid, unsigned 
     return ((__u64)pid << 32) | (start_time >> 32);
 }
 
-// should only be directly used only by fill_process_t()
+// should only be directly used only by bprm_committed_creds and fill_process_t()
 statfunc void fill_process_t_numeric_values(struct process_t *process_event, struct task_struct *task)
 {
     process_event->pid = BPF_CORE_READ(task, tgid);

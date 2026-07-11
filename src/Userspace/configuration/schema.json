@@ -88,6 +88,9 @@
                             }
                         }
                     }
+                },
+                "legacy_exec": {
+                    "type": "boolean"
                 }
             }
         },
