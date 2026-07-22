@@ -21,14 +21,17 @@ CXXFLAGS       := -std=c++20 -Wall -Wextra \
                   -Wno-missing-field-initializers \
                   -Wno-unused-parameter
 
+# Generate .d dependency files so header edits rebuild the right .o
+DEPFLAGS       := -MMD -MP
+
 ifdef DEBUG
-    CXXFLAGS   += -O0 -g3 -ggdb -fno-omit-frame-pointer -fno-inline -static-libstdc++ -static-libgcc -fPIE -fstack-protector-strong -DDEBUG 
+    CXXFLAGS   += -O0 -g3 -ggdb -fno-omit-frame-pointer -fno-inline -fPIE -fstack-protector-strong -DDEBUG
 else
-    CXXFLAGS   += -O2 -DNDEBUG -D_FORTIFY_SOURCE=2 -fstack-protector-strong -fPIE -static-libstdc++ -static-libgcc
+    CXXFLAGS   += -O2 -DNDEBUG -D_FORTIFY_SOURCE=2 -fstack-protector-strong -fPIE
 endif
 
 # ---- Linker Flags --------------------------------------------
-LDFLAGS        := -pthread -Wl,-rpath,'$$ORIGIN/../lib' -Wl,--enable-new-dtags
+LDFLAGS        := -pthread -static-libstdc++ -static-libgcc -Wl,-rpath,'$$ORIGIN/../lib' -Wl,--enable-new-dtags
 
 ifdef DEBUG
     # Debug: no additional hardening flags
@@ -38,9 +41,12 @@ endif
 
 LDLIBS         := -lbpf -lelf -lz -lzstd -lssl -lcrypto -lsqlite3 -ldw -lbz2
 
-# ---- Source Files --------------------------------------------
-# Find all .cpp files recursively, ensuring main.cpp is first
-SRC            := main.cpp $(filter-out ./main.cpp, $(shell find . -name "*.cpp" -type f))
+# ---- Source / Objects ----------------------------------------
+# Find all .cpp files recursively (exclude vendored 3rd_party).
+SRC            := $(sort $(patsubst ./%,%,$(shell find . -name '*.cpp' -type f ! -path './3rd_party/*')))
+OBJ_DIR        := .obj
+OBJS           := $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(SRC))
+DEPS           := $(OBJS:.o=.d)
 
 # ---- Dependencies --------------------------------------------
 BPF_SKEL       := ../Kernel/Programs/syscall_monitoring/all_bpf.skel.h
@@ -59,11 +65,19 @@ all: $(BINARY)
 $(SCHEMA_INC): configuration/schema.json
 	cd configuration && cp -a schema.json g_schema.json && xxd -i g_schema.json > schema.inc && rm -f g_schema.json
 
-$(BINARY): $(SRC) $(BPF_SKEL) $(FEATURES_TEST_SKEL) $(SHARED_HDR) $(SCHEMA_INC)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(SRC) -o $@ $(LDFLAGS) $(LDLIBS)
+# Ensure generated headers exist before compiling any C++ TU.
+$(OBJS): | $(BPF_SKEL) $(FEATURES_TEST_SKEL) $(SHARED_HDR) $(SCHEMA_INC)
+
+$(OBJ_DIR)/%.o: %.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(DEPFLAGS) -c $< -o $@
+
+$(BINARY): $(OBJS)
+	$(CXX) $(OBJS) -o $@ $(LDFLAGS) $(LDLIBS)
 
 clean:
 	$(RM) $(BINARY)
-	$(RM) configuration/schema.inc
-	find . -type f -name '*.o' -delete 2>/dev/null || true
+	$(RM) $(SCHEMA_INC)
+	$(RM) -r $(OBJ_DIR)
 
+-include $(DEPS)

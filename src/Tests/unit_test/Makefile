@@ -17,6 +17,7 @@ USERSPACE_SRC_DIR  := $(CURDIR)/../../Userspace
 KERNEL_TESTS_DIR   := $(CURDIR)/kernel
 USERSPACE_TESTS_DIR := $(CURDIR)/userspace
 SCHEMA_INC          := $(USERSPACE_SRC_DIR)/configuration/schema.inc
+OBJ_DIR             := .obj
 
 # ---- Compilers -----------------------------------------------
 BPF_CC         := clang
@@ -52,6 +53,9 @@ CXXFLAGS       := -std=c++20 -Wall -Wextra \
                   -Wno-missing-field-initializers \
                   -Wno-unused-parameter \
                   -Wno-unused-result
+
+# Generate .d dependency files so header edits rebuild the right .o
+DEPFLAGS       := -MMD -MP
 
 ifdef DEBUG
     CXXFLAGS   += -O0 -g -DDEBUG -fPIE -fstack-protector-strong
@@ -111,23 +115,21 @@ USERSPACE_IMPL_SRC := $(USERSPACE_SRC_DIR)/logger.cpp \
                       $(USERSPACE_SRC_DIR)/async_event_work/shell_async_worker.cpp \
                       $(USERSPACE_SRC_DIR)/probes_objects/uprobe_probe.cpp
 
-# All source and object files
-ALL_TEST_SRC   := $(KERNEL_TEST_SRC) $(USERSPACE_TEST_SRC) $(USERSPACE_IMPL_SRC) $(MAIN_SRC)
-ALL_TEST_OBJ   := $(patsubst %.cpp,%.o,$(ALL_TEST_SRC))
+# Object files under .obj/ (do not drop .o into Userspace / test source trees)
+KERNEL_TEST_OBJS    := $(patsubst $(KERNEL_TESTS_DIR)/%.cpp,$(OBJ_DIR)/kernel/%.o,$(KERNEL_TEST_SRC))
+USERSPACE_TEST_OBJS := $(patsubst $(USERSPACE_TESTS_DIR)/%.cpp,$(OBJ_DIR)/userspace_tests/%.o,$(USERSPACE_TEST_SRC))
+USERSPACE_IMPL_OBJS := $(patsubst $(USERSPACE_SRC_DIR)/%.cpp,$(OBJ_DIR)/userspace_impl/%.o,$(USERSPACE_IMPL_SRC))
+MAIN_OBJ            := $(OBJ_DIR)/main.o
+ALL_TEST_OBJ        := $(KERNEL_TEST_OBJS) $(USERSPACE_TEST_OBJS) $(USERSPACE_IMPL_OBJS) $(MAIN_OBJ)
+DEPS                := $(ALL_TEST_OBJ:.o=.d)
 
 # ---- Output Binary -------------------------------------------
 TEST_BIN       := unit_tests
 
 # ---- Build Rules ---------------------------------------------
-.PHONY: all clean generate_constants
+.PHONY: all clean
 
 all: $(TEST_BIN)
-
-generate_constants: $(CONSTANTS_H)
-
-$(CONSTANTS_H): $(CONSTANTS_JSON)
-	@echo "==> Generating constants.h from constants.json..."
-	python3 $(SHARED_HDR_DIR)/generate_constants.py
 
 # Generate schema.inc from schema.json
 $(SCHEMA_INC): $(USERSPACE_SRC_DIR)/configuration/schema.json
@@ -149,26 +151,35 @@ $(ALL_BPF_OBJ): $(BPF_OBJ)
 $(ALL_BPF_SKEL): $(ALL_BPF_OBJ)
 	bpftool gen skeleton $< > $@
 
-# Compile kernel test C++ files to object files
-$(KERNEL_TESTS_DIR)/%.o: $(KERNEL_TESTS_DIR)/%.cpp $(ALL_BPF_SKEL) $(SHARED_HDR_DIR)/events_structs.h
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+# Ensure generated headers exist before compiling any C++ TU.
+$(ALL_TEST_OBJ): | $(ALL_BPF_SKEL) $(SHARED_HDR_DIR)/events_structs.h $(SCHEMA_INC)
 
-# Compile userspace test C++ files to object files
-$(USERSPACE_TESTS_DIR)/%.o: $(USERSPACE_TESTS_DIR)/%.cpp $(ALL_BPF_SKEL) $(SHARED_HDR_DIR)/events_structs.h
+$(OBJ_DIR)/main.o: $(MAIN_SRC)
 	@mkdir -p $(dir $@)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(DEPFLAGS) -c $< -o $@
 
-# Compile userspace implementation C++ files to object files
-$(USERSPACE_SRC_DIR)/%.o: $(USERSPACE_SRC_DIR)/%.cpp $(SCHEMA_INC)
+$(OBJ_DIR)/kernel/%.o: $(KERNEL_TESTS_DIR)/%.cpp
 	@mkdir -p $(dir $@)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(DEPFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/userspace_tests/%.o: $(USERSPACE_TESTS_DIR)/%.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(DEPFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/userspace_impl/%.o: $(USERSPACE_SRC_DIR)/%.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(DEPFLAGS) -c $< -o $@
 
 # Link all object files into the test binary
 $(TEST_BIN): $(ALL_TEST_OBJ)
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o $@ $(LDFLAGS) $(LDLIBS)
+	$(CXX) $^ -o $@ $(LDFLAGS) $(LDLIBS)
 
 clean:
-	$(RM) $(BPF_OBJ) $(ALL_BPF_OBJ) $(ALL_BPF_SKEL) $(ALL_TEST_OBJ) $(TEST_BIN)
+	$(RM) $(BPF_OBJ) $(ALL_BPF_OBJ) $(ALL_BPF_SKEL) $(TEST_BIN)
 	$(RM) $(SCHEMA_INC)
+	$(RM) -r $(OBJ_DIR)
+	# Remove legacy .o files from older Makefile layouts (if any remain).
 	find $(KERNEL_TESTS_DIR) $(USERSPACE_TESTS_DIR) -type f -name '*.o' -delete 2>/dev/null || true
 	find $(USERSPACE_SRC_DIR) -type f -name '*.o' -delete 2>/dev/null || true
+
+-include $(DEPS)
