@@ -1,5 +1,7 @@
 FROM ubuntu:20.04
 
+ARG TARGETARCH
+
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Base tools and enable 'universe' (needed for clang-18, libbpf-dev, etc.)
@@ -86,10 +88,12 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
     ln -sf $(/usr/local/bin/uv python find 3.10) /usr/local/bin/python3 && \
     ln -sf $(/usr/local/bin/uv python find 3.10) /usr/local/bin/python
 
-# Install flatc (FlatBuffers compiler) v25.12.19
-RUN curl -LO https://github.com/google/flatbuffers/releases/download/v25.12.19/Linux.flatc.binary.clang++-18.zip && \
-    unzip Linux.flatc.binary.clang++-18.zip -d /usr/local/bin/ && \
-    chmod +x /usr/local/bin/flatc && \
-    rm Linux.flatc.binary.clang++-18.zip
+# flatc: official Linux zip is x86_64-only; skip on aarch64 (generated headers are checked in)
+RUN if [ -z "${TARGETARCH}" ] || [ "${TARGETARCH}" = "amd64" ]; then \
+        curl -LO https://github.com/google/flatbuffers/releases/download/v25.12.19/Linux.flatc.binary.clang++-18.zip && \
+        unzip Linux.flatc.binary.clang++-18.zip -d /usr/local/bin/ && \
+        chmod +x /usr/local/bin/flatc && \
+        rm Linux.flatc.binary.clang++-18.zip; \
+    fi
 
 ENV PATH="/usr/local/bin:$PATH"

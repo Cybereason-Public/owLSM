@@ -7,6 +7,7 @@ Usage:
     scripts/package.py unit_tests
 """
 
+import platform
 import subprocess
 import shutil
 import sys
@@ -18,8 +19,29 @@ PROJECT_ROOT = SCRIPT_DIR.parent
 # System libraries to exclude (always present on target systems)
 EXCLUDE_LIBS = ["linux-vdso", "ld-linux", "libc.so", "libm.so", "libdl.so", "librt.so", "libpthread.so"]
 
-# Fallback search paths for libraries that ldd reports as "not found"
-LIBRARY_SEARCH_PATHS = ["/usr/lib64", "/usr/lib/x86_64-linux-gnu", "/usr/lib", "/lib/x86_64-linux-gnu", "/lib64", "/lib"]
+# Fallback search paths for libraries that ldd reports as "not found" (per host arch)
+_COMMON_LIBRARY_SEARCH_PATHS = ["/usr/lib64", "/usr/lib", "/lib64", "/lib"]
+_ARCH_LIBRARY_SEARCH_PATHS = {
+    "x86_64": ["/usr/lib/x86_64-linux-gnu", "/lib/x86_64-linux-gnu"],
+    "aarch64": ["/usr/lib/aarch64-linux-gnu", "/lib/aarch64-linux-gnu"],
+}
+
+
+def host_arch():
+    """Return normalized host arch (x86_64 or aarch64)."""
+    machine = platform.machine()
+    if machine in ("x86_64", "amd64"):
+        return "x86_64"
+    if machine in ("aarch64", "arm64"):
+        return "aarch64"
+    print(f"ERROR: Unsupported architecture for packaging: {machine}")
+    sys.exit(1)
+
+
+def library_search_paths():
+    arch = host_arch()
+    return _ARCH_LIBRARY_SEARCH_PATHS[arch] + _COMMON_LIBRARY_SEARCH_PATHS
+
 
 RESOURCES_SRC = PROJECT_ROOT / "src" / "Userspace" / "resources"
 FLATBUFFERS_SRC = PROJECT_ROOT / "src" / "Userspace" / "events" / "flatbuffers"
@@ -45,7 +67,7 @@ MODES = {
 
 def find_library(soname):
     """Search common paths for a library that ldd couldn't resolve."""
-    for search_dir in LIBRARY_SEARCH_PATHS:
+    for search_dir in library_search_paths():
         candidate = Path(search_dir) / soname
         if candidate.is_file():
             return candidate
@@ -93,7 +115,7 @@ def package(mode_name):
         print(f"Error: RulesGenerator binary not found: {RULES_GENERATOR_BIN}")
         sys.exit(1)
 
-    print(f"==> Packaging {binary_path.name} into {output_dir}")
+    print(f"==> Packaging {binary_path.name} into {output_dir} (host arch: {host_arch()})")
 
     # Recreate directory structure (handle both file and directory from previous builds)
     if output_dir.exists():

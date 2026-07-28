@@ -71,7 +71,7 @@ docker run -it --rm -v "$PWD":/workspace -w /workspace ghcr.io/cybereason-public
 | `make kernel -j$(nproc)` | Build only eBPF programs |
 | `make userspace -j$(nproc)` | Build only userspace (requires kernel) |
 | `make test -j$(nproc)` | Build and package unit tests → `build/unit_tests/` (bin, lib) |
-| `make tarball -j$(nproc)` | Create release tarball (depends on all) |
+| `make tarball -j$(nproc)` | Create release tarball (depends on all). Optional `ARCH=x86_64\|aarch64` → `owlsm-$(ARCH)-v$(VERSION).tar.gz` |
 | `make automation -j$(nproc)` | Build + setup automation tests (depends on all) |
 | `make clean` | Clean all build artifacts |
 | `make DEBUG=1 -j$(nproc)` | Debug build |
@@ -93,8 +93,9 @@ sudo ./build/owlsm/bin/owlsm --stdin
 
 ## Environment Requirements
 
-- **Kernel**: 5.14+
-- **libc** 2.32+
+- **Architecture**: `x86_64` or `aarch64`
+- **Kernel**: `x86_64` 5.14+; `aarch64` 6.4+
+- **libc** 2.31+
 - ebpf enabled
 - ebpf lsm enabled
 - BTF support 

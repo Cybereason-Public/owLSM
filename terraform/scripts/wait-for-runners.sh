@@ -24,6 +24,7 @@ set -euo pipefail
 # Environment:
 #   GH_TOKEN         - GitHub PAT with repo admin / self-hosted runners read access
 #   GITHUB_OUTPUT    - (optional) GitHub Actions output file for failed_runners
+#   ENABLE_ARM       - If "false", ignore A1 (ARM) runners in tfvars (default: true)
 # =============================================================================
 
 REPO="${1:?Usage: $0 <repo> <run_label> <expected_count> <tfvars_path> [max_wait] [poll_interval]}"
@@ -101,10 +102,15 @@ echo "$MERGED" | jq -r '.[] | "    \(.name) | status=\(.status) | labels=\([.lab
 
 # Build the list of expected runner display names from tfvars
 # TF keys match display_name, so: automation-owlsm-<key>-<run_id>
+# When ENABLE_ARM=false, skip A1 shapes (matches terraform enable_arm filter)
 RUN_ID="${RUN_LABEL#run-}"
-EXPECTED_NAMES=$(jq -r --arg rid "$RUN_ID" \
-    '.runners | keys[] | "automation-owlsm-\(.)-\($rid)"' \
-    "$TFVARS_PATH")
+ENABLE_ARM="${ENABLE_ARM:-true}"
+EXPECTED_NAMES=$(jq -r --arg rid "$RUN_ID" --arg arm "$ENABLE_ARM" '
+    .runners
+    | to_entries[]
+    | select(($arm != "false") or (.value.shape | contains("A1") | not))
+    | "automation-owlsm-\(.key)-\($rid)"
+    ' "$TFVARS_PATH")
 
 # Find which expected runners are NOT in the online list
 FAILED_KEYS="[]"

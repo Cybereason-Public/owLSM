@@ -1,0 +1,79 @@
+name: Download CI artifact
+description: Install gh if needed, download arch-specific CI artifact, extract to a path
+
+inputs:
+  artifact-name-base:
+    description: Base artifact name without -x86_64/-aarch64 suffix
+    required: true
+  github-token:
+    description: Token for actions artifacts API
+    required: true
+  extract-path:
+    description: Directory to extract the tarball into
+    required: false
+    default: /opt/owLSM
+  gh-version:
+    description: GitHub CLI version to install if missing
+    required: false
+    default: "2.87.0"
+
+runs:
+  using: composite
+  steps:
+    - name: Detect host arch
+      shell: bash
+      run: |
+        case "$(uname -m)" in
+          x86_64)
+            echo "HOST_ARCH=x86_64" >> "$GITHUB_ENV"
+            echo "GH_ARCH=amd64" >> "$GITHUB_ENV"
+            ;;
+          aarch64|arm64)
+            echo "HOST_ARCH=aarch64" >> "$GITHUB_ENV"
+            echo "GH_ARCH=arm64" >> "$GITHUB_ENV"
+            ;;
+          *)
+            echo "ERROR: unsupported arch $(uname -m)"
+            exit 1
+            ;;
+        esac
+
+    - name: Ensure GitHub CLI is installed
+      shell: bash
+      run: |
+        if command -v gh &>/dev/null; then
+          echo "==> gh already installed: $(gh --version | head -1)"
+          exit 0
+        fi
+        GH_VER="${{ inputs.gh-version }}"
+        GH_URL="https://github.com/cli/cli/releases/download/v${GH_VER}/gh_${GH_VER}_linux_${GH_ARCH}.tar.gz"
+        echo "==> Installing gh from ${GH_URL}"
+        curl -fL --retry 3 --retry-delay 2 -o "gh_${GH_VER}_linux_${GH_ARCH}.tar.gz" "$GH_URL"
+        tar -xzf "gh_${GH_VER}_linux_${GH_ARCH}.tar.gz"
+        sudo mv "gh_${GH_VER}_linux_${GH_ARCH}/bin/gh" /usr/bin/gh
+        rm -rf gh_*
+        echo "==> gh installed: $(gh --version | head -1)"
+
+    - name: Download and extract artifact
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: |
+        set -e
+        ARTIFACT_NAME="${{ inputs.artifact-name-base }}-${HOST_ARCH}"
+        echo "==> Searching for latest artifact: ${ARTIFACT_NAME}"
+        ARTIFACT_ID=$(gh api "repos/${{ github.repository }}/actions/artifacts?name=${ARTIFACT_NAME}" \
+          --jq '[.artifacts[]] | sort_by(.created_at) | last | .id')
+        if [ -z "$ARTIFACT_ID" ] || [ "$ARTIFACT_ID" = "null" ]; then
+          echo "ERROR: Artifact '${ARTIFACT_NAME}' not found"
+          exit 1
+        fi
+        echo "==> Artifact ID: $ARTIFACT_ID"
+        gh api "repos/${{ github.repository }}/actions/artifacts/$ARTIFACT_ID/zip" > "${ARTIFACT_NAME}.zip"
+        sudo mkdir -p "${{ inputs.extract-path }}"
+        unzip -o "${ARTIFACT_NAME}.zip" -d /tmp/artifact_download
+        sudo tar xzf /tmp/artifact_download/*.tar.gz -C "${{ inputs.extract-path }}"
+        rm -rf /tmp/artifact_download "${ARTIFACT_NAME}.zip"
+        sudo chown -R "$(id -u):$(id -g)" "${{ inputs.extract-path }}"
+        echo "==> Extracted to ${{ inputs.extract-path }}"
+        ls -la "${{ inputs.extract-path }}/"

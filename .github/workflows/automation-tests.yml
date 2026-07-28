@@ -16,7 +16,7 @@ on:
         required: true
         type: string
       artifact-name:
-        description: "Name of the build artifact to download"
+        description: "Base build artifact name (without -x86_64/-aarch64 suffix)"
         required: true
         type: string
       automation-tests-command-args:
@@ -30,7 +30,6 @@ on:
 
 env:
   AUTOMATION_ROOT_DIR: /opt/owLSM/src/Tests/Automation
-  GH_VERSION: 2.87.0
 
 jobs:
   automation-tests:
@@ -38,21 +37,16 @@ jobs:
     runs-on: ["run-${{ github.run_id }}", "${{ inputs.runner-label }}"]
 
     steps:
-      # =====================================================================
-      # Prerequisites
-      # =====================================================================
-      - name: Ensure GitHub CLI is installed
-        run: |
-          if command -v gh &>/dev/null; then
-            echo "==> gh already installed: $(gh --version | head -1)"
-          else
-            echo "==> gh not found, installing..."
-            wget -q "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_amd64.tar.gz"
-            tar -xzf gh_${GH_VERSION}_linux_amd64.tar.gz
-            sudo mv gh_${GH_VERSION}_linux_amd64/bin/gh /usr/bin/gh
-            rm -rf gh_*
-            echo "==> gh installed: $(gh --version | head -1)"
-          fi
+      # Needed so the local composite action under .github/actions/ is available
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Download CI artifact
+        uses: ./.github/actions/download-ci-artifact
+        with:
+          artifact-name-base: ${{ inputs.artifact-name }}
+          github-token: ${{ secrets.GH_RUNNER_PAT }}
+          extract-path: /opt/owLSM
 
       - name: Ensure uv is installed
         run: |
@@ -66,47 +60,6 @@ jobs:
             echo "==> uv installed: $(uv --version)"
           fi
 
-      # =====================================================================
-      # Download & Extract Artifact
-      # =====================================================================
-      - name: Download artifact via GH API
-        env:
-          GH_TOKEN: ${{ secrets.GH_RUNNER_PAT }}
-        run: |
-          echo "==> Searching for latest artifact: ${{ inputs.artifact-name }}"
-
-          # Sort by created_at and pick the most recent one
-          ARTIFACT_ID=$(gh api "repos/${{ github.repository }}/actions/artifacts?name=${{ inputs.artifact-name }}" \
-            --jq '[.artifacts[]] | sort_by(.created_at) | last | .id')
-
-          if [ -z "$ARTIFACT_ID" ] || [ "$ARTIFACT_ID" = "null" ]; then
-            echo "ERROR: Artifact '${{ inputs.artifact-name }}' not found"
-            exit 1
-          fi
-
-          echo "==> Artifact ID: $ARTIFACT_ID"
-          gh api "repos/${{ github.repository }}/actions/artifacts/$ARTIFACT_ID/zip" > "${{ inputs.artifact-name }}.zip"
-          echo "==> Artifact downloaded successfully"
-          ls -lh "${{ inputs.artifact-name }}.zip"
-
-      - name: Extract artifact to /opt/owLSM
-        run: |
-          echo "==> Extracting artifact to /opt/owLSM"
-          sudo mkdir -p /opt/owLSM
-
-          # GH API wraps the artifact in a zip; extract to get the inner .tar.gz
-          unzip -o "${{ inputs.artifact-name }}.zip" -d /tmp/artifact_download
-          # Extract the tarball to /opt/owLSM
-          sudo tar xzf /tmp/artifact_download/*.tar.gz -C /opt/owLSM
-          rm -rf /tmp/artifact_download
-
-          sudo chown -R "$(id -u):$(id -g)" /opt/owLSM
-          echo "==> Artifact extracted to /opt/owLSM"
-          ls -la /opt/owLSM/
-
-      # =====================================================================
-      # Install Test Dependencies
-      # =====================================================================
       - name: Setup venv and install requirements
         run: |
           cd $AUTOMATION_ROOT_DIR
@@ -115,17 +68,11 @@ jobs:
           uv pip install -r requirements.txt
           echo "==> venv ready: $(pytest --version)"
 
-      # =====================================================================
-      # Run Automation Tests
-      # =====================================================================
       - name: Run automation tests
         run: |
           cd $AUTOMATION_ROOT_DIR
           sudo PYTHONPATH=$AUTOMATION_ROOT_DIR $AUTOMATION_ROOT_DIR/venv/bin/pytest ${{inputs.automation-tests-command-args}}
 
-      # =====================================================================
-      # Collect Debug Logs (only on failure or cancellation)
-      # =====================================================================
       - name: Collect debug logs
         id: collect_logs
         if: failure() || cancelled()
@@ -144,9 +91,6 @@ jobs:
           path: ${{ steps.collect_logs.outputs.zip_path }}
           retention-days: 14
 
-      # =====================================================================
-      # Upload Results
-      # =====================================================================
       - name: Rename results file
         if: always()
         run: mv ${{ env.AUTOMATION_ROOT_DIR }}/results.xml ${{ env.AUTOMATION_ROOT_DIR }}/results-${{ inputs.runner-label }}.xml

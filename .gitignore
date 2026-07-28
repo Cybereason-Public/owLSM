@@ -50,3 +50,6 @@ src/Tests/Automation/resources/OOM_kill_me
 src/Tests/Automation/resources/signal_sender
 src/Tests/Automation/resources/protected_process
 
+# terraform
+terraform/.terraform/*
+terraform/.terraform.lock.hcl

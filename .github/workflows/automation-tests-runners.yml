@@ -13,9 +13,13 @@ on:
   workflow_dispatch:
     inputs:
       artifact-name:
-        description: "Name of the build artifact"
+        description: "Artifact base name (without -x86_64/-aarch64 suffix)"
         required: true
         type: string
+      enable_arm:
+        description: "Enable aarch64"
+        type: boolean
+        default: true
       destroy_runners:
         description: 'Destroy runner VMs after tests'
         type: boolean
@@ -32,9 +36,13 @@ on:
   workflow_call:
     inputs:
       artifact-name:
-        description: "Name of the build artifact to download for automation tests"
+        description: "Artifact base name (without -x86_64/-aarch64 suffix)"
         required: true
         type: string
+      enable_arm:
+        description: "Enable aarch64"
+        type: boolean
+        default: true
       destroy_runners:
         description: 'Destroy runner VMs after tests'
         type: boolean
@@ -64,6 +72,8 @@ env:
   TF_VAR_github_repo_url: ${{ github.server_url }}/${{ github.repository }}
   TF_VAR_run_id: ${{ github.run_id }}
   TF_VAR_ephemeral_runner: ${{ inputs.ephemeral_runners == '' && 'true' || inputs.ephemeral_runners }}
+  TF_VAR_enable_arm: ${{ inputs.enable_arm }}
+  ENABLE_ARM: ${{ inputs.enable_arm }}
   TF_WORKING_DIR: terraform
   ALLOWED_FAILED_TESTS: 0
   ALLOWED_SKIPPED_TESTS: 0
@@ -76,6 +86,8 @@ jobs:
       runners_ready: ${{ steps.apply.outputs.runners_ready }}
       runner_labels: ${{ steps.runner_count.outputs.labels }}
       runner_count: ${{ steps.runner_count.outputs.count }}
+      automation_count: ${{ steps.runner_count.outputs.automation_count }}
+      unit_test_label: ${{ steps.runner_count.outputs.unit_test_label }}
 
     steps:
       # =====================================================================
@@ -88,12 +100,24 @@ jobs:
         id: runner_count
         run: |
           TFVARS="${{ env.TF_WORKING_DIR }}/runners.auto.tfvars.json"
-          COUNT=$(jq '.runners | length' "$TFVARS")
-          LABELS=$(jq -c '[.runners[].runner_labels[0]]' "$TFVARS")
-          echo "count=$COUNT" >> $GITHUB_OUTPUT
-          echo "labels=$LABELS" >> $GITHUB_OUTPUT
-          echo "Expected runners: $COUNT"
-          echo "Runner labels: $LABELS"
+          # Mirror terraform enable_arm: drop A1 shapes when ARM is disabled
+          ACTIVE=$(jq --arg arm "${{ inputs.enable_arm }}" '
+            .runners
+            | to_entries
+            | map(select(($arm != "false") or (.value.shape | contains("A1") | not)))
+            | from_entries
+          ' "$TFVARS")
+          COUNT=$(echo "$ACTIVE" | jq 'length')
+          LABELS=$(echo "$ACTIVE" | jq -c '[.[] | select(.purpose == "automation") | .runner_labels[0]]')
+          AUTOMATION_COUNT=$(echo "$ACTIVE" | jq '[.[] | select(.purpose == "automation")] | length')
+          UNIT_TEST_LABEL=$(echo "$ACTIVE" | jq -r '[.[] | select(.purpose == "unit-test") | .runner_labels[0]] | first // empty')
+          echo "count=$COUNT" >> "$GITHUB_OUTPUT"
+          echo "labels=$LABELS" >> "$GITHUB_OUTPUT"
+          echo "automation_count=$AUTOMATION_COUNT" >> "$GITHUB_OUTPUT"
+          echo "unit_test_label=$UNIT_TEST_LABEL" >> "$GITHUB_OUTPUT"
+          echo "Provisioned runners: $COUNT"
+          echo "Automation labels: $LABELS"
+          echo "Unit-test label: ${UNIT_TEST_LABEL:-<none>}"
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -229,9 +253,7 @@ jobs:
 
   # =====================================================================
   # Run Automation Tests on Each Provisioned Runner (dynamic matrix)
-  # =====================================================================
-  # Matrix is generated from display_name values in
-  # terraform/runners.auto.tfvars.json
+  # Matrix: purpose == "automation" only (see provision-runners)
   # =====================================================================
 
   run-automation-tests:
@@ -249,6 +271,35 @@ jobs:
       automation-tests-command-args: ${{ inputs.automation-tests-command-args }}
     secrets:
       GH_RUNNER_PAT: ${{ secrets.GH_RUNNER_PAT }}
+
+  # =====================================================================
+  # aarch64 unit tests (purpose == unit-test runner; parallel with automation)
+  # =====================================================================
+
+  unit-tests-aarch64:
+    name: Unit tests (aarch64)
+    needs: provision-runners
+    if: >-
+      needs.provision-runners.outputs.runners_ready == 'true' &&
+      inputs.enable_arm == true &&
+      needs.provision-runners.outputs.unit_test_label != ''
+    runs-on: ["run-${{ github.run_id }}", "${{ needs.provision-runners.outputs.unit_test_label }}"]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Download CI artifact
+        uses: ./.github/actions/download-ci-artifact
+        with:
+          artifact-name-base: ${{ inputs.artifact-name }}
+          github-token: ${{ secrets.GH_RUNNER_PAT }}
+          extract-path: /opt/owLSM
+
+      - name: Run aarch64 unit tests
+        run: |
+          sudo chmod +x /opt/owLSM/build/unit_tests/bin/unit_tests
+          sudo /opt/owLSM/build/unit_tests/bin/unit_tests
+          echo "==> aarch64 unit tests passed!"
 
   # =====================================================================
   # Aggregate Test Results from All Runners
@@ -284,7 +335,7 @@ jobs:
           uv pip install -r requirements.txt
           python3 aggregate_results.py \
             ${{ github.workspace }}/${{ env.RESULTS_DIR }} \
-            ${{ needs.provision-runners.outputs.runner_count }} \
+            ${{ needs.provision-runners.outputs.automation_count }} \
             ${{ github.workspace }}/aggregated-results/aggregated_results.json
 
       - name: Validate test results
@@ -319,11 +370,11 @@ jobs:
 
   destroy-runners:
     name: Destroy OCI Runner VMs
-    needs: [provision-runners, run-automation-tests, aggregate-results]
+    needs: [provision-runners, run-automation-tests, aggregate-results, unit-tests-aarch64]
     if: >-
       always() &&
       inputs.destroy_runners == true &&
-      needs.run-automation-tests.result == 'success'
+      needs.provision-runners.outputs.runners_ready == 'true'
     uses: ./.github/workflows/destroy-runners.yml
     secrets:
       GH_RUNNER_PAT: ${{ secrets.GH_RUNNER_PAT }}

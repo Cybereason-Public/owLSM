@@ -118,6 +118,10 @@ def I_set_up_oom_cgroup(scenario_context):
     with open(f"{cgroup_path}/memory.max", "w") as f:
         f.write("5M")
 
+    # Disable swap for this cgroup so swap won't be used and OOM will be triggered instead of swapping.
+    with open(f"{cgroup_path}/memory.swap.max", "w") as f:
+        f.write("0")
+
     with open(f"{cgroup_path}/cgroup.procs", "w") as f:
         f.write(str(pid))
-    logger.log_info(f"Moved process {pid} into cgroup: {cgroup_path} with memory limit to 5M")
+    logger.log_info(f"Moved process {pid} into cgroup: {cgroup_path} with memory limit to 5M and swap disabled")

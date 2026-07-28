@@ -179,7 +179,18 @@ fi
 log_info "Latest runner version: $RUNNER_VERSION"
 
 cd "$RUNNER_DIR"
-RUNNER_TAR="actions-runner-linux-x64-$${RUNNER_VERSION}.tar.gz"
+
+# x64 and aarch64 need different GitHub Actions runner packages
+case "$(uname -m)" in
+    x86_64) RUNNER_ARCH="x64" ;;
+    aarch64|arm64) RUNNER_ARCH="arm64" ;;
+    *)
+        log_error "Unsupported architecture: $(uname -m)"
+        exit 1
+        ;;
+esac
+
+RUNNER_TAR="actions-runner-linux-$${RUNNER_ARCH}-$${RUNNER_VERSION}.tar.gz"
 
 if [ ! -f "$RUNNER_TAR" ]; then
     sudo -u "$RUNNER_USER" curl -sL -o "$RUNNER_TAR" \
