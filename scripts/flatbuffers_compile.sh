@@ -9,6 +9,13 @@ CPP_OUT_DIR="$PROJECT_ROOT/src/Userspace/events/flatbuffers/include"
 
 SCHEMA_FILE="$SCHEMA_DIR/owlsm_events.fbs"
 
+HOST_ARCH="$(uname -m)"
+if [[ "${HOST_ARCH}" != "x86_64" ]]; then
+    echo "ERROR: FlatBuffers schema regeneration is only supported on x86_64 (got ${HOST_ARCH})." >&2
+    echo "       The aarch64 CI image does not ship flatc; regenerate headers on x86_64 and commit them." >&2
+    exit 1
+fi
+
 if ! command -v flatc &>/dev/null; then
     echo "ERROR: flatc not found in PATH. Install FlatBuffers v25.12.19." >&2
     exit 1

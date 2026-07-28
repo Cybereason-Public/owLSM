@@ -2,8 +2,6 @@
 #
 # Checks if this machine meets the requirements to run owLSM.
 
-REQUIRED_KERNEL_MAJOR=5
-REQUIRED_KERNEL_MINOR=14
 REQUIRED_GLIBC_MAJOR=2
 REQUIRED_GLIBC_MINOR=31
 
@@ -20,19 +18,45 @@ fail() {
     FAIL=$((FAIL + 1))
 }
 
+version_ge() {
+    # $1=major $2=minor  >=  $3=req_major $4=req_minor
+    [ "$1" -gt "$3" ] 2>/dev/null || \
+    { [ "$1" -eq "$3" ] && [ "$2" -ge "$4" ]; }
+}
+
 echo "=== owLSM Compatibility Check ==="
 echo ""
 
-# --- Kernel version ---
+# --- CPU architecture ---
+HOST_ARCH="$(uname -m)"
+case "$HOST_ARCH" in
+    x86_64)
+        REQUIRED_KERNEL_MAJOR=5
+        REQUIRED_KERNEL_MINOR=14
+        pass "Architecture: $HOST_ARCH (supported)"
+        ;;
+    aarch64|arm64)
+        HOST_ARCH=aarch64
+        REQUIRED_KERNEL_MAJOR=6
+        REQUIRED_KERNEL_MINOR=4
+        pass "Architecture: $HOST_ARCH (supported)"
+        ;;
+    *)
+        fail "Architecture: $HOST_ARCH (supported: x86_64, aarch64)"
+        REQUIRED_KERNEL_MAJOR=5
+        REQUIRED_KERNEL_MINOR=14
+        ;;
+esac
+
+# --- Kernel version (arch-specific minimum) ---
 KERNEL_VERSION=$(uname -r)
 KERNEL_MAJOR=$(echo "$KERNEL_VERSION" | cut -d. -f1)
 KERNEL_MINOR=$(echo "$KERNEL_VERSION" | cut -d. -f2)
 
-if [ "$KERNEL_MAJOR" -gt "$REQUIRED_KERNEL_MAJOR" ] 2>/dev/null || \
-   { [ "$KERNEL_MAJOR" -eq "$REQUIRED_KERNEL_MAJOR" ] && [ "$KERNEL_MINOR" -ge "$REQUIRED_KERNEL_MINOR" ]; }; then
-    pass "Kernel version: $KERNEL_VERSION (>= ${REQUIRED_KERNEL_MAJOR}.${REQUIRED_KERNEL_MINOR})"
+if version_ge "$KERNEL_MAJOR" "$KERNEL_MINOR" "$REQUIRED_KERNEL_MAJOR" "$REQUIRED_KERNEL_MINOR"; then
+    pass "Kernel version: $KERNEL_VERSION (>= ${REQUIRED_KERNEL_MAJOR}.${REQUIRED_KERNEL_MINOR} for ${HOST_ARCH})"
 else
-    fail "Kernel version: $KERNEL_VERSION (requires >= ${REQUIRED_KERNEL_MAJOR}.${REQUIRED_KERNEL_MINOR})"
+    fail "Kernel version: $KERNEL_VERSION (requires >= ${REQUIRED_KERNEL_MAJOR}.${REQUIRED_KERNEL_MINOR} for ${HOST_ARCH})"
 fi
 
 # --- glibc version ---
@@ -40,8 +64,7 @@ GLIBC_VERSION=$(ldd --version 2>&1 | head -n1 | grep -oP '[0-9]+\.[0-9]+$')
 if [ -n "$GLIBC_VERSION" ]; then
     GLIBC_MAJOR=$(echo "$GLIBC_VERSION" | cut -d. -f1)
     GLIBC_MINOR=$(echo "$GLIBC_VERSION" | cut -d. -f2)
-    if [ "$GLIBC_MAJOR" -gt "$REQUIRED_GLIBC_MAJOR" ] 2>/dev/null || \
-       { [ "$GLIBC_MAJOR" -eq "$REQUIRED_GLIBC_MAJOR" ] && [ "$GLIBC_MINOR" -ge "$REQUIRED_GLIBC_MINOR" ]; }; then
+    if version_ge "$GLIBC_MAJOR" "$GLIBC_MINOR" "$REQUIRED_GLIBC_MAJOR" "$REQUIRED_GLIBC_MINOR"; then
         pass "glibc version: $GLIBC_VERSION (>= ${REQUIRED_GLIBC_MAJOR}.${REQUIRED_GLIBC_MINOR})"
     else
         fail "glibc version: $GLIBC_VERSION (requires >= ${REQUIRED_GLIBC_MAJOR}.${REQUIRED_GLIBC_MINOR})"

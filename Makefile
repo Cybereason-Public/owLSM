@@ -5,11 +5,21 @@
 # ---- Configuration Variables ---------------------------------
 # Set DEBUG=1 for debug builds: make DEBUG=1
 # Leave unset for release builds: make
+
 VERSION        ?= 1.0.0
+ARCH           ?=
 
 # Validate VERSION format (X.Y.Z)
 ifneq ($(words $(subst ., ,$(VERSION))),3)
 $(error VERSION must be Major.Minor.Patch, got '$(VERSION)')
+endif
+
+ifneq ($(ARCH),)
+ifneq ($(ARCH),x86_64)
+ifneq ($(ARCH),aarch64)
+$(error ARCH must be x86_64 or aarch64, got '$(ARCH)')
+endif
+endif
 endif
 
 # ---- Export variables to sub-makefiles -----------------------
@@ -60,10 +70,17 @@ test: kernel
 	@$(MAKE) -C $(UNIT_TEST_DIR)
 	@python3 $(SCRIPTS_DIR)/package.py unit_tests
 
+# Top-level directory inside the archive stays "owlsm".
+ifdef ARCH
+TARBALL_NAME := owlsm-$(ARCH)-v$(VERSION).tar.gz
+else
+TARBALL_NAME := owlsm-$(VERSION).tar.gz
+endif
+
 tarball: all
 	@echo "==> Creating tarball..."
-	@tar -czf $(BUILD_DIR)/owlsm-$(VERSION).tar.gz -C $(BUILD_DIR) owlsm
-	@echo "==> Tarball created: $(BUILD_DIR)/owlsm-$(VERSION).tar.gz"
+	@tar -czf $(BUILD_DIR)/$(TARBALL_NAME) -C $(BUILD_DIR) owlsm
+	@echo "==> Tarball created: $(BUILD_DIR)/$(TARBALL_NAME)"
 
 automation:
 	@echo "==> Building automation resources..."
@@ -101,10 +118,13 @@ help:
 	@echo "Variables:"
 	@echo "  DEBUG      - Set to 1 for debug build (default: unset = release)"
 	@echo "  VERSION    - Version string X.Y.Z (default: $(VERSION))"
+	@echo "  ARCH       - Optional tarball name arch: x86_64 or aarch64"
+	@echo "               (build itself always uses the host arch)"
 	@echo ""
 	@echo "Examples:"
-	@echo "  make -j\$$(nproc)              # Release build"
+	@echo "  make -j\$$(nproc)              # Release build (host arch)"
 	@echo "  make DEBUG=1 -j\$$(nproc)      # Debug build"
-	@echo "  make tarball VERSION=2.0.0    # Release tarball"
+	@echo "  make tarball VERSION=2.0.0    # → build/owlsm-2.0.0.tar.gz"
+	@echo "  make tarball ARCH=aarch64 VERSION=2.0.0  # → build/owlsm-aarch64-v2.0.0.tar.gz"
 	@echo "  make test -j\$$(nproc)         # Build + package unit tests"
 	@echo "  make automation -j\$$(nproc)   # Build + setup automation"

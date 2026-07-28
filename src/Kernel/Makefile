@@ -5,13 +5,23 @@
 # ---- Compiler ------------------------------------------------
 BPF_CC         := clang
 
+# ---- Architecture (libbpf expects x86 / arm64, not uname -m) -
+UNAME_M        := $(shell uname -m)
+ifeq ($(UNAME_M),x86_64)
+BPF_TARGET_ARCH := x86
+else ifeq ($(UNAME_M),aarch64)
+BPF_TARGET_ARCH := arm64
+else
+$(error Unsupported architecture for eBPF build: $(UNAME_M))
+endif
+
 # ---- Path Variables ------------------------------------------
 SHARED_DIR     := $(CURDIR)/../Shared
 CONSTANTS_H    := $(SHARED_DIR)/constants.h
 CONSTANTS_JSON := $(SHARED_DIR)/constants.json
 
 # ---- BPF Compilation Flags (fixed, no mode variations) -------
-BPF_CPPFLAGS   := -D__TARGET_ARCH_$(shell uname -m | sed 's/x86_64/x86/') \
+BPF_CPPFLAGS   := -D__TARGET_ARCH_$(BPF_TARGET_ARCH) \
                   -D__BPF_KERNEL__ \
                   -I$(CURDIR) \
                   -I$(CURDIR)/Programs/syscall_monitoring \

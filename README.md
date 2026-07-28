@@ -103,6 +103,8 @@ Before running owLSM, verify your system meets the requirements:
 chmod +x scripts/check_compatibility.sh && ./scripts/check_compatibility.sh
 ```
 
+Supported architectures: `x86_64` (kernel ≥ 5.14) and `aarch64` (kernel ≥ 6.4).
+
 ## Automation Tests (Integration Testing)
 See [src/Tests/Automation/README.md](src/Tests/Automation/README.md) for running the automation tests.
 

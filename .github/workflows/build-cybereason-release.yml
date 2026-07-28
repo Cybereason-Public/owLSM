@@ -48,225 +48,112 @@ jobs:
           fi
 
           VERSION="${TAG#v}"
-          ASSET="owlsm-${VERSION}.tar.gz"
-
-          echo "tag=$TAG"                              >> "$GITHUB_OUTPUT"
-          echo "version=$VERSION"                      >> "$GITHUB_OUTPUT"
-          echo "asset=$ASSET"                          >> "$GITHUB_OUTPUT"
-          echo "out_tarball=owlsm-${VERSION}-cybereason.tar.gz" >> "$GITHUB_OUTPUT"
-          echo "artifact_name=owlsm-${VERSION}-cybereason"      >> "$GITHUB_OUTPUT"
-          echo "Tag: $TAG | Version: $VERSION | Asset: $ASSET"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Tag: $TAG | Version: $VERSION | Assets: owlsm-{x86_64,aarch64}-v${VERSION}.tar.gz"
 
       # ---------------------------------------------------------------
       # (b) Validate the release tag exists AND the asset is present
       # ---------------------------------------------------------------
-      - name: Verify release and asset exist
+      - name: Verify release and assets exist
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -e
           TAG="${{ steps.meta.outputs.tag }}"
-          ASSET="${{ steps.meta.outputs.asset }}"
+          VERSION="${{ steps.meta.outputs.version }}"
           REPO="${{ github.repository }}"
-
-          echo "==> Verifying tag $TAG exists on remote..."
           git ls-remote --exit-code --tags origin "refs/tags/${TAG}" || {
-            echo "::error::Tag ${TAG} does not exist on remote. Publish the official release first."
-            exit 1
+            echo "::error::Tag ${TAG} does not exist on remote."; exit 1
           }
-
-          echo "==> Verifying release $TAG exists in $REPO..."
-          gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1 || {
-            echo "::error::Release ${TAG} not found in ${REPO}. Run 'Publish GitHub Release' first."
-            exit 1
+          gh release view "$TAG" --repo "$REPO" >/dev/null || {
+            echo "::error::Release ${TAG} not found. Run Publish GitHub Release first."; exit 1
           }
+          for arch in x86_64 aarch64; do
+            ASSET="owlsm-${arch}-v${VERSION}.tar.gz"
+            FOUND=$(gh release view "$TAG" --repo "$REPO" --json assets \
+              --jq ".assets[] | select(.name == \"${ASSET}\") | .name")
+            [ -n "$FOUND" ] || { echo "::error::Asset ${ASSET} missing on ${TAG}"; exit 1; }
+            echo "==> Found $FOUND"
+          done
 
-          echo "==> Verifying asset $ASSET is attached to release $TAG..."
-          ASSET_FOUND=$(gh release view "$TAG" --repo "$REPO" \
-            --json assets --jq ".assets[] | select(.name == \"${ASSET}\") | .name")
-          if [ -z "$ASSET_FOUND" ]; then
-            echo "::error::Asset ${ASSET} not found on release ${TAG}."
-            exit 1
-          fi
-          echo "==> Found asset: $ASSET_FOUND"
-
-      # ---------------------------------------------------------------
-      # (c) Pull the CI docker image
-      # ---------------------------------------------------------------
-      - name: Pull CI Docker image
-        run: |
-          echo "Pulling Docker image: ${{ env.DOCKER_IMAGE }}"
-          docker pull ${{ env.DOCKER_IMAGE }}
-
-      # ---------------------------------------------------------------
-      # (d) Build convert_company_rules inside the CI image so the binary
-      #     is glibc/arch-compatible with the official release binaries.
-      # ---------------------------------------------------------------
-      - name: Build convert_company_rules binary
-        run: |
-          docker run --rm \
-            -v "${{ github.workspace }}:/workspace" \
-            -w /workspace \
-            ${{ env.DOCKER_IMAGE }} \
-            bash -c "
-              set -e
-              echo '==> Building convert_company_rules...'
-              bash scripts/CR_rules/build_convert_company_rules.sh
-              echo '==> Build completed!'
-              ls -l scripts/CR_rules/convert_company_rules
-            "
-
-      # ---------------------------------------------------------------
-      # (e) Download the official release asset (clean subdir first)
-      # ---------------------------------------------------------------
-      - name: Download official release asset
+      - name: Build Cybereason tarballs (both arches)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -e
           TAG="${{ steps.meta.outputs.tag }}"
-          ASSET="${{ steps.meta.outputs.asset }}"
-
-          rm -rf release-download
+          VERSION="${{ steps.meta.outputs.version }}"
+          docker run --privileged --rm tonistiigi/binfmt --install all
+          docker pull --platform linux/amd64 ${{ env.DOCKER_IMAGE }}
+          docker pull --platform linux/arm64 ${{ env.DOCKER_IMAGE }}
+          rm -rf release-download extract
           mkdir -p release-download
-          gh release download "$TAG" \
-            --repo "${{ github.repository }}" \
-            --pattern "$ASSET" \
-            --dir release-download
-          echo "==> Downloaded:"
-          ls -lh release-download
+          for arch in x86_64 aarch64; do
+            case "$arch" in x86_64) platform=linux/amd64 ;; aarch64) platform=linux/arm64 ;; esac
+            ASSET="owlsm-${arch}-v${VERSION}.tar.gz"
+            OUT="owlsm-${arch}-v${VERSION}-cybereason.tar.gz"
+            docker run --rm --platform "$platform" \
+              -v "${{ github.workspace }}:/workspace" -w /workspace \
+              ${{ env.DOCKER_IMAGE }} \
+              bash -c "set -e; bash scripts/CR_rules/build_convert_company_rules.sh"
+            gh release download "$TAG" --repo "${{ github.repository }}" --pattern "$ASSET" --dir release-download
+            rm -rf extract && mkdir -p extract
+            tar -xzf "release-download/${ASSET}" -C extract
+            cp scripts/CR_rules/convert_company_rules extract/owlsm/bin/
+            chmod +x extract/owlsm/bin/convert_company_rules
+            cp scripts/CR_rules/field_mapping.yml extract/owlsm/resources/
+            tar -czf "$OUT" -C extract owlsm
+            ls -lh "$OUT"
+          done
 
-      # ---------------------------------------------------------------
-      # (f) Extract the tarball (yields a top-level owlsm/ dir)
-      # ---------------------------------------------------------------
-      - name: Extract release tarball
+      - name: Publish tarballs to releases branch
         run: |
-          ASSET="${{ steps.meta.outputs.asset }}"
-          rm -rf extract
-          mkdir -p extract
-          tar -xzf "release-download/${ASSET}" -C extract
-          echo "==> Extracted layout:"
-          ls -l extract/owlsm
-
-      # ---------------------------------------------------------------
-      # (g) Copy the freshly built binary into owlsm/bin
-      # ---------------------------------------------------------------
-      - name: Add convert_company_rules binary
-        run: |
-          cp scripts/CR_rules/convert_company_rules extract/owlsm/bin/convert_company_rules
-          chmod +x extract/owlsm/bin/convert_company_rules
-          ls -l extract/owlsm/bin/convert_company_rules
-
-      # ---------------------------------------------------------------
-      # (h) Copy the field_mapping.yml resource
-      # ---------------------------------------------------------------
-      - name: Add field_mapping.yml resource
-        run: |
-          cp scripts/CR_rules/field_mapping.yml extract/owlsm/resources/field_mapping.yml
-          ls -l extract/owlsm/resources/field_mapping.yml
-
-      # ---------------------------------------------------------------
-      # (i) Repack so the internal layout matches the official tarball
-      # ---------------------------------------------------------------
-      - name: Repack Cybereason tarball
-        run: |
-          OUT="${{ steps.meta.outputs.out_tarball }}"
-          tar -czf "$OUT" -C extract owlsm
-          echo "==> Repacked:"
-          ls -lh "$OUT"
-
-      # ---------------------------------------------------------------
-      # (j) Publish the tarball onto the dedicated releases branch.
-      #     The branch is assumed to already exist (orphan branch holding
-      #     only release tarballs). Served anonymously via raw.githubusercontent.com;
-      #     NOT a GitHub Release. Uses the built-in GITHUB_TOKEN (contents: write).
-      # ---------------------------------------------------------------
-      - name: Publish tarball to releases branch
-        run: |
-          OUT="${{ steps.meta.outputs.out_tarball }}"
+          set -e
+          VERSION="${{ steps.meta.outputs.version }}"
           BRANCH="owlsm_cybereason_releases"
           WORKTREE="${{ runner.temp }}/cyber-rel"
-
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          # Fetch the (assumed-existing) branch; fail clearly if it is missing.
-          if ! git fetch origin "$BRANCH"; then
-            echo "::error::Branch '$BRANCH' not found on origin. Create it once before running this workflow."
-            exit 1
-          fi
-
-          # Work on the branch in an isolated worktree so the main checkout
-          # is left untouched.
-          SRC="${{ github.workspace }}/$OUT"
+          git fetch origin "$BRANCH" || { echo "::error::Branch '$BRANCH' missing"; exit 1; }
           rm -rf "$WORKTREE"
           git worktree add -f "$WORKTREE" "origin/$BRANCH"
-
-          # Build the commit fresh against the current remote tip each attempt
-          # and reapply (rather than rebasing a delete-heavy commit), so a
-          # concurrent update is handled by a clean retry.
           published=""
           for attempt in 1 2 3; do
             git -C "$WORKTREE" fetch origin "$BRANCH"
             git -C "$WORKTREE" reset --hard "origin/$BRANCH"
-
-            # Releases-only hygiene: this branch must hold nothing but release
-            # tarballs. If it was seeded from the UI (a copy of main), strip
-            # every tracked file that is not a *.tar.gz. Idempotent/self-healing.
             git -C "$WORKTREE" ls-files -z -- ':(exclude)*.tar.gz' \
               | xargs -0 -r git -C "$WORKTREE" rm -q -- || true
-
-            cp "$SRC" "$WORKTREE/$OUT"
-            git -C "$WORKTREE" add -- "$OUT"
-
+            for arch in x86_64 aarch64; do
+              OUT="owlsm-${arch}-v${VERSION}-cybereason.tar.gz"
+              cp "${{ github.workspace }}/$OUT" "$WORKTREE/$OUT"
+              git -C "$WORKTREE" add -- "$OUT"
+            done
             if git -C "$WORKTREE" diff --cached --quiet; then
-              echo "==> $OUT already current on $BRANCH; nothing to publish."
               published=1; break
             fi
-
-            git -C "$WORKTREE" commit -m "Publish $OUT (${{ steps.meta.outputs.tag }})"
-            if git -C "$WORKTREE" push origin "HEAD:$BRANCH"; then
-              echo "==> Published $OUT to $BRANCH"
-              published=1; break
-            fi
-            echo "==> Push rejected (attempt $attempt); refreshing $BRANCH and retrying..."
+            git -C "$WORKTREE" commit -m "Publish cybereason ${{ steps.meta.outputs.tag }} (x86_64 + aarch64)"
+            git -C "$WORKTREE" push origin "HEAD:$BRANCH" && { published=1; break; }
+            echo "==> Push rejected (attempt $attempt); retrying..."
           done
-
           git worktree remove --force "$WORKTREE" || true
+          [ -n "$published" ] || { echo "::error::Publish failed"; exit 1; }
 
-          if [ -z "$published" ]; then
-            echo "::error::Failed to publish $OUT to $BRANCH after 3 attempts."
-            exit 1
-          fi
-
-      # ---------------------------------------------------------------
-      # (k) Surface results in the UI and as job outputs
-      # ---------------------------------------------------------------
       - name: Summary
         id: summary
         run: |
-          ARTIFACT_NAME="${{ steps.meta.outputs.artifact_name }}"
-          OUT="${{ steps.meta.outputs.out_tarball }}"
+          VERSION="${{ steps.meta.outputs.version }}"
           BRANCH="owlsm_cybereason_releases"
           REPO="${{ github.repository }}"
-          DOWNLOAD_URL="https://raw.githubusercontent.com/${REPO}/${BRANCH}/${OUT}"
-
-          echo "artifact_name=$ARTIFACT_NAME" >> "$GITHUB_OUTPUT"
-          echo "tarball=$OUT"                 >> "$GITHUB_OUTPUT"
-          echo "download_url=$DOWNLOAD_URL"   >> "$GITHUB_OUTPUT"
-
+          OUT_X64="owlsm-x86_64-v${VERSION}-cybereason.tar.gz"
+          OUT_ARM="owlsm-aarch64-v${VERSION}-cybereason.tar.gz"
+          echo "artifact_name=owlsm-*-v${VERSION}-cybereason" >> "$GITHUB_OUTPUT"
+          echo "tarball=${OUT_X64},${OUT_ARM}" >> "$GITHUB_OUTPUT"
+          echo "download_url=https://raw.githubusercontent.com/${REPO}/${BRANCH}/${OUT_X64}" >> "$GITHUB_OUTPUT"
           {
-            echo "## Cybereason Artifact Published"
-            echo ""
-            echo "| Property | Value |"
-            echo "|----------|-------|"
-            echo "| Artifact | $ARTIFACT_NAME |"
-            echo "| Tarball | $OUT |"
-            echo "| Branch | \`$BRANCH\` |"
-            echo "| Download URL | <$DOWNLOAD_URL> |"
-            echo ""
-            echo "Anonymous download (browser or curl):"
-            echo '```'
-            echo "curl -L -O $DOWNLOAD_URL"
-            echo '```'
+            echo "## Cybereason Artifacts Published"
+            echo "| x86_64 | <https://raw.githubusercontent.com/${REPO}/${BRANCH}/${OUT_X64}> |"
+            echo "| aarch64 | <https://raw.githubusercontent.com/${REPO}/${BRANCH}/${OUT_ARM}> |"
           } >> "$GITHUB_STEP_SUMMARY"
 
       # ---------------------------------------------------------------

@@ -15,7 +15,8 @@ Before installing owLSM, ensure your system meets these requirements:
 
 | Requirement | Details |
 |-------------|---------|
-| **Linux Kernel** | 5.14 or higher |
+| **Architecture** | `x86_64` or `aarch64` |
+| **Linux Kernel** | `x86_64`: 5.14 or higher; `aarch64`: 6.4 or higher |
 | **glibc** | 2.31 or higher |
 | **eBPF LSM** | Must be enabled in kernel |
 | **BTF Support** | Required for CO-RE (Compile Once, Run Everywhere) |
@@ -28,7 +29,7 @@ For complete build and installation instructions, please refer to the [GitHub re
 ## Check System Compatibility
 
 Run the script to verify your system meets all requirements.  
-The script checks kernel version, glibc version, BTF support, and eBPF LSM support, and reports which requirements pass or fail.
+The script checks architecture, kernel version (per arch), glibc version, BTF support, and eBPF LSM support, and reports which requirements pass or fail.
 
 ```bash
 chmod +x scripts/check_compatibility.sh && ./scripts/check_compatibility.sh

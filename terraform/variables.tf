@@ -91,16 +91,23 @@ variable "ephemeral_runner" {
   default     = true
 }
 
+variable "enable_arm" {
+  description = "When false, skip A1 (ARM) runner shapes"
+  type        = bool
+  default     = true
+}
+
 variable "runners" {
   description = "Map of runner configurations. Each entry creates one OCI instance."
   type = map(object({
-    image_id       = string
-    display_name   = string
-    shape          = optional(string, "VM.Standard.E5.Flex")
-    ocpus          = optional(number, 2)
-    memory_in_gbs  = optional(number, 16)
-    boot_volume_gb = optional(number, 100)
-    runner_labels              = optional(list(string), ["ubuntu-22"]) # first label must represent unique runner distributive
-    pv_encryption_in_transit   = optional(bool, true)
+    image_id                 = string
+    display_name             = string
+    shape                    = optional(string, "VM.Standard.E5.Flex")
+    ocpus                    = optional(number, 2)
+    memory_in_gbs            = optional(number, 16)
+    boot_volume_gb           = optional(number, 100)
+    runner_labels            = optional(list(string), ["ubuntu-22"]) # first label must represent unique runner distributive
+    pv_encryption_in_transit = optional(bool, true)
+    purpose                  = optional(string, "automation")
   }))
 }

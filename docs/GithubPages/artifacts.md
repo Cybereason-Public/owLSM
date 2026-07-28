@@ -45,6 +45,15 @@ build/unit_tests/
 
 Running `make tarball -j$(nproc)` creates `build/owlsm-{VERSION}.tar.gz` containing the same layout as `build/owlsm/`.
 
+With an arch suffix (used for multi-arch releases):
+
+```bash
+make tarball -j$(nproc) ARCH=x86_64 VERSION=1.0.0   # → build/owlsm-x86_64-v1.0.0.tar.gz
+make tarball -j$(nproc) ARCH=aarch64 VERSION=1.0.0  # → build/owlsm-aarch64-v1.0.0.tar.gz
+```
+
+The directory inside the archive stays `owlsm/` (not renamed by `ARCH`).
+
 The tarball is a self-contained distribution: the `lib/` directory includes all non-system shared libraries needed to run `owlsm` on the target machine, so no additional library installation is required beyond basic libs like glibc and the [system requirements](/owLSM/getting-started/).
 
 ---
