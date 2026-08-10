@@ -1,19 +1,25 @@
 {
   "mcpServers": {
     "pySigma Docs": {
-      "url": "https://gitmcp.io/SigmaHQ/pySigma?tab=readme-ov-file"
+      "url": "https://gitmcp.io/SigmaHQ/pySigma"
     },
     "sigma Docs": {
-      "url": "https://gitmcp.io/SigmaHQ/sigma?tab=readme-ov-file"
+      "url": "https://gitmcp.io/SigmaHQ/sigma"
     },
     "sigma-specification Docs": {
-      "url": "https://gitmcp.io/SigmaHQ/sigma-specification?tab=readme-ov-file"
+      "url": "https://gitmcp.io/SigmaHQ/sigma-specification"
     },
     "libbpf Docs": {
       "url": "https://gitmcp.io/libbpf/libbpf"
     },
     "flatbuffers Docs": {
       "url": "https://gitmcp.io/google/flatbuffers"
+    },
+    "tetragon Docs": {
+      "url": "https://gitmcp.io/cilium/tetragon"
+    },
+    "kubearmor Docs": {
+      "url": "https://gitmcp.io/kubearmor/kubearmor"
     }
   }
 }
