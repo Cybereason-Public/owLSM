@@ -24,15 +24,17 @@ Ship a DaemonSet agent that can see the cluster, map containers to pods, and enr
     + ca-certificates
     + `ENTRYPOINT ["/opt/owlsm/bin/owlsm"] CMD ["-c", "/etc/owlsm/config.json"]`
     + lightweight distro (ubutnu or something lighter)
+
 - DaemonSet (privileged, host mounts as needed: proc, bpf, CRI socket, etc.)
     + paths to mount:
         * host: `/proc`, container: `/host/proc`
         * host: `/sys/fs/cgroup`, container: `/sys/fs/cgroup`
         * host: `/sys/fs/bpf`, container: `/sys/fs/bpf`
-        * CRI socket: one host path from Helm `cri.socketHostPath` (default e.g. `/run/containerd/containerd.sock`. Set to `/var/run/crio/crio.sock` for CRI-O). Mount that socket’s parent dir into the pod (same path as on the host).
+        * CRI socket: one host path from Helm `socketHostPath` (default e.g. `/run/containerd/containerd.sock`. Set to `/var/run/crio/crio.sock` for CRI-O). Mount that socket’s parent dir into the pod (same path as on the host).
         * host: `/sys/kernel/tracing`, container: `/sys/kernel/tracing`
         * host: `/sys/kernel/btf`, container: `/sys/kernel/btf`
-        * ConfigMap (K8s object) with a key `config.json` which holds the full owLSM config string. Then we mount this ConfigMap in `/etc/owlsm` and kubelet automatically creates the `/etc/owlsm/config.json` file with the content. 
+        * ConfigMap (K8s object) with a key `config.json` which holds the full owLSM config string. Then we mount this ConfigMap in `/etc/owlsm` and kubelet automatically creates the `/etc/owlsm/config.json` file with the content.
+        * host: `/var/log/owlsm/owlsm.log`, container: `/var/log/owlsm/owlsm.log`. Need to `DirectoryOrCreate`. 
     + hostNetwork
     + dnsPolicy: ClusterFirstWithHostNet (needed with hostNetwork so API DNS works)
     + `nodeSelector: kubernetes.io/os: linux` - so it runs only on linux nodes. 
@@ -40,25 +42,22 @@ Ship a DaemonSet agent that can see the cluster, map containers to pods, and enr
     + `tolerations: [{operator: Exists}]`
     + env `NODE_NAME` from downward API `spec.nodeName` (for node-filtered pod watch)
 
-- code modifications - existing code doesn't expect `/host/proc`. So we will need to make the `/proc` path dinamic, and if its k8s mode then don't assume `/proc` but read a value from values.
-The full path (for example `/host/proc`) will be specified in `values.yaml` and be passed to the owlsm binary in this flow `values.yaml rootProcPath` --> `ConfigMap` --> `config.json` --> `owLSM`.
-Same flow for CRI socket path: `values.yaml cri.socketHostPath` --> `ConfigMap` --> `config.json` CRI endpoint (e.g. `unix://` + that path) --> `owLSM`.
-
-Remember that both of these paths `rootProcPath` & `cri.socketHostPath` are going through the DaemonSet as well, as it needs to mount them.
+- code modifications - existing code doesn't expect `/host/proc`. So we will need to make the `/proc` path dynamic, and if its k8s mode then don't assume `/proc` but read a value from config.
+The container proc path (for example `/host/proc`) lives in `values.yaml` as `config.kubernetes.root_proc_path`. The DaemonSet uses the same value as the host's `/proc` mount path.
+CRI socket: Helm-only key `socketHostPath` (filesystem path) → DaemonSet mounts the parent dir of `socketHostPath`, and Helm writes `config.kubernetes.cri_endpoint` as `unix://` + `socketHostPath`.
 
 
 - ServiceAccount + minimal RBAC (list/watch pods only)
     + ServiceAccount - Who the agent pod is
     + ClusterRole - list/watch pods
     + ClusterRoleBinding - Links ServiceAccount → ClusterRole cluster-wide
+
 - Config delivery via ConfigMap (flags/paths into the pod)
-    + ConfigMap will have only 1 key which is `config.json`. This key will hold the full json that is passed to the owLSM binary.
-    + Delivery works likes this: we mount this ConfigMap in `/etc/owlsm` and kubelet automatically creates the `/etc/owlsm/config.json` file with the content. Then the docker entrypoint starts this container and passes to it `/etc/owlsm/config.json`
-    + What will be added to the config.json:
-        * proc path (e.g. /host/proc)
-        * CRI endpoint — same socket as `cri.socketHostPath`.
-        * enable K8s API — turn on informer/cache + enrichment
-    
+    + ConfigMap has one key: `config.json` — the full JSON passed to the owLSM binary.
+    + Default flow: `values.yaml` has a key: `config`, which is a YAML representation of that JSON (same shape as `config.json`). Helm translates the value of `config` to JSON and sets the ConfigMap key. Kubelet mounts the ConfigMap at `/etc/owlsm` → `/etc/owlsm/config.json`. Then pwLSM Image run with CMD: `-c /etc/owlsm/config.json`. All the Yaml to Json translation is done automatically by helm, owLSM never sees the yaml, he recives the json.
+    + Helm overwrites `config.kubernetes.cri_endpoint` with `unix://` + `socketHostPath`.
+    + Override (rules): `helm ... --set-file configJson=./full_config.json` — `./full_config.json` is file on the Helm client machine. `--set-file` Replaces ConfigMap `config.json` entirely and ignores `values.config`. This is how users ship a config with rules, As `values.config` is a config without rules. Include `userspace.log_location: /var/log/owlsm/owlsm.log` in that JSON so logs still land on the host mount.
+     
 - Simple in-repo Helm chart (templates only; no chart repo/publishing)
 This folder represents the owLSM helm-chart. Everything that it is going to include.
 Most of the k8s files/dirs we created in `### 1a. Packaging & deploy` will be here.
@@ -78,6 +77,20 @@ kubernetes
         ├── clusterrolebinding.yaml
         └── configmap.yaml
 ```
+
+#### naming conventions that should be followed when adding k8s support for owLSM
+1. Agent namespace: kube-system
+2. Test namespace: owlsm-test 
+3. Helm release name: owlsm
+4. Helm chart name: owlsm
+5. App / selector labels: Use the Standard [Kubernetes recommended labels](https://kubernetes.io/docs/concepts/overview/working-with-objects/common-labels/): name=owlsm, instance={{ .Release.Name }}, part-of=owlsm, component=agent, managed-by=Helm, version=<appVersion>
+6. DaemonSet name: `owlsm`. Don't use Helm's default of `release-chart` as it becomes `owlsm-owlsm`. The name should be just `owlsm`.
+7. ServiceAccount name: `owlsm`. Don't keep this empty.
+8. ClusterRole / ClusterRoleBinding: both should be named `owlsm`.
+9. ConfigMap name: owlsm-config
+10. Container name (inside the pod): owlsm
+11. Container image name + tag: For testing use the names specified in `Plan/agent_testing_tools.md` and for local use owlsm:local. In the future, our real image will be owlsm-runtime
+
 
 ### 1b. Userspace K8s identity
 - Talk to K8s API; maintain an in-memory pod/ns/label cache (watch/informer). Consider open-source K8s/CRI clients.
@@ -151,7 +164,6 @@ Wire kernel events to pod identity and allow targeting by K8s metadata.
 
 ## Phase 4 — Optional maturity (only if needed)
 
-- Convert the single key ConfigMap where the value is a json, to a yaml based config, so we can control every values via the ConfigMap and it is translated to the final json. So everything is controled in yaml and the yaml is translated to json. 
 - Runtime hooks (NRI/OCI) for earlier identity / smaller start races
 - Helm chart repository / publishing
 - CRDs for kubectl-native policies — still the **same agent** watches them (Helm installs CRD schemas)

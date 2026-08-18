@@ -5,6 +5,7 @@ build/
 src/Userspace/configuration/schema.inc
 src/Userspace/.obj/*
 *.skel.h
+*.d
 
 # Python
 __pycache__/

@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: owlsm
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "owlsm.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "owlsm.selectorLabels" . | nindent 6 }}
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        {{- include "owlsm.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: owlsm
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      nodeSelector:
+        kubernetes.io/os: linux
+      tolerations:
+        - operator: Exists
+      {{- with .Values.priorityClassName }}
+      priorityClassName: {{ . | quote }}
+      {{- end }}
+      containers:
+        - name: owlsm
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            privileged: true
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: host-proc
+              mountPath: {{ .Values.config.kubernetes.root_proc_path | quote }}
+              mountPropagation: HostToContainer
+            - name: cgroup
+              mountPath: /sys/fs/cgroup
+              mountPropagation: HostToContainer
+            - name: bpf
+              mountPath: /sys/fs/bpf
+              mountPropagation: Bidirectional
+            - name: cri-socket
+              mountPath: {{ dir .Values.socketHostPath | quote }}
+            - name: tracing
+              mountPath: /sys/kernel/tracing
+              mountPropagation: Bidirectional
+            - name: btf
+              mountPath: /sys/kernel/btf
+              mountPropagation: HostToContainer
+            - name: config
+              mountPath: /etc/owlsm
+              readOnly: true
+            - name: logs
+              mountPath: /var/log/owlsm
+      volumes:
+        - name: host-proc
+          hostPath:
+            path: /proc
+            type: Directory
+        - name: cgroup
+          hostPath:
+            path: /sys/fs/cgroup
+            type: Directory
+        - name: bpf
+          hostPath:
+            path: /sys/fs/bpf
+            type: DirectoryOrCreate
+        - name: cri-socket
+          hostPath:
+            path: {{ dir .Values.socketHostPath | quote }}
+            type: Directory
+        - name: tracing
+          hostPath:
+            path: /sys/kernel/tracing
+            type: Directory
+        - name: btf
+          hostPath:
+            path: /sys/kernel/btf
+            type: Directory
+        - name: config
+          configMap:
+            name: owlsm-config
+        - name: logs
+          hostPath:
+            path: /var/log/owlsm
+            type: DirectoryOrCreate

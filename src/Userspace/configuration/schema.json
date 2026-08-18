@@ -126,6 +126,23 @@
                 }
             }
         },
+        "kubernetes": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "root_proc_path": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "cri_endpoint": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            }
+        },
         "rules": {
             "type": "object",
             "additionalProperties": false,

@@ -50,6 +50,7 @@ namespace owlsm::config {
         if (auto it = j.find("features"); it != j.end())  { fromJson(*it, m_config.features); }
         if (auto it = j.find("userspace"); it != j.end()) { fromJson(*it, m_config.userspace); }
         if (auto it = j.find("kernel"); it != j.end())    { fromJson(*it, m_config.kernel); }
+        if (auto it = j.find("kubernetes"); it != j.end()) { fromJson(*it, m_config.kubernetes); }
 
         if (auto it = j.find("rules"); it != j.end() && it->is_object()) {
             RulesParser rules_parser;
@@ -119,5 +120,12 @@ namespace owlsm::config {
     void ConfigParser::fromJson(const nlohmann::json& j, KernelConfig& o)
     {
         if (auto it = j.find("log_level"); it != j.end()) {o.log_level = get_enum<log_level>(*it);}
+    }
+
+    void ConfigParser::fromJson(const nlohmann::json& j, KubernetesConfig& o)
+    {
+        get_if_present(j, "enabled", o.enabled);
+        get_if_present(j, "root_proc_path", o.root_proc_path);
+        get_if_present(j, "cri_endpoint", o.cri_endpoint);
     }
 }

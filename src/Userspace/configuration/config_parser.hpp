@@ -34,6 +34,7 @@ private:
     void fromJson(const nlohmann::json& j, AntiTamperingEventsConfig& o);
     void fromJson(const nlohmann::json& j, UserspaceConfig& o);
     void fromJson(const nlohmann::json& j, KernelConfig& o);
+    void fromJson(const nlohmann::json& j, KubernetesConfig& o);
     
     Config m_config;
 

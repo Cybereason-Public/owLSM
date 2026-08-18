@@ -1,0 +1,6 @@
+apiVersion: v2
+name: owlsm
+description: Helm chart for Tetragon
+type: application
+version: 0.9.0
+appVersion: "0.9.0"

@@ -1,0 +1,56 @@
+# Placeholder local image until owlsm-runtime exists. Image ENTRYPOINT/CMD is
+# /opt/owlsm/bin/owlsm -c /etc/owlsm/config.json — this chart does not override them.
+image:
+  repository: owlsm
+  tag: local
+  pullPolicy: IfNotPresent
+
+# Host CRI socket (filesystem path). DaemonSet mounts the parent directory.
+# Helm overwrites config.kubernetes.cri_endpoint with unix:// + this path.
+socketHostPath: /run/containerd/containerd.sock
+
+# If set, used as ConfigMap data.config.json and values.config is ignored.
+# helm install ... --set-file configJson=./full_config.json
+configJson: ""
+
+# YAML representation of owlsm config.json. Helm translates this to the ConfigMap key config.json
+config:
+  features:
+    file_monitoring:
+      enabled: true
+      events:
+        chmod: true
+        chown: true
+        file_create: true
+        unlink: true
+        rename: true
+        write: true
+        read: false
+        mkdir: true
+        rmdir: true
+    network_monitoring:
+      enabled: true
+    shell_commands_monitoring:
+      enabled: true
+    anti_tampering:
+      enabled: false
+      events:
+        signals: EXCLUDE_EVENT
+        ptrace: EXCLUDE_EVENT
+    legacy_exec: false
+  userspace:
+    max_events_queue_size: 10000
+    output_type: JSON
+    log_level: LOG_LEVEL_INFO
+    log_location: /var/log/owlsm/owlsm.log
+    set_limits: true
+  kernel:
+    log_level: LOG_LEVEL_WARNING
+  kubernetes:
+    enabled: true
+    root_proc_path: /host/proc
+    cri_endpoint: unix:///run/containerd/containerd.sock
+
+priorityClassName: ""
+
+resources: {}

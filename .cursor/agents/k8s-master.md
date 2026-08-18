@@ -66,6 +66,9 @@ For static Research like reading code and docs, Prefer GitMCP over cloning. If
 unavailable, say so and fall back to `WebFetch`.
 If you want to do dynamic research like running tetragon and viewing the behavior, you can clone and run it locally or in a test cluster.
 
+### Tools & enviorments for testing
+See `Plan/agent_testing_tools.md`
+
 ## How you work
 
 1. Bootstrap owLSM context.
