@@ -23,9 +23,9 @@ void cleanup();
 void setupShellDetection();
 int libbpfLogCallback(enum libbpf_print_level level, const char *format, va_list args);
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
-    if(getuid() != 0)
+    if (getuid() != 0)
     {
         std::cerr << "Error: This program must be run as root" << std::endl;
         exit(1);
@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-void safeSetup(int argc, char *argv[])
+void safeSetup(int argc, char* argv[])
 {
     try 
     {
@@ -56,7 +56,7 @@ void safeSetup(int argc, char *argv[])
     }
 }
 
-void setup(int argc, char *argv[])
+void setup(int argc, char* argv[])
 {
     owlsm::Logger::initialize(owlsm::globals::CURRENT_PROCESS_DIR + "/" + owlsm::globals::LOG_FILE_NAME, LOG_LEVEL_DEBUG);
     LOG_INFO("Starting OWLSM. Version: " + std::string(OWLSM_VERSION_STR));
@@ -85,12 +85,17 @@ void setup(int argc, char *argv[])
     owlsm::Logger::applyConfiguredLogLocation(owlsm::globals::g_config.userspace.log_location);
     owlsm::Logger::getInstance().setLogLevel(owlsm::globals::g_config.userspace.log_level);
 
+    if (owlsm::globals::g_config.kubernetes.enabled)
+    {
+        owlsm::globals::g_kubernetes_client.initialize();
+    }
+
     owlsm::RulesOrganizer::add_end_rules(owlsm::globals::g_config.rules_config.rules);
     auto organized_rules = owlsm::RulesOrganizer::organize_rules(owlsm::globals::g_config.rules_config.rules);
 
     owlsm::SystemSetup::start();
     setupShellDetection();
-    libbpf_set_print(NULL);
+    libbpf_set_print(nullptr);
     owlsm::CheckBpfFeatureAvailability::validateExecArgvOffsets();
     const auto detected_features = owlsm::CheckBpfFeatureAvailability().getFeatures();
     libbpf_set_print(libbpfLogCallback);
@@ -137,10 +142,11 @@ void cleanup()
 {
     owlsm::globals::g_probe_manager.bpfDetach();
     owlsm::globals::g_probe_manager.bpfDestroy();
+    owlsm::globals::g_kubernetes_client.destroy();
     owlsm::Logger::shutdown();
 }
 
-int libbpfLogCallback(enum libbpf_print_level level, const char *format, va_list args)
+int libbpfLogCallback(enum libbpf_print_level level, const char* format, va_list args)
 {
     char buffer[owlsm::globals::LIBBPF_LOG_MESSAGE_SIZE] = {};
     std::vsnprintf(buffer, sizeof(buffer), format, args);

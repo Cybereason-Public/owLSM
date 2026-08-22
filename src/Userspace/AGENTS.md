@@ -12,6 +12,7 @@ The Userspace component is a C++ application that loads eBPF programs into the k
 Userspace/
 ├── AGENTS.md                       # This file
 ├── Makefile                        # Build rules
+├── lru_cache.hpp                   # Template LRU cache
 ├── main.cpp                        # Entry point
 ├── ringbuffers_messages_handlers.cpp/.hpp  # Event processing from eBPF
 ├── configuration/                  # Config file handling
@@ -32,6 +33,8 @@ Userspace/
 ├── rules_managment/                # Rule loading, regex-to-DFA conversion, and bpf map population
 │   ├── dfa_builder.hpp/.cpp        # Regex→AST→NFA→DFA pipeline and KMP DFA builder
 │   └── ...
+├── kubernetes/                     # Kubernetes related code
+│   └── client_go/                  # k8s go-client. Compile to c-shared library (libowlsm_k8s.so)
 └── 3rd_party/                      # Vendored dependencies (DO NOT MODIFY CODE IN THESE FILES)
     ├── cxxopts/                    # CLI parsing
     ├── flatbuffers/                # FlatBuffers runtime headers (v25.12.19)

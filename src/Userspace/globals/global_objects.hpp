@@ -1,6 +1,7 @@
 #pragma once
 
 #include "configuration/config.hpp"
+#include "kubernetes/kubernetes_client.hpp"
 #include "probes_objects/probe_manager.hpp"
 #include "shell_detection/shells_db.hpp"
 
@@ -9,4 +10,5 @@ namespace owlsm::globals
     extern config::Config g_config;
     extern ProbeManager g_probe_manager;
     extern ShellsDB g_shells_db;
+    extern kubernetes::KubernetesClient g_kubernetes_client;
 }

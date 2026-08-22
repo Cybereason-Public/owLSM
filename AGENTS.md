@@ -67,7 +67,8 @@ docker run -it --rm -v "$PWD":/workspace -w /workspace ghcr.io/cybereason-public
 
 | Command | Description |
 |---------|-------------|
-| `make -j$(nproc)` | Build and package owlsm → `build/owlsm/` (binaries, libraries, resources, flatbuffers) |
+| `make -j$(nproc)` | Build and package Linux owlsm → `build/owlsm/` (binaries, libraries, resources, flatbuffers) |
+| `make K8S=1 -j$(nproc)` / `make k8s -j$(nproc)` | Kubernetes build (with client-go) → `build/owlsm-k8s/` |
 | `make kernel -j$(nproc)` | Build only eBPF programs |
 | `make userspace -j$(nproc)` | Build only userspace (requires kernel) |
 | `make test -j$(nproc)` | Build and package unit tests → `build/unit_tests/` (bin, lib) |

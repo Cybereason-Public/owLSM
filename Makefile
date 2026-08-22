@@ -25,6 +25,13 @@ endif
 # ---- Export variables to sub-makefiles -----------------------
 export DEBUG
 export VERSION
+export K8S
+
+ifneq ($(K8S),)
+ifneq ($(K8S),1)
+$(error K8S must be 1 if set, got '$(K8S)')
+endif
+endif
 
 # ---- Directories ---------------------------------------------
 SRC_DIR        := src
@@ -45,13 +52,22 @@ TEST_BIN       := $(UNIT_TEST_DIR)/unit_tests
 INSTALL_DIR    := $(BUILD_DIR)/owlsm
 TEST_INSTALL_DIR := $(BUILD_DIR)/unit_tests
 
+ifeq ($(K8S),1)
+PACKAGE_MODE   := owlsm-k8s
+else
+PACKAGE_MODE   := owlsm
+endif
+
 # ---- Phony Targets -------------------------------------------
-.PHONY: all clean test tarball automation help kernel userspace rules_generator
+.PHONY: all clean test tarball automation help kernel userspace rules_generator k8s
 .DEFAULT_GOAL := all
 
 # ---- Build Targets -------------------------------------------
 all: kernel userspace rules_generator
-	@python3 $(SCRIPTS_DIR)/package.py owlsm
+	@python3 $(SCRIPTS_DIR)/package.py $(PACKAGE_MODE)
+
+k8s:
+	@$(MAKE) K8S=1 all
 
 kernel:
 	@echo "==> Building Kernel (eBPF)..."
@@ -77,7 +93,8 @@ else
 TARBALL_NAME := owlsm-$(VERSION).tar.gz
 endif
 
-tarball: all
+tarball:
+	@$(MAKE) K8S= all
 	@echo "==> Creating tarball..."
 	@tar -czf $(BUILD_DIR)/$(TARBALL_NAME) -C $(BUILD_DIR) owlsm
 	@echo "==> Tarball created: $(BUILD_DIR)/$(TARBALL_NAME)"
@@ -105,24 +122,28 @@ help:
 	@echo "OWLSM Build System"
 	@echo ""
 	@echo "Targets:"
-	@echo "  all        - Build and package owlsm (default) → build/owlsm/ (includes rules_generator)"
+	@echo "  all        - Build and package Linux owlsm (default) → build/owlsm/"
+	@echo "  k8s        - Alias for make K8S=1 all → build/owlsm-k8s/"
 	@echo "  kernel     - Build eBPF kernel code"
 	@echo "  userspace  - Build userspace binary"
 	@echo "  test       - Build and package unit tests → build/unit_tests/"
-	@echo "  tarball    - Create release tarball (depends on all)"
+	@echo "  tarball    - Create Linux release tarball (always Linux, ignores K8S=1)"
 	@echo "  automation - Build and setup automation tests"
 	@echo "  rules_generator - Build RulesGenerator binary → Rules/RulesGenerator/rules_generator"
-	@echo "  clean      - Clean all build artifacts"
+	@echo "  clean      - Clean all build artifacts (Linux and K8s)"
 	@echo "  help       - Show this help message"
 	@echo ""
 	@echo "Variables:"
 	@echo "  DEBUG      - Set to 1 for debug build (default: unset = release)"
+	@echo "  K8S        - Set to 1 for Kubernetes build (Go client-go, build/owlsm-k8s)"
 	@echo "  VERSION    - Version string X.Y.Z (default: $(VERSION))"
 	@echo "  ARCH       - Optional tarball name arch: x86_64 or aarch64"
 	@echo "               (build itself always uses the host arch)"
 	@echo ""
 	@echo "Examples:"
-	@echo "  make -j\$$(nproc)              # Release build (host arch)"
+	@echo "  make -j\$$(nproc)              # Linux release build (host arch)"
+	@echo "  make K8S=1 -j\$$(nproc)        # Kubernetes build → build/owlsm-k8s/"
+	@echo "  make k8s -j\$$(nproc)          # Same as make K8S=1"
 	@echo "  make DEBUG=1 -j\$$(nproc)      # Debug build"
 	@echo "  make tarball VERSION=2.0.0    # → build/owlsm-2.0.0.tar.gz"
 	@echo "  make tarball ARCH=aarch64 VERSION=2.0.0  # → build/owlsm-aarch64-v2.0.0.tar.gz"
