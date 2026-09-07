@@ -32,11 +32,6 @@ std::optional<PodInfo> KubernetesClient::lookupByPodUid(const std::string&) cons
     return std::nullopt;
 }
 
-std::optional<PodInfo> KubernetesClient::lookupByContainerId(const std::string&) const
-{
-    return std::nullopt;
-}
-
 void KubernetesClient::handlePodUpsert(const owlsm_k8s_pod*)
 {
 }

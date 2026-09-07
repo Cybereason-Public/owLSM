@@ -3,7 +3,6 @@
 {{- $json = .Values.configJson -}}
 {{- else -}}
 {{- $cfg := deepCopy .Values.config -}}
-{{- $_ := set $cfg.kubernetes "cri_endpoint" (printf "unix://%s" .Values.socketHostPath) -}}
 {{- $json = $cfg | toPrettyJson -}}
 {{- end -}}
 apiVersion: v1

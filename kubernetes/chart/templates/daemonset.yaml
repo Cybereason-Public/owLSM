@@ -51,8 +51,6 @@ spec:
             - name: bpf
               mountPath: /sys/fs/bpf
               mountPropagation: Bidirectional
-            - name: cri-socket
-              mountPath: {{ dir .Values.socketHostPath | quote }}
             - name: tracing
               mountPath: /sys/kernel/tracing
               mountPropagation: Bidirectional
@@ -64,6 +62,8 @@ spec:
               readOnly: true
             - name: logs
               mountPath: /var/log/owlsm
+            - name: nri
+              mountPath: /var/run/nri
       volumes:
         - name: host-proc
           hostPath:
@@ -77,10 +77,6 @@ spec:
           hostPath:
             path: /sys/fs/bpf
             type: DirectoryOrCreate
-        - name: cri-socket
-          hostPath:
-            path: {{ dir .Values.socketHostPath | quote }}
-            type: Directory
         - name: tracing
           hostPath:
             path: /sys/kernel/tracing
@@ -95,4 +91,8 @@ spec:
         - name: logs
           hostPath:
             path: /var/log/owlsm
+            type: DirectoryOrCreate
+        - name: nri
+          hostPath:
+            path: /var/run/nri
             type: DirectoryOrCreate

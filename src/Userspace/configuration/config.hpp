@@ -80,7 +80,6 @@ struct KubernetesConfig
 {
     bool enabled = false;
     std::string root_proc_path;
-    std::string cri_endpoint;
 };
 
 struct Config 

@@ -129,11 +129,40 @@ Both userspace C/C++ and kernel EBPF must follow these conventions
 
 #### Namespaces
 - All lowercase
+- Code should not live outside a namespace, unless it has to.
+- Don't use anonymous (unnamed) namespaces.
+- Do not add trailing namespace comments (} // namespace openadr). Just close with }.
 
 #### Classes and Structs
 - PascalCase: `class ClassName`
 - Private members prefixed with `m_`: `m_member_name`
 - if a class has no members, make it a static class.
+- Everything lives under a class. No global functions/variables/etc. unless the design requires it.
+- Template functions/classes are implemented in the .hpp headers.
+- Split declarations (.hpp) and implementations (.cpp). Exception: very small classes, template classes, or when the amount of code doesn't justify a dedicated file.
+- declerations in header files shouln't have spaces between them
+
+```
+// example_file.hpp
+class Example 
+{
+public:
+  Example() = defualt;
+  Foo()
+
+private: 
+  Fu()
+  Func()
+
+public:
+  string data;
+  
+print:
+  int length;
+  int size;
+}
+```
+- **Waterfall method order** (class methods only): order methods so a caller sits directly above its callees. Read a class .cpp top-to-bottom like a page — entry points first, then the helpers they call, then those helpers' helpers. Match the same order in the .hpp declarations (public entry points, then private callees in call order). This does not apply to free functions.
 
 #### Functions
 - camelCase: `calculateTotal()`
@@ -204,6 +233,16 @@ private:
 };
 }
 ```
+
+## Unit tests
+- Don't add production functions that exist only for unit tests.
+- To let unit tests reach private members of production code, use a friend class.
+  + This is the only scenario in the codebase that you should use a friend class/function
+
+
+## throwing exceptions
+When we have an error in the setup phase its better to throw an exception then return an error code or a std::nullopt. We will have a single large try-catch wrapping the setup phase.
+When we have an error in the runtime phase we need to log it and return some kind of indicator (if the caller depends on the callee to be successfull).
 
 ### Python
 

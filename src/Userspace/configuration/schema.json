@@ -136,10 +136,6 @@
                 "root_proc_path": {
                     "type": "string",
                     "minLength": 1
-                },
-                "cri_endpoint": {
-                    "type": "string",
-                    "minLength": 1
                 }
             }
         },

@@ -126,6 +126,5 @@ namespace owlsm::config {
     {
         get_if_present(j, "enabled", o.enabled);
         get_if_present(j, "root_proc_path", o.root_proc_path);
-        get_if_present(j, "cri_endpoint", o.cri_endpoint);
     }
 }

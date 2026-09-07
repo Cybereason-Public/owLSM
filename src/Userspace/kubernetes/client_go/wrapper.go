@@ -30,7 +30,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 	"sync"
 	"time"
 	"unsafe"
@@ -248,7 +247,6 @@ func copyPodToC(pod *corev1.Pod, out *C.owlsm_k8s_pod) {
 	out.name = C.CString(pod.Name)
 	out.ns = C.CString(pod.Namespace)
 	copyLabelsToC(pod.Labels, out)
-	copyContainerIDsToC(collectStrippedContainerIDs(pod), out)
 }
 
 func copyLabelsToC(labels map[string]string, out *C.owlsm_k8s_pod) {
@@ -271,46 +269,6 @@ func copyLabelsToC(labels map[string]string, out *C.owlsm_k8s_pod) {
 	}
 }
 
-func copyContainerIDsToC(ids []string, out *C.owlsm_k8s_pod) {
-	n := len(ids)
-	if n == 0 {
-		return
-	}
-	ptr := C.malloc(C.size_t(n) * C.size_t(unsafe.Sizeof((*C.char)(nil))))
-	if ptr == nil {
-		return
-	}
-	out.container_ids = (**C.char)(ptr)
-	out.container_id_count = C.int(n)
-	slice := unsafe.Slice(out.container_ids, n)
-	for i, id := range ids {
-		slice[i] = C.CString(id)
-	}
-}
-
-func collectStrippedContainerIDs(pod *corev1.Pod) []string {
-	ids := make([]string, 0)
-	appendIDs := func(statuses []corev1.ContainerStatus) {
-		for _, status := range statuses {
-			stripped_id := stripRuntimePrefix(status.ContainerID)
-			if stripped_id != "" {
-				ids = append(ids, stripped_id)
-			}
-		}
-	}
-	appendIDs(pod.Status.ContainerStatuses)
-	appendIDs(pod.Status.InitContainerStatuses)
-	appendIDs(pod.Status.EphemeralContainerStatuses)
-	return ids
-}
-
-func stripRuntimePrefix(raw_id string) string {
-	if idx := strings.Index(raw_id, "://"); idx >= 0 {
-		return raw_id[idx+3:]
-	}
-	return raw_id
-}
-
 func podFromObj(obj interface{}) *corev1.Pod {
 	if pod, ok := obj.(*corev1.Pod); ok {
 		return pod
@@ -331,7 +289,6 @@ func freePod(pod *C.owlsm_k8s_pod) {
 	freeCString(pod.name)
 	freeCString(pod.ns)
 	freeLabels(pod)
-	freeContainerIDs(pod)
 	*pod = C.owlsm_k8s_pod{}
 }
 
@@ -353,19 +310,6 @@ func freeLabels(pod *C.owlsm_k8s_pod) {
 		}
 	}
 	C.free(unsafe.Pointer(pod.labels))
-}
-
-func freeContainerIDs(pod *C.owlsm_k8s_pod) {
-	if pod.container_ids == nil {
-		return
-	}
-	if pod.container_id_count > 0 {
-		ids := unsafe.Slice(pod.container_ids, int(pod.container_id_count))
-		for i := range ids {
-			freeCString(ids[i])
-		}
-	}
-	C.free(unsafe.Pointer(pod.container_ids))
 }
 
 func main() {}

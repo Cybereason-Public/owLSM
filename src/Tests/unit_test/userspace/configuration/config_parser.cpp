@@ -225,13 +225,11 @@ TEST_F(ConfigParserTest, kubernetes_fields_are_parsed_and_default_disabled)
     owlsm::config::ConfigParser default_parser(std::string(CONFIG_JSON_ONLY_FEATURES_4), schema_str);
     EXPECT_FALSE(default_parser.getConfig().kubernetes.enabled);
     EXPECT_TRUE(default_parser.getConfig().kubernetes.root_proc_path.empty());
-    EXPECT_TRUE(default_parser.getConfig().kubernetes.cri_endpoint.empty());
 
     owlsm::config::ConfigParser k8s_parser(
-        R"({"kubernetes": {"enabled": true, "root_proc_path": "/host/proc", "cri_endpoint": "unix:///run/containerd/containerd.sock"}})",
+        R"({"kubernetes": {"enabled": true, "root_proc_path": "/host/proc"}})",
         schema_str);
     const auto& kubernetes = k8s_parser.getConfig().kubernetes;
     EXPECT_TRUE(kubernetes.enabled);
     EXPECT_EQ(kubernetes.root_proc_path, "/host/proc");
-    EXPECT_EQ(kubernetes.cri_endpoint, "unix:///run/containerd/containerd.sock");
 }

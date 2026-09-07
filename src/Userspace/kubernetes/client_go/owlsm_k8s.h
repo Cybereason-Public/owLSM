@@ -14,7 +14,7 @@ extern "C"
  *  -1  failed to create in-cluster client
  *  -2  pod informer cache did not sync in time
  *
- * on_upsert: Add or Update. container_ids are already stripped (no runtime prefix).
+ * on_upsert: Add or Update.
  * on_delete: Delete, or Update when the UID changed (recreate of ns/name).
  * Pointers passed to callbacks are valid only for the duration of the call.
  */
@@ -31,8 +31,6 @@ typedef struct owlsm_k8s_pod
     char* ns;
     owlsm_k8s_label* labels;
     int label_count;
-    char** container_ids;
-    int container_id_count;
 } owlsm_k8s_pod;
 
 typedef void (*owlsm_k8s_pod_upsert_fn)(const owlsm_k8s_pod* pod);

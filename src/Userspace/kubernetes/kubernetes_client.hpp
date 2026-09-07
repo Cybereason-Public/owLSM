@@ -28,7 +28,6 @@ public:
 
     std::size_t cachedPodCount() const;
     std::optional<PodInfo> lookupByPodUid(const std::string& uid) const;
-    std::optional<PodInfo> lookupByContainerId(const std::string& container_id) const;
 
     void handlePodUpsert(const owlsm_k8s_pod* pod);
     void handlePodDelete(const char* uid);

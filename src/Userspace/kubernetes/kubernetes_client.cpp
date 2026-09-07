@@ -64,11 +64,6 @@ std::optional<PodInfo> KubernetesClient::lookupByPodUid(const std::string& uid) 
     return m_cache.lookupByPodUid(uid);
 }
 
-std::optional<PodInfo> KubernetesClient::lookupByContainerId(const std::string& container_id) const
-{
-    return m_cache.lookupByContainerId(container_id);
-}
-
 void KubernetesClient::handlePodUpsert(const owlsm_k8s_pod* pod)
 {
     if (!m_cache_enabled.load() || pod == nullptr)
@@ -130,13 +125,6 @@ PodInfo KubernetesClient::copyPod(const owlsm_k8s_pod& raw)
         for (int i = 0; i < raw.label_count; ++i)
         {
             info.labels.emplace(raw.labels[i].key ? raw.labels[i].key : "", raw.labels[i].value ? raw.labels[i].value : "");
-        }
-    }
-    if (raw.container_ids != nullptr)
-    {
-        for (int i = 0; i < raw.container_id_count; ++i)
-        {
-            info.container_ids.push_back(raw.container_ids[i] ? raw.container_ids[i] : "");
         }
     }
     return info;
