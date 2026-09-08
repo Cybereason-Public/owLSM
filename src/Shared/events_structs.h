@@ -78,7 +78,9 @@ struct stdio_file_descriptors_at_process_creation_t
 struct process_t 
 {
     unsigned int pid;
+    unsigned int ns_pid;
     unsigned int ppid;
+    unsigned int ns_ppid;
     unsigned long long unique_process_id;
     unsigned long long unique_ppid_id;
   

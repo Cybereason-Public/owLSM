@@ -4,32 +4,9 @@
 #include "preprocessor_definitions/stat.bpf.h"
 #include "common_maps.bpf.h"
 
-statfunc void fill_process_container_id(struct process_t *process)
-{
-    if (!k8s_enabled)
-    {
-        return;
-    }
-    
-    process->container_id = 0;
-    for (int i = 0; i < 16; i++)
-    {
-        const u64 ancestor = bpf_get_current_ancestor_cgroup_id(i);
-        if (ancestor == 0)
-        {
-            break;
-        }
-        const u64 *container_id = bpf_map_lookup_elem(&cgroup_id_to_container_id, &ancestor);
-        if (container_id)
-        {
-            process->container_id = *container_id;
-        }
-    }
-}
-
 statfunc void fill_file_t_numeric_values(struct file_t *file, const struct dentry *dentry, umode_t * mode)
 {
-    if(mode)
+    if (mode)
     {
         file->mode = *mode;
     }
@@ -65,11 +42,36 @@ statfunc unsigned long long build_process_unique_id(unsigned long pid, unsigned 
     return ((__u64)pid << 32) | (start_time >> 32);
 }
 
+statfunc void fill_process_container_id(struct process_t *process)
+{
+    if (!k8s_enabled)
+    {
+        return;
+    }
+    
+    process->container_id = 0;
+    for (int i = 0; i < 16; i++)
+    {
+        const u64 ancestor = bpf_get_current_ancestor_cgroup_id(i);
+        if (ancestor == 0)
+        {
+            break;
+        }
+        const u64 *container_id = bpf_map_lookup_elem(&cgroup_id_to_container_id, &ancestor);
+        if (container_id)
+        {
+            process->container_id = *container_id;
+        }
+    }
+}
+
 // should only be directly used only by bprm_committed_creds and fill_process_t()
 statfunc void fill_process_t_numeric_values(struct process_t *process_event, struct task_struct *task)
 {
     process_event->pid = BPF_CORE_READ(task, tgid);
+    process_event->ns_pid = get_task_ns_pid(task);
     process_event->ppid  = BPF_CORE_READ(task, real_parent, tgid); // TODO - This might not be the original ppid. We need to check somehow and decide what to do if its not.
+    process_event->ns_ppid = get_task_ns_ppid(task);
     process_event->start_time = BPF_CORE_READ(task, start_time);
 
     process_event->ruid = BPF_CORE_READ(task, cred, uid.val);
@@ -90,7 +92,7 @@ statfunc void fill_process_t_numeric_values(struct process_t *process_event, str
 statfunc int fill_process_t(struct process_t *process_event, struct task_struct *task)
 {
     struct file *exe_file = BPF_CORE_READ(task, mm, exe_file);
-    if(!exe_file)
+    if (!exe_file)
     {
         REPORT_ERROR(GENERIC_ERROR, "Failed to get exe_file from task");
         return GENERIC_ERROR;
@@ -140,7 +142,7 @@ statfunc int fill_event_process_from_cache(struct process_t *process_event)
 statfunc struct process_t *get_or_update_parent_process_in_caches(const struct process_t *child_process)
 {
     struct process_t * parent_process = get_process_from_caches(child_process->ppid, child_process->unique_ppid_id);
-    if(!parent_process)
+    if (!parent_process)
     {
         /*
         If the parent process is not in the caches, it means one of few realistic things:
@@ -152,7 +154,7 @@ statfunc struct process_t *get_or_update_parent_process_in_caches(const struct p
         If indeed it was option 1, we will match the rule_t.parent_process against the current parent and not the original parent.
         */
         parent_process = allocate_process_t();
-        if(!parent_process)
+        if (!parent_process)
         {
             REPORT_ERROR(GENERIC_ERROR, "allocate_process_t failed. child_process pid: %d, ppid: %d", child_process->pid, child_process->ppid);
             return NULL;
@@ -161,7 +163,7 @@ statfunc struct process_t *get_or_update_parent_process_in_caches(const struct p
         struct task_struct *current_task = (struct task_struct *)bpf_get_current_task();
         struct task_struct *parent_task = BPF_CORE_READ(current_task, real_parent);
         fill_process_t(parent_process, parent_task);
-        if(update_process_in_alive_process_cache(parent_process->pid, parent_process) != SUCCESS)
+        if (update_process_in_alive_process_cache(parent_process->pid, parent_process) != SUCCESS)
         {
             REPORT_ERROR(GENERIC_ERROR, "update_process_in_cache. pid: %d", parent_process->pid);
         }
@@ -172,11 +174,11 @@ statfunc struct process_t *get_or_update_parent_process_in_caches(const struct p
 statfunc int fill_event_parent_process_from_cache(struct process_t *child_process, struct process_t *parent_process)
 {
     struct process_t *parent = get_or_update_parent_process_in_caches(child_process);
-    if(!parent)
+    if (!parent)
     {
         return GENERIC_ERROR;
     }
-    if(bpf_probe_read_kernel(parent_process, sizeof(struct process_t), parent) != SUCCESS)
+    if (bpf_probe_read_kernel(parent_process, sizeof(struct process_t), parent) != SUCCESS)
     {
         REPORT_ERROR(GENERIC_ERROR, "bpf_probe_read_kernel failed");
         return GENERIC_ERROR;
@@ -187,7 +189,7 @@ statfunc int fill_event_parent_process_from_cache(struct process_t *child_proces
 statfunc int fill_process_t_from_bprm(struct process_t *process_event, struct linux_binprm *bprm, const struct command_line_t *cmd)
 {
     struct file *exe_file = BPF_CORE_READ(bprm, file);
-    if(!exe_file)
+    if (!exe_file)
     {
         REPORT_ERROR(GENERIC_ERROR, "Failed to get file from bprm");
         return GENERIC_ERROR;
@@ -197,7 +199,9 @@ statfunc int fill_process_t_from_bprm(struct process_t *process_event, struct li
 
     struct task_struct *task = (void *)bpf_get_current_task_btf();
     process_event->pid = BPF_CORE_READ(task, tgid);
+    process_event->ns_pid = get_task_ns_pid(task);
     process_event->ppid = BPF_CORE_READ(task, real_parent, tgid);
+    process_event->ns_ppid = get_task_ns_ppid(task);
     process_event->start_time = BPF_CORE_READ(task, start_time);
     process_event->cgroup_id = bpf_get_current_cgroup_id();
     process_event->ptrace_flags = BPF_CORE_READ(task, ptrace);
@@ -297,11 +301,11 @@ statfunc int fill_missing_network_event_members_using_sk_buffer(struct network_e
     struct iphdr * iph = (struct iphdr *)(head + network_header);
 
     int ip_type_number = get_ip_type_number(iph);
-    if(ip_type_number == 4)
+    if (ip_type_number == 4)
     {
         network_event->ip_type = AF_INET;
     }
-    else if(ip_type_number == 6)
+    else if (ip_type_number == 6)
     {
         network_event->ip_type = AF_INET6;
         return SUCCESS; 
@@ -312,7 +316,7 @@ statfunc int fill_missing_network_event_members_using_sk_buffer(struct network_e
     }
 
     unsigned char protocol = BPF_CORE_READ(iph, protocol);
-    if(protocol != IPPROTO_TCP && protocol != IPPROTO_UDP)
+    if (protocol != IPPROTO_TCP && protocol != IPPROTO_UDP)
     {
         return NOT_SUPPORTED;
     }
@@ -340,18 +344,18 @@ statfunc int fill_incomming_connection_network_event_t(struct network_event_t *n
     network_event->direction = INCOMING;
 
     unsigned char protocol = BPF_CORE_READ(sk, sk_protocol);
-    if(protocol != IPPROTO_TCP && protocol != IPPROTO_UDP)
+    if (protocol != IPPROTO_TCP && protocol != IPPROTO_UDP)
     {
         return NOT_SUPPORTED;
     }
     network_event->protocol = protocol;
 
     unsigned short family = BPF_CORE_READ(req, __req_common.skc_family);
-    if(family == AF_INET6)
+    if (family == AF_INET6)
     {
         BPF_CORE_READ_INTO(&network_event->addresses.ipv6.source_ip, req, __req_common.skc_v6_daddr);
 
-        if(network_event->addresses.ipv6.source_ip[0] == 0 &&
+        if (network_event->addresses.ipv6.source_ip[0] == 0 &&
             network_event->addresses.ipv6.source_ip[1] == 0 &&
             network_event->addresses.ipv6.source_ip[2] == bpf_htonl(0x0000ffff))
         {
@@ -361,12 +365,12 @@ statfunc int fill_incomming_connection_network_event_t(struct network_event_t *n
         }
     }
 
-    if(family == AF_INET)
+    if (family == AF_INET)
     {
         network_event->addresses.ipv4.destination_ip = BPF_CORE_READ(req, __req_common.skc_rcv_saddr);
         network_event->addresses.ipv4.source_ip = BPF_CORE_READ(req, __req_common.skc_daddr);
     }
-    else if(family == AF_INET6)
+    else if (family == AF_INET6)
     {
         BPF_CORE_READ_INTO(&network_event->addresses.ipv6.destination_ip, req, __req_common.skc_v6_rcv_saddr);
     }
@@ -406,13 +410,13 @@ statfunc int fill_outgoing_connection_network_event_t_first_part(struct network_
     network_event->direction = OUTGOING;
     network_event->protocol = BPF_CORE_READ(sk, sk_protocol);
     unsigned short family = BPF_CORE_READ(address, sa_family);
-    if(family == AF_INET)
+    if (family == AF_INET)
     {
         struct sockaddr_in *addr_in = (struct sockaddr_in *)address;
         network_event->addresses.ipv4.destination_ip = BPF_CORE_READ(addr_in, sin_addr.s_addr);
         network_event->destination_port = bpf_ntohs(BPF_CORE_READ(addr_in, sin_port));
     }
-    else if(family == AF_INET6)
+    else if (family == AF_INET6)
     {
         struct sockaddr_in6 *addr_in6 = (struct sockaddr_in6 *)address;
         BPF_CORE_READ_INTO(&network_event->addresses.ipv6.destination_ip, addr_in6, sin6_addr);

@@ -30,7 +30,9 @@ statfunc void print_process_t(const struct process_t *p)
     }
 
     bpf_printk("pid=%u", p->pid);
+    bpf_printk("ns_pid=%u", p->ns_pid);
     bpf_printk("ppid=%u", p->ppid);
+    bpf_printk("ns_ppid=%u", p->ns_ppid);
     bpf_printk("unique_process_id=%llu", p->unique_process_id);
     bpf_printk("unique_ppid_id=%llu", p->unique_ppid_id);
 

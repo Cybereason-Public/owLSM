@@ -466,3 +466,27 @@ statfunc void get_stdio_file_descriptors_at_process_creation_from_task(const str
 
     return;
 }
+
+statfunc unsigned int get_task_ns_pid(const struct task_struct *task)
+{
+    struct pid *pid = BPF_CORE_READ(task, group_leader, thread_pid);
+    const unsigned int level = BPF_CORE_READ(pid, level);
+    return BPF_CORE_READ(pid, numbers[level].nr);
+}
+
+statfunc unsigned int get_task_pid_ns_inum(const struct task_struct *task)
+{
+    struct pid *pid = BPF_CORE_READ(task, group_leader, thread_pid);
+    const unsigned int level = BPF_CORE_READ(pid, level);
+    return BPF_CORE_READ(pid, numbers[level].ns, ns.inum);
+}
+
+statfunc unsigned int get_task_ns_ppid(const struct task_struct *task)
+{
+    const struct task_struct *parent = BPF_CORE_READ(task, real_parent, group_leader);
+    if (get_task_pid_ns_inum(task) != get_task_pid_ns_inum(parent))
+    {
+        return 0;
+    }
+    return get_task_ns_pid(parent);
+}

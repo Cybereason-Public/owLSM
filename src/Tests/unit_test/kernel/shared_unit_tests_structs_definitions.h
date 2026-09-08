@@ -52,3 +52,11 @@ struct prevention_test{
     unsigned long long process_start_time;
     int result;
 };
+
+struct ns_pid_helpers_test
+{
+    unsigned int ns_pid;
+    unsigned int ns_ppid;
+    unsigned int pid_ns_inum;
+    unsigned int recorded;
+};
