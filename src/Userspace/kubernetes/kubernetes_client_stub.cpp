@@ -13,6 +13,10 @@ void KubernetesClient::initialize()
 {
 }
 
+void KubernetesClient::startNri(const int)
+{
+}
+
 void KubernetesClient::destroy()
 {
 }
@@ -40,9 +44,8 @@ void KubernetesClient::handlePodDelete(const char*)
 {
 }
 
-PodInfo KubernetesClient::copyPod(const owlsm_k8s_pod&)
+void KubernetesClient::confirmCgroupV2()
 {
-    return {};
 }
 
 std::string KubernetesClient::readNodeName() const
@@ -60,4 +63,21 @@ std::string KubernetesClient::describeInitFailure(const int) const
     return {};
 }
 
+PodInfo KubernetesClient::copyPod(const owlsm_k8s_pod&)
+{
+    return {};
+}
+
+}
+
+extern "C" int owlsm_k8s_nri_start(owlsm_k8s_nri_upsert_fn,
+                                   owlsm_k8s_nri_remove_fn,
+                                   owlsm_k8s_nri_sync_done_fn,
+                                   owlsm_k8s_nri_disconnected_fn)
+{
+    return -1;
+}
+
+extern "C" void owlsm_k8s_nri_stop(void)
+{
 }

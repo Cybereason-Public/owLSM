@@ -1,4 +1,5 @@
 #include "kubernetes/kubernetes_client.hpp"
+#include "kubernetes/cgroup_path.hpp"
 #include "kubernetes/client_go/owlsm_k8s.h"
 #include "globals/global_objects.hpp"
 #include "logger.hpp"
@@ -28,7 +29,9 @@ void KubernetesClient::initialize()
     }
 
     m_cache.clear();
+    m_nri_plugin.clear();
     m_cache_enabled.store(true);
+    confirmCgroupV2();
     const auto rc = startClientGo(readNodeName());
     if (rc != 0)
     {
@@ -41,10 +44,23 @@ void KubernetesClient::initialize()
     LOG_INFO("client-go Kubernetes client ready cached_pods=" << cachedPodCount());
 }
 
+void KubernetesClient::startNri(const int cgroup_id_map_fd)
+{
+    if (!m_initialized)
+    {
+        throw std::runtime_error("NRI start requires Kubernetes client init");
+    }
+    m_nri_plugin.setMapFd(cgroup_id_map_fd);
+    m_nri_plugin.start();
+    LOG_INFO("NRI plugin ready containers=" << m_nri_plugin.size());
+}
+
 void KubernetesClient::destroy()
 {
     m_cache_enabled.store(false);
     m_initialized = false;
+    m_nri_plugin.stop();
+    m_nri_plugin.clear();
     owlsm_k8s_destroy();
     m_cache.clear();
 }
@@ -80,6 +96,17 @@ void KubernetesClient::handlePodDelete(const char* uid)
         return;
     }
     m_cache.eraseByUid(uid);
+}
+
+void KubernetesClient::confirmCgroupV2()
+{
+    const auto host_proc_path = owlsm::globals::g_config.kubernetes.root_proc_path.empty() 
+        ? std::filesystem::path(owlsm::globals::DEFAULT_HOST_PROC_DIR) 
+            : std::filesystem::path(owlsm::globals::g_config.kubernetes.root_proc_path);
+    
+    CgroupPath::throwIfNotCgroupV2(host_proc_path);
+    m_nri_plugin.setHostRoot(host_proc_path);
+    LOG_INFO("cgroup v2 host root=" << host_proc_path.string());
 }
 
 std::string KubernetesClient::readNodeName() const

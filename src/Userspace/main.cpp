@@ -109,6 +109,10 @@ void setup(int argc, char* argv[])
     protected_pids.push_back(getpid());
 
     owlsm::globals::g_probe_manager.bpfLoad(excluded_pids, protected_pids);
+    if (owlsm::globals::g_config.kubernetes.enabled)
+    {
+        owlsm::globals::g_kubernetes_client.startNri(owlsm::globals::g_probe_manager.cgroupIdToContainerIdMapFd());
+    }
     owlsm::globals::g_probe_manager.bpfAttach();
 
 }

@@ -89,6 +89,7 @@ struct process_t
     unsigned int suid;
   
     unsigned long long cgroup_id;
+    unsigned long long container_id;
     unsigned long long start_time;
     unsigned int ptrace_flags;
   

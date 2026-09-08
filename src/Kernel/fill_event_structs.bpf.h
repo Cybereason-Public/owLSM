@@ -2,6 +2,30 @@
 #include "struct_extractors.bpf.h"
 #include "process_cache.bpf.h"
 #include "preprocessor_definitions/stat.bpf.h"
+#include "common_maps.bpf.h"
+
+statfunc void fill_process_container_id(struct process_t *process)
+{
+    if (!k8s_enabled)
+    {
+        return;
+    }
+    
+    process->container_id = 0;
+    for (int i = 0; i < 16; i++)
+    {
+        const u64 ancestor = bpf_get_current_ancestor_cgroup_id(i);
+        if (ancestor == 0)
+        {
+            break;
+        }
+        const u64 *container_id = bpf_map_lookup_elem(&cgroup_id_to_container_id, &ancestor);
+        if (container_id)
+        {
+            process->container_id = *container_id;
+        }
+    }
+}
 
 statfunc void fill_file_t_numeric_values(struct file_t *file, const struct dentry *dentry, umode_t * mode)
 {
@@ -55,6 +79,7 @@ statfunc void fill_process_t_numeric_values(struct process_t *process_event, str
     process_event->suid = BPF_CORE_READ(task, cred, suid.val);
     process_event->ptrace_flags = BPF_CORE_READ(task, ptrace);
     process_event->cgroup_id   = bpf_get_current_cgroup_id();
+    fill_process_container_id(process_event);
     get_stdio_file_descriptors_at_process_creation_from_task(task, &process_event->stdio_file_descriptors_at_process_creation);
 
     process_event->unique_process_id = build_process_unique_id(process_event->pid, process_event->start_time);

@@ -22,7 +22,7 @@ export TMPDIR := $(GOTMPDIR)
 
 SO           := libowlsm_k8s.so
 CGO_HEADER   := libowlsm_k8s.h
-SRCS         := wrapper.go go.mod owlsm_k8s.h
+SRCS         := wrapper.go nri.go go.mod owlsm_k8s.h
 
 all: $(SO)
 

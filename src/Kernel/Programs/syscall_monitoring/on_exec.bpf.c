@@ -142,6 +142,9 @@ int BPF_PROG(bprm_creds_from_file, struct linux_binprm *bprm)
     // fill_current_process_t() uses task->real_parent. If the original parent exited and reaped, task->real_parent will be the current parent (likely pid 1) which is not what we want.
     event->data.exec.new_process.ppid = event->process.ppid;
     event->data.exec.new_process.unique_ppid_id = event->process.unique_ppid_id;
+    
+    // `runc init` process will happen before NRI Start hook, so it will cause the process to have container_id = 0. And `runc init` exec's to the user defined container entrypoint after NRI start hook, so we need to recalculate the container_id.
+    fill_process_container_id(&event->data.exec.new_process);
 
     if(update_process_in_alive_process_cache(pid, &event->data.exec.new_process) != SUCCESS)
     {
