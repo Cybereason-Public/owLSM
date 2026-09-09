@@ -26,6 +26,12 @@ struct FileBuilder;
 struct Process;
 struct ProcessBuilder;
 
+struct PodLabel;
+struct PodLabelBuilder;
+
+struct Kubernetes;
+struct KubernetesBuilder;
+
 struct RuleMetadata;
 struct RuleMetadataBuilder;
 
@@ -674,7 +680,9 @@ struct Process FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_FILE = 24,
     VT_CMD = 26,
     VT_STDIO_FILE_DESCRIPTORS_AT_PROCESS_CREATION = 28,
-    VT_SHELL_COMMAND = 30
+    VT_SHELL_COMMAND = 30,
+    VT_NS_PID = 32,
+    VT_NS_PPID = 34
   };
   uint32_t pid() const {
     return GetField<uint32_t>(VT_PID, 0);
@@ -718,6 +726,12 @@ struct Process FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const ::flatbuffers::String *shell_command() const {
     return GetPointer<const ::flatbuffers::String *>(VT_SHELL_COMMAND);
   }
+  uint32_t ns_pid() const {
+    return GetField<uint32_t>(VT_NS_PID, 0);
+  }
+  uint32_t ns_ppid() const {
+    return GetField<uint32_t>(VT_NS_PPID, 0);
+  }
   template <bool B = false>
   bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -738,6 +752,8 @@ struct Process FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            VerifyField<owlsm::fb::StdioFileDescriptors>(verifier, VT_STDIO_FILE_DESCRIPTORS_AT_PROCESS_CREATION, 1) &&
            VerifyOffset(verifier, VT_SHELL_COMMAND) &&
            verifier.VerifyString(shell_command()) &&
+           VerifyField<uint32_t>(verifier, VT_NS_PID, 4) &&
+           VerifyField<uint32_t>(verifier, VT_NS_PPID, 4) &&
            verifier.EndTable();
   }
 };
@@ -788,6 +804,12 @@ struct ProcessBuilder {
   void add_shell_command(::flatbuffers::Offset<::flatbuffers::String> shell_command) {
     fbb_.AddOffset(Process::VT_SHELL_COMMAND, shell_command);
   }
+  void add_ns_pid(uint32_t ns_pid) {
+    fbb_.AddElement<uint32_t>(Process::VT_NS_PID, ns_pid, 0);
+  }
+  void add_ns_ppid(uint32_t ns_ppid) {
+    fbb_.AddElement<uint32_t>(Process::VT_NS_PPID, ns_ppid, 0);
+  }
   explicit ProcessBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -814,10 +836,14 @@ inline ::flatbuffers::Offset<Process> CreateProcess(
     ::flatbuffers::Offset<owlsm::fb::File> file = 0,
     ::flatbuffers::Offset<::flatbuffers::String> cmd = 0,
     const owlsm::fb::StdioFileDescriptors *stdio_file_descriptors_at_process_creation = nullptr,
-    ::flatbuffers::Offset<::flatbuffers::String> shell_command = 0) {
+    ::flatbuffers::Offset<::flatbuffers::String> shell_command = 0,
+    uint32_t ns_pid = 0,
+    uint32_t ns_ppid = 0) {
   ProcessBuilder builder_(_fbb);
   builder_.add_start_time(start_time);
   builder_.add_cgroup_id(cgroup_id);
+  builder_.add_ns_ppid(ns_ppid);
+  builder_.add_ns_pid(ns_pid);
   builder_.add_shell_command(shell_command);
   builder_.add_stdio_file_descriptors_at_process_creation(stdio_file_descriptors_at_process_creation);
   builder_.add_cmd(cmd);
@@ -848,7 +874,9 @@ inline ::flatbuffers::Offset<Process> CreateProcessDirect(
     ::flatbuffers::Offset<owlsm::fb::File> file = 0,
     const char *cmd = nullptr,
     const owlsm::fb::StdioFileDescriptors *stdio_file_descriptors_at_process_creation = nullptr,
-    const char *shell_command = nullptr) {
+    const char *shell_command = nullptr,
+    uint32_t ns_pid = 0,
+    uint32_t ns_ppid = 0) {
   auto cmd__ = cmd ? _fbb.CreateString(cmd) : 0;
   auto shell_command__ = shell_command ? _fbb.CreateString(shell_command) : 0;
   return owlsm::fb::CreateProcess(
@@ -866,7 +894,216 @@ inline ::flatbuffers::Offset<Process> CreateProcessDirect(
       file,
       cmd__,
       stdio_file_descriptors_at_process_creation,
-      shell_command__);
+      shell_command__,
+      ns_pid,
+      ns_ppid);
+}
+
+struct PodLabel FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef PodLabelBuilder Builder;
+  static FLATBUFFERS_CONSTEXPR_CPP11 const char *GetFullyQualifiedName() {
+    return "owlsm.fb.PodLabel";
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_KEY = 4,
+    VT_VALUE = 6
+  };
+  const ::flatbuffers::String *key() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_KEY);
+  }
+  const ::flatbuffers::String *value() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_VALUE);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffsetRequired(verifier, VT_KEY) &&
+           verifier.VerifyString(key()) &&
+           VerifyOffsetRequired(verifier, VT_VALUE) &&
+           verifier.VerifyString(value()) &&
+           verifier.EndTable();
+  }
+};
+
+struct PodLabelBuilder {
+  typedef PodLabel Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_key(::flatbuffers::Offset<::flatbuffers::String> key) {
+    fbb_.AddOffset(PodLabel::VT_KEY, key);
+  }
+  void add_value(::flatbuffers::Offset<::flatbuffers::String> value) {
+    fbb_.AddOffset(PodLabel::VT_VALUE, value);
+  }
+  explicit PodLabelBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<PodLabel> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<PodLabel>(end);
+    fbb_.Required(o, PodLabel::VT_KEY);
+    fbb_.Required(o, PodLabel::VT_VALUE);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<PodLabel> CreatePodLabel(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> key = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> value = 0) {
+  PodLabelBuilder builder_(_fbb);
+  builder_.add_value(value);
+  builder_.add_key(key);
+  return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<PodLabel> CreatePodLabelDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const char *key = nullptr,
+    const char *value = nullptr) {
+  auto key__ = key ? _fbb.CreateString(key) : 0;
+  auto value__ = value ? _fbb.CreateString(value) : 0;
+  return owlsm::fb::CreatePodLabel(
+      _fbb,
+      key__,
+      value__);
+}
+
+struct Kubernetes FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
+  typedef KubernetesBuilder Builder;
+  static FLATBUFFERS_CONSTEXPR_CPP11 const char *GetFullyQualifiedName() {
+    return "owlsm.fb.Kubernetes";
+  }
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_NODE_NAME = 4,
+    VT_CONTAINER_ID = 6,
+    VT_POD_UID = 8,
+    VT_POD_NAMESPACE = 10,
+    VT_POD_NAME = 12,
+    VT_POD_LABELS = 14,
+    VT_HOST_EVENT = 16
+  };
+  const ::flatbuffers::String *node_name() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_NODE_NAME);
+  }
+  ::flatbuffers::Optional<uint64_t> container_id() const {
+    return GetOptional<uint64_t, uint64_t>(VT_CONTAINER_ID);
+  }
+  const ::flatbuffers::String *pod_uid() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_POD_UID);
+  }
+  const ::flatbuffers::String *pod_namespace() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_POD_NAMESPACE);
+  }
+  const ::flatbuffers::String *pod_name() const {
+    return GetPointer<const ::flatbuffers::String *>(VT_POD_NAME);
+  }
+  const ::flatbuffers::Vector<::flatbuffers::Offset<owlsm::fb::PodLabel>> *pod_labels() const {
+    return GetPointer<const ::flatbuffers::Vector<::flatbuffers::Offset<owlsm::fb::PodLabel>> *>(VT_POD_LABELS);
+  }
+  ::flatbuffers::Optional<bool> host_event() const {
+    return GetOptional<uint8_t, bool>(VT_HOST_EVENT);
+  }
+  template <bool B = false>
+  bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyOffset(verifier, VT_NODE_NAME) &&
+           verifier.VerifyString(node_name()) &&
+           VerifyField<uint64_t>(verifier, VT_CONTAINER_ID, 8) &&
+           VerifyOffset(verifier, VT_POD_UID) &&
+           verifier.VerifyString(pod_uid()) &&
+           VerifyOffset(verifier, VT_POD_NAMESPACE) &&
+           verifier.VerifyString(pod_namespace()) &&
+           VerifyOffset(verifier, VT_POD_NAME) &&
+           verifier.VerifyString(pod_name()) &&
+           VerifyOffset(verifier, VT_POD_LABELS) &&
+           verifier.VerifyVector(pod_labels()) &&
+           verifier.VerifyVectorOfTables(pod_labels()) &&
+           VerifyField<uint8_t>(verifier, VT_HOST_EVENT, 1) &&
+           verifier.EndTable();
+  }
+};
+
+struct KubernetesBuilder {
+  typedef Kubernetes Table;
+  ::flatbuffers::FlatBufferBuilder &fbb_;
+  ::flatbuffers::uoffset_t start_;
+  void add_node_name(::flatbuffers::Offset<::flatbuffers::String> node_name) {
+    fbb_.AddOffset(Kubernetes::VT_NODE_NAME, node_name);
+  }
+  void add_container_id(uint64_t container_id) {
+    fbb_.AddElement<uint64_t>(Kubernetes::VT_CONTAINER_ID, container_id);
+  }
+  void add_pod_uid(::flatbuffers::Offset<::flatbuffers::String> pod_uid) {
+    fbb_.AddOffset(Kubernetes::VT_POD_UID, pod_uid);
+  }
+  void add_pod_namespace(::flatbuffers::Offset<::flatbuffers::String> pod_namespace) {
+    fbb_.AddOffset(Kubernetes::VT_POD_NAMESPACE, pod_namespace);
+  }
+  void add_pod_name(::flatbuffers::Offset<::flatbuffers::String> pod_name) {
+    fbb_.AddOffset(Kubernetes::VT_POD_NAME, pod_name);
+  }
+  void add_pod_labels(::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<owlsm::fb::PodLabel>>> pod_labels) {
+    fbb_.AddOffset(Kubernetes::VT_POD_LABELS, pod_labels);
+  }
+  void add_host_event(bool host_event) {
+    fbb_.AddElement<uint8_t>(Kubernetes::VT_HOST_EVENT, static_cast<uint8_t>(host_event));
+  }
+  explicit KubernetesBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  ::flatbuffers::Offset<Kubernetes> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = ::flatbuffers::Offset<Kubernetes>(end);
+    return o;
+  }
+};
+
+inline ::flatbuffers::Offset<Kubernetes> CreateKubernetes(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    ::flatbuffers::Offset<::flatbuffers::String> node_name = 0,
+    ::flatbuffers::Optional<uint64_t> container_id = ::flatbuffers::nullopt,
+    ::flatbuffers::Offset<::flatbuffers::String> pod_uid = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> pod_namespace = 0,
+    ::flatbuffers::Offset<::flatbuffers::String> pod_name = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<::flatbuffers::Offset<owlsm::fb::PodLabel>>> pod_labels = 0,
+    ::flatbuffers::Optional<bool> host_event = ::flatbuffers::nullopt) {
+  KubernetesBuilder builder_(_fbb);
+  if(container_id) { builder_.add_container_id(*container_id); }
+  builder_.add_pod_labels(pod_labels);
+  builder_.add_pod_name(pod_name);
+  builder_.add_pod_namespace(pod_namespace);
+  builder_.add_pod_uid(pod_uid);
+  builder_.add_node_name(node_name);
+  if(host_event) { builder_.add_host_event(*host_event); }
+  return builder_.Finish();
+}
+
+inline ::flatbuffers::Offset<Kubernetes> CreateKubernetesDirect(
+    ::flatbuffers::FlatBufferBuilder &_fbb,
+    const char *node_name = nullptr,
+    ::flatbuffers::Optional<uint64_t> container_id = ::flatbuffers::nullopt,
+    const char *pod_uid = nullptr,
+    const char *pod_namespace = nullptr,
+    const char *pod_name = nullptr,
+    const std::vector<::flatbuffers::Offset<owlsm::fb::PodLabel>> *pod_labels = nullptr,
+    ::flatbuffers::Optional<bool> host_event = ::flatbuffers::nullopt) {
+  auto node_name__ = node_name ? _fbb.CreateString(node_name) : 0;
+  auto pod_uid__ = pod_uid ? _fbb.CreateString(pod_uid) : 0;
+  auto pod_namespace__ = pod_namespace ? _fbb.CreateString(pod_namespace) : 0;
+  auto pod_name__ = pod_name ? _fbb.CreateString(pod_name) : 0;
+  auto pod_labels__ = pod_labels ? _fbb.CreateVector<::flatbuffers::Offset<owlsm::fb::PodLabel>>(*pod_labels) : 0;
+  return owlsm::fb::CreateKubernetes(
+      _fbb,
+      node_name__,
+      container_id,
+      pod_uid__,
+      pod_namespace__,
+      pod_name__,
+      pod_labels__,
+      host_event);
 }
 
 struct RuleMetadata FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
@@ -1884,7 +2121,8 @@ struct Event FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_PARENT_PROCESS = 18,
     VT_TIME = 20,
     VT_DATA_TYPE = 22,
-    VT_DATA = 24
+    VT_DATA = 24,
+    VT_KUBERNETES = 26
   };
   uint64_t id() const {
     return GetField<uint64_t>(VT_ID, 0);
@@ -1950,6 +2188,9 @@ struct Event FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const owlsm::fb::PtraceEventData *data_as_PtraceEventData() const {
     return data_type() == owlsm::fb::EventData::PtraceEventData ? static_cast<const owlsm::fb::PtraceEventData *>(data()) : nullptr;
   }
+  const owlsm::fb::Kubernetes *kubernetes() const {
+    return GetPointer<const owlsm::fb::Kubernetes *>(VT_KUBERNETES);
+  }
   template <bool B = false>
   bool Verify(::flatbuffers::VerifierTemplate<B> &verifier) const {
     return VerifyTableStart(verifier) &&
@@ -1968,6 +2209,8 @@ struct Event FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            VerifyField<uint8_t>(verifier, VT_DATA_TYPE, 1) &&
            VerifyOffset(verifier, VT_DATA) &&
            VerifyEventData(verifier, data(), data_type()) &&
+           VerifyOffset(verifier, VT_KUBERNETES) &&
+           verifier.VerifyTable(kubernetes()) &&
            verifier.EndTable();
   }
 };
@@ -2049,6 +2292,9 @@ struct EventBuilder {
   void add_data(::flatbuffers::Offset<void> data) {
     fbb_.AddOffset(Event::VT_DATA, data);
   }
+  void add_kubernetes(::flatbuffers::Offset<owlsm::fb::Kubernetes> kubernetes) {
+    fbb_.AddOffset(Event::VT_KUBERNETES, kubernetes);
+  }
   explicit EventBuilder(::flatbuffers::FlatBufferBuilder &_fbb)
         : fbb_(_fbb) {
     start_ = fbb_.StartTable();
@@ -2074,10 +2320,12 @@ inline ::flatbuffers::Offset<Event> CreateEvent(
     ::flatbuffers::Offset<owlsm::fb::Process> parent_process = 0,
     uint64_t time = 0,
     owlsm::fb::EventData data_type = owlsm::fb::EventData::NONE,
-    ::flatbuffers::Offset<void> data = 0) {
+    ::flatbuffers::Offset<void> data = 0,
+    ::flatbuffers::Offset<owlsm::fb::Kubernetes> kubernetes = 0) {
   EventBuilder builder_(_fbb);
   builder_.add_time(time);
   builder_.add_id(id);
+  builder_.add_kubernetes(kubernetes);
   builder_.add_data(data);
   builder_.add_parent_process(parent_process);
   builder_.add_process(process);

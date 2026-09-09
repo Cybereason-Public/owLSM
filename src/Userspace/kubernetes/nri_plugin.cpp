@@ -97,6 +97,11 @@ std::size_t NriPlugin::size() const
     return m_cache.size();
 }
 
+std::optional<std::string> NriPlugin::lookupPodUid(const std::uint64_t container_id) const
+{
+    return m_cache.lookupPodUid(container_id);
+}
+
 void NriPlugin::handleUpsert(const char* container_id, const char* pod_uid, const char* cgroups_path)
 {
     m_cache.upsert(container_id, pod_uid, cgroups_path);

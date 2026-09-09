@@ -32,7 +32,8 @@ void KubernetesClient::initialize()
     m_nri_plugin.clear();
     m_cache_enabled.store(true);
     confirmCgroupV2();
-    const auto rc = startClientGo(readNodeName());
+    m_node_name = readNodeName();
+    const auto rc = startClientGo(m_node_name);
     if (rc != 0)
     {
         m_cache_enabled.store(false);
@@ -63,6 +64,7 @@ void KubernetesClient::destroy()
     m_nri_plugin.clear();
     owlsm_k8s_destroy();
     m_cache.clear();
+    m_node_name.clear();
 }
 
 bool KubernetesClient::isReady() const
@@ -73,6 +75,16 @@ bool KubernetesClient::isReady() const
 std::size_t KubernetesClient::cachedPodCount() const
 {
     return m_cache.livePodCount();
+}
+
+std::string KubernetesClient::nodeName() const
+{
+    return m_node_name;
+}
+
+std::optional<std::string> KubernetesClient::lookupPodUid(const std::uint64_t container_id) const
+{
+    return m_nri_plugin.lookupPodUid(container_id);
 }
 
 std::optional<PodInfo> KubernetesClient::lookupByPodUid(const std::string& uid) const

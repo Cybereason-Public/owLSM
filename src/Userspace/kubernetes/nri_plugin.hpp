@@ -5,8 +5,10 @@
 #include <atomic>
 #include <condition_variable>
 #include <cstddef>
+#include <cstdint>
 #include <filesystem>
 #include <mutex>
+#include <optional>
 #include <thread>
 
 namespace owlsm::kubernetes
@@ -25,6 +27,7 @@ public:
     void setMapFd(const int map_fd);
     void clear();
     std::size_t size() const;
+    std::optional<std::string> lookupPodUid(const std::uint64_t container_id) const;
     void handleUpsert(const char* container_id, const char* pod_uid, const char* cgroups_path);
     void handleRemove(const char* container_id);
     void handleSyncDone();

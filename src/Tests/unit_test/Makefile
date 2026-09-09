@@ -117,6 +117,7 @@ USERSPACE_IMPL_SRC := $(USERSPACE_SRC_DIR)/logger.cpp \
                       $(USERSPACE_SRC_DIR)/ringbuffers_messages_handlers.cpp \
                       $(USERSPACE_SRC_DIR)/events/event_to_json.cpp \
                       $(USERSPACE_SRC_DIR)/events/event_to_flatbuffer.cpp \
+                      $(USERSPACE_SRC_DIR)/events/kubernetes_event_enrichment.cpp \
                       $(USERSPACE_SRC_DIR)/globals/global_objects.cpp \
                       $(USERSPACE_SRC_DIR)/globals/global_strings.cpp \
                       $(USERSPACE_SRC_DIR)/shell_detection/shells_db.cpp \

@@ -31,6 +31,16 @@ std::size_t KubernetesClient::cachedPodCount() const
     return 0;
 }
 
+std::string KubernetesClient::nodeName() const
+{
+    return {};
+}
+
+std::optional<std::string> KubernetesClient::lookupPodUid(const std::uint64_t) const
+{
+    return std::nullopt;
+}
+
 std::optional<PodInfo> KubernetesClient::lookupByPodUid(const std::string&) const
 {
     return std::nullopt;

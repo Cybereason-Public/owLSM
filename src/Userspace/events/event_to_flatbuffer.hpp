@@ -34,6 +34,7 @@ private:
     static fb::RuleSeverity toFbRuleSeverity(rule_severity severity);
     static flatbuffers::Offset<fb::File> serializeFile(flatbuffers::FlatBufferBuilder& builder, const File& f);
     static flatbuffers::Offset<fb::Process> serializeProcess(flatbuffers::FlatBufferBuilder& builder, const Process& p);
+    static flatbuffers::Offset<fb::Kubernetes> serializeKubernetes(flatbuffers::FlatBufferBuilder& builder, const Kubernetes& k8s);
     void serializeEvent(const Event& ev);
     void serializeError(const Error& err);
     void serializeMessage(const Event& ev);

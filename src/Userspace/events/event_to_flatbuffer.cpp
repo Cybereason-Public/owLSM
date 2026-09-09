@@ -168,7 +168,9 @@ flatbuffers::Offset<fb::Process> EventToFlatbuffer<MessageType>::serializeProces
 
     fb::ProcessBuilder pb(builder);
     pb.add_pid(p.pid);
+    pb.add_ns_pid(p.ns_pid);
     pb.add_ppid(p.ppid);
+    pb.add_ns_ppid(p.ns_ppid);
     pb.add_ruid(p.ruid);
     pb.add_rgid(p.rgid);
     pb.add_euid(p.euid);
@@ -182,6 +184,60 @@ flatbuffers::Offset<fb::Process> EventToFlatbuffer<MessageType>::serializeProces
     pb.add_stdio_file_descriptors_at_process_creation(&stdio);
     pb.add_shell_command(shell_cmd_off);
     return pb.Finish();
+}
+
+template <typename MessageType>
+flatbuffers::Offset<fb::Kubernetes> EventToFlatbuffer<MessageType>::serializeKubernetes(
+    flatbuffers::FlatBufferBuilder& builder, const Kubernetes& k8s)
+{
+    flatbuffers::Offset<flatbuffers::String> node_name_off = 0;
+    if (!k8s.node_name.empty())
+    {
+        node_name_off = builder.CreateString(k8s.node_name);
+    }
+    flatbuffers::Offset<flatbuffers::String> pod_uid_off = 0;
+    if (!k8s.pod_uid.empty())
+    {
+        pod_uid_off = builder.CreateString(k8s.pod_uid);
+    }
+    flatbuffers::Offset<flatbuffers::String> pod_namespace_off = 0;
+    if (!k8s.pod_namespace.empty())
+    {
+        pod_namespace_off = builder.CreateString(k8s.pod_namespace);
+    }
+    flatbuffers::Offset<flatbuffers::String> pod_name_off = 0;
+    if (!k8s.pod_name.empty())
+    {
+        pod_name_off = builder.CreateString(k8s.pod_name);
+    }
+
+    flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fb::PodLabel>>> labels_off = 0;
+    if (!k8s.pod_labels.empty())
+    {
+        std::vector<flatbuffers::Offset<fb::PodLabel>> label_offsets;
+        label_offsets.reserve(k8s.pod_labels.size());
+        for (const auto& [key, value] : k8s.pod_labels)
+        {
+            const auto key_off = builder.CreateString(key);
+            const auto value_off = builder.CreateString(value);
+            label_offsets.push_back(fb::CreatePodLabel(builder, key_off, value_off));
+        }
+        labels_off = builder.CreateVector(label_offsets);
+    }
+    const flatbuffers::Optional<uint64_t> container_id =
+        (k8s.container_id != 0)
+            ? flatbuffers::Optional<uint64_t>(k8s.container_id)
+            : flatbuffers::nullopt;
+
+    return fb::CreateKubernetes(
+        builder,
+        node_name_off,
+        container_id,
+        pod_uid_off,
+        pod_namespace_off,
+        pod_name_off,
+        labels_off,
+        k8s.host_event);
 }
 
 template <typename MessageType>
@@ -317,11 +373,16 @@ void EventToFlatbuffer<MessageType>::serializeEvent(const Event& ev)
         }
     }, ev.data);
 
+    flatbuffers::Offset<fb::Kubernetes> kubernetes_off = 0;
+    if (ev.kubernetes.hasAnyValue())
+    {
+        kubernetes_off = serializeKubernetes(m_builder, ev.kubernetes);
+    }
     auto event_off = fb::CreateEvent(m_builder, ev.id,
         toFbEventType(ev.type), toFbAction(ev.action),
         ev.matched_rule_id, meta_off, ev.had_error_while_handling,
         process_off, parent_off, ev.time,
-        data_type, data_off);
+        data_type, data_off, kubernetes_off);
 
     m_builder.FinishSizePrefixed(event_off);
 }

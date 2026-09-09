@@ -99,8 +99,38 @@ void to_json(nlohmann::json& j, const StdioFileDescriptorsAtProcessCreation& s)
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Owner, uid, gid)
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(File, inode, dev, path, owner, mode, type, suid, sgid, last_modified_seconds, nlink, filename)
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Process, pid, ppid, ruid, rgid, euid, egid, suid, cgroup_id, start_time, ptrace_flags, file, cmd, stdio_file_descriptors_at_process_creation, shell_command)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Process, pid, ns_pid, ppid, ns_ppid, ruid, rgid, euid, egid, suid, cgroup_id, start_time, ptrace_flags, file, cmd, stdio_file_descriptors_at_process_creation, shell_command)
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(ExitEventData, exit_code, signal)
+
+void to_json(nlohmann::json& j, const Kubernetes& k8s)
+{
+    j = nlohmann::json::object();
+    if (!k8s.node_name.empty())
+    {
+        j["node_name"] = k8s.node_name;
+    }
+    if (k8s.container_id != 0)
+    {
+        j["container_id"] = k8s.container_id;
+    }
+    if (!k8s.pod_uid.empty())
+    {
+        j["pod_uid"] = k8s.pod_uid;
+    }
+    if (!k8s.pod_namespace.empty())
+    {
+        j["pod_namespace"] = k8s.pod_namespace;
+    }
+    if (!k8s.pod_name.empty())
+    {
+        j["pod_name"] = k8s.pod_name;
+    }
+    if (!k8s.pod_labels.empty())
+    {
+        j["pod_labels"] = k8s.pod_labels;
+    }
+    j["host_event"] = k8s.host_event;
+}
 
 void to_json(nlohmann::json& j, const GenericFileEventData& e)
 {
@@ -207,6 +237,11 @@ void EventToJson<Event>::write_root_event_json(nlohmann::json& j, const Event& e
         {"parent_process", ev.parent_process},
         {"time", ev.time}
     };
+
+    if (ev.kubernetes.hasAnyValue())
+    {
+        j["kubernetes"] = ev.kubernetes;
+    }
 
     if (ev.matched_rule_metadata.hasAnyValue())
     {

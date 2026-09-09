@@ -67,6 +67,9 @@
         "parent_process": {
             "$ref": "#/definitions/process_object"
         },
+        "kubernetes": {
+            "$ref": "#/definitions/kubernetes_object"
+        },
         "time": {
             "type": "integer",
             "minimum": 0,
@@ -370,13 +373,32 @@
                 "stderr": { "$ref": "#/definitions/file_type" }
             }
         },
+        "kubernetes_object": {
+            "type": "object",
+            "required": ["host_event"],
+            "additionalProperties": false,
+            "properties": {
+                "node_name": { "type": "string" },
+                "container_id": { "type": "integer", "minimum": 1 },
+                "pod_uid": { "type": "string", "minLength": 1 },
+                "pod_namespace": { "type": "string", "minLength": 1 },
+                "pod_name": { "type": "string", "minLength": 1 },
+                "pod_labels": {
+                    "type": "object",
+                    "additionalProperties": { "type": "string" }
+                },
+                "host_event": { "type": "boolean" }
+            }
+        },
         "process_object": {
             "type": "object",
-            "required": ["pid", "ppid", "ruid", "rgid", "euid", "egid", "suid", "cgroup_id", "start_time", "ptrace_flags", "file", "cmd", "shell_command", "stdio_file_descriptors_at_process_creation"],
+            "required": ["pid", "ns_pid", "ppid", "ns_ppid", "ruid", "rgid", "euid", "egid", "suid", "cgroup_id", "start_time", "ptrace_flags", "file", "cmd", "shell_command", "stdio_file_descriptors_at_process_creation"],
             "additionalProperties": false,
             "properties": {
                 "pid": { "type": "integer", "minimum": 0 },
+                "ns_pid": { "type": "integer", "minimum": 0 },
                 "ppid": { "type": "integer", "minimum": 0 },
+                "ns_ppid": { "type": "integer", "minimum": 0 },
                 "ruid": { "type": "integer", "minimum": 0 },
                 "rgid": { "type": "integer", "minimum": 0 },
                 "euid": { "type": "integer", "minimum": 0 },

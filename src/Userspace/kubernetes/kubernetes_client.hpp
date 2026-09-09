@@ -6,6 +6,7 @@
 
 #include <atomic>
 #include <cstddef>
+#include <cstdint>
 #include <optional>
 #include <string>
 
@@ -26,6 +27,8 @@ public:
     void destroy();
     bool isReady() const;
     std::size_t cachedPodCount() const;
+    std::string nodeName() const;
+    std::optional<std::string> lookupPodUid(const std::uint64_t container_id) const;
     std::optional<PodInfo> lookupByPodUid(const std::string& uid) const;
     void handlePodUpsert(const owlsm_k8s_pod* pod);
     void handlePodDelete(const char* uid);
@@ -39,6 +42,7 @@ private:
 
     bool m_initialized = false;
     std::atomic<bool> m_cache_enabled {false};
+    std::string m_node_name;
     PodIdentityCache m_cache;
     NriPlugin m_nri_plugin;
 };
