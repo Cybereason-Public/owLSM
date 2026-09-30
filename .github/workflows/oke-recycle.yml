@@ -1,0 +1,46 @@
+name: Recycle OKE node pool
+
+# Once per K8s CI workflow. Runs on k8s-oci controller VM.
+
+on:
+  workflow_call:
+    secrets:
+      OKE_CLUSTER_OCID:
+        required: true
+      OKE_COMPARTMENT_OCID:
+        required: true
+      OKE_NODE_SUBNET_ID:
+        required: true
+      OKE_NODE_IMAGE_ID:
+        required: true
+      OKE_AVAILABILITY_DOMAIN_1:
+        required: true
+      OKE_AVAILABILITY_DOMAIN_2:
+        required: true
+      OKE_SSH_PRIVATE_KEY:
+        required: true
+      OKE_SSH_PUBLIC_KEY:
+        required: true
+  workflow_dispatch:
+
+jobs:
+  recycle:
+    name: Recycle OKE node pool
+    runs-on: ["run-${{ github.run_id }}", "k8s-oci"]
+    timeout-minutes: 45
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Recycle node pool
+        env:
+          OKE_CLUSTER_OCID: ${{ secrets.OKE_CLUSTER_OCID }}
+          OKE_COMPARTMENT_OCID: ${{ secrets.OKE_COMPARTMENT_OCID }}
+          OKE_NODE_SUBNET_ID: ${{ secrets.OKE_NODE_SUBNET_ID }}
+          OKE_NODE_IMAGE_ID: ${{ secrets.OKE_NODE_IMAGE_ID }}
+          OKE_AVAILABILITY_DOMAIN_1: ${{ secrets.OKE_AVAILABILITY_DOMAIN_1 }}
+          OKE_AVAILABILITY_DOMAIN_2: ${{ secrets.OKE_AVAILABILITY_DOMAIN_2 }}
+          OKE_SSH_PRIVATE_KEY: ${{ secrets.OKE_SSH_PRIVATE_KEY }}
+          OKE_SSH_PUBLIC_KEY: ${{ secrets.OKE_SSH_PUBLIC_KEY }}
+          OKE_REGION: us-ashburn-1
+        run: ./kubernetes/oke/recycle_oke_once.sh

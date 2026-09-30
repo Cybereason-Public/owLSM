@@ -1,0 +1,107 @@
+name: K8s Automation Tests
+
+# =============================================================================
+# Runs K8s pytest on one controller (k8s-kind or k8s-oci). Sibling of
+# automation-tests.yml. Checkouts this commit (chart + pytest). Does not
+# download the Linux tarball. kubectl/helm/kind/docker/oci/uv are on the
+# controller image. Node-pool recycle is not here (oke-recycle.yml).
+# =============================================================================
+
+on:
+  workflow_call:
+    inputs:
+      runner-label:
+        description: "Controller label (k8s-kind or k8s-oci)"
+        required: true
+        type: string
+      image-repository:
+        description: "owlsm image repository for Helm --set"
+        required: false
+        type: string
+        default: "ghcr.io/cybereason-public/test-owlsm-runtime"
+      image-tag:
+        description: "owlsm image tag (e.g. ci-<git-sha>)"
+        required: true
+        type: string
+      k8s-tests-command-args:
+        description: "pytest args for src/Tests/K8S_Automation"
+        required: true
+        type: string
+        default: "features/ --junitxml=$AUTOMATION_ROOT_DIR/results.xml -v -s"
+    secrets:
+      OKE_CLUSTER_OCID:
+        required: false
+      OKE_SSH_PRIVATE_KEY:
+        required: false
+      OKE_SSH_PUBLIC_KEY:
+        required: false
+
+jobs:
+  k8s-automation-tests:
+    name: "K8s Tests (${{ inputs.runner-label }})"
+    runs-on: ["run-${{ github.run_id }}", "${{ inputs.runner-label }}"]
+    env:
+      AUTOMATION_ROOT_DIR: ${{ github.workspace }}/src/Tests/K8S_Automation
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup venv and install requirements
+        run: |
+          cd $AUTOMATION_ROOT_DIR
+          uv venv venv --clear
+          source venv/bin/activate
+          uv pip install -r requirements.txt
+          echo "==> venv ready: $(pytest --version)"
+
+      - name: Run K8s automation tests
+        env:
+          OWLSM_CLUSTER_TYPE: ${{ inputs.runner-label == 'k8s-oci' && 'oci' || 'kind' }}
+          OWLSM_IMAGE_REPOSITORY: ${{ inputs.image-repository }}
+          OWLSM_IMAGE_TAG: ${{ inputs.image-tag }}
+          OKE_CLUSTER_OCID: ${{ secrets.OKE_CLUSTER_OCID }}
+          OKE_SSH_PRIVATE_KEY: ${{ secrets.OKE_SSH_PRIVATE_KEY }}
+          OKE_SSH_PUBLIC_KEY: ${{ secrets.OKE_SSH_PUBLIC_KEY }}
+          OKE_REGION: us-ashburn-1
+          OWLSM_OKE_SKIP_NODE_POOL_RECYCLE: "1"
+        run: |
+          cd $AUTOMATION_ROOT_DIR
+          source venv/bin/activate
+          export PYTHONPATH=$AUTOMATION_ROOT_DIR
+          echo "==> CLUSTER_TYPE=${OWLSM_CLUSTER_TYPE} image=${OWLSM_IMAGE_REPOSITORY}:${OWLSM_IMAGE_TAG}"
+          if [ "${OWLSM_CLUSTER_TYPE}" = "oci" ]; then
+            "${GITHUB_WORKSPACE}/kubernetes/oke/run_oke.sh" ${{ inputs.k8s-tests-command-args }}
+          else
+            pytest ${{ inputs.k8s-tests-command-args }}
+          fi
+
+      - name: Collect debug logs
+        id: collect_logs
+        if: failure() || cancelled()
+        run: |
+          sudo python3 ${{ github.workspace }}/scripts/zip_logs.py \
+            --automation-dir "$AUTOMATION_ROOT_DIR" \
+            --output-dir /tmp/collected_logs
+          ZIP_PATH=$(ls /tmp/collected_logs/*.zip)
+          echo "zip_path=$ZIP_PATH" >> "$GITHUB_OUTPUT"
+
+      - name: Upload debug logs
+        if: (failure() || cancelled()) && steps.collect_logs.outputs.zip_path != ''
+        uses: actions/upload-artifact@v5
+        with:
+          name: k8s-debug-logs-${{ inputs.runner-label }}
+          path: ${{ steps.collect_logs.outputs.zip_path }}
+          retention-days: 14
+
+      - name: Rename results file
+        if: always()
+        run: mv ${{ env.AUTOMATION_ROOT_DIR }}/results.xml ${{ env.AUTOMATION_ROOT_DIR }}/results-${{ inputs.runner-label }}.xml
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: k8s-automation-test-results-${{ inputs.runner-label }}
+          path: ${{ env.AUTOMATION_ROOT_DIR }}/results-${{ inputs.runner-label }}.xml
+          retention-days: 30

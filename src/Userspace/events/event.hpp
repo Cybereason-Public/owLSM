@@ -3,8 +3,9 @@
 #include "events_structs.h"
 #include "configuration/rule.hpp"
 
-#include <variant>
 #include <cstring>
+#include <map>
+#include <variant>
 
 namespace owlsm::events
 {
@@ -78,7 +79,9 @@ struct File
 struct Process
 {
     unsigned int pid = 0;
+    unsigned int ns_pid = 0;
     unsigned int ppid = 0;
+    unsigned int ns_ppid = 0;
     unsigned long long unique_process_id = 0;
     unsigned long long unique_ppid_id = 0;
     unsigned int ruid = 0;
@@ -87,6 +90,7 @@ struct Process
     unsigned int egid = 0;
     unsigned int suid = 0;
     unsigned long long cgroup_id = 0;
+    unsigned long long container_id = 0;
     unsigned long long start_time = 0;
     unsigned int ptrace_flags = 0;
     File file;
@@ -96,9 +100,9 @@ struct Process
 
     Process() = default;
     explicit Process(const process_t& p)
-        : pid(p.pid) , ppid(p.ppid) , unique_process_id(p.unique_process_id) , unique_ppid_id(p.unique_ppid_id)
+        : pid(p.pid) , ns_pid(p.ns_pid) , ppid(p.ppid) , ns_ppid(p.ns_ppid) , unique_process_id(p.unique_process_id) , unique_ppid_id(p.unique_ppid_id)
         , ruid(p.ruid) , rgid(p.rgid) , euid(p.euid) , egid(p.egid) , suid(p.suid) , cgroup_id(p.cgroup_id)
-        , start_time(p.start_time) , ptrace_flags(p.ptrace_flags) , file(p.file) , cmd(p.cmd)
+        , container_id(p.container_id) , start_time(p.start_time) , ptrace_flags(p.ptrace_flags) , file(p.file) , cmd(p.cmd)
         , stdio_file_descriptors_at_process_creation(p.stdio_file_descriptors_at_process_creation) , shell_command(p.shell_command) {}
 };
 
@@ -231,6 +235,28 @@ struct NetworkEventData
     }
 };
 
+struct Kubernetes
+{
+    std::string node_name;
+    unsigned long long container_id = 0;
+    std::string pod_uid;
+    std::string pod_namespace;
+    std::string pod_name;
+    std::map<std::string, std::string> pod_labels;
+    bool host_event = false;
+
+    bool hasAnyValue() const
+    {
+        return host_event ||
+            container_id != 0 ||
+            !node_name.empty() ||
+            !pod_uid.empty() ||
+            !pod_namespace.empty() ||
+            !pod_name.empty() ||
+            !pod_labels.empty();
+    }
+};
+
 using EventData = std::variant<
     ChownEventData,
     ChmodEventData,
@@ -255,6 +281,7 @@ struct Event
     unsigned long long time = 0;
     Process process;
     Process parent_process;
+    Kubernetes kubernetes;
     EventData data;
 
     unsigned int matched_rule_id = 0;

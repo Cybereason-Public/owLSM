@@ -11,4 +11,5 @@ const struct command_line_t   empty_command_line_t   SEC(".rodata") = { };
 const struct printed_message  empty_printed_message  SEC(".rodata") = { };
 const volatile struct ebpf_features g_ebpf_features SEC(".rodata");
 const volatile int legacy_exec_enabled SEC(".rodata");
+const volatile int k8s_enabled SEC(".rodata");
 volatile unsigned long long global_event_id_counter = 1;

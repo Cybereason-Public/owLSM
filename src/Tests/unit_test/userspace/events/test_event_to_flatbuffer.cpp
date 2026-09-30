@@ -3,7 +3,9 @@
 #include "events/flatbuffers/include/owlsm_events_generated.h"
 
 #include <flatbuffers/flatbuffers.h>
+#include <map>
 #include <memory>
+#include <string>
 #include <vector>
 #include <netinet/in.h>
 
@@ -23,7 +25,9 @@ protected:
         ev->had_error_while_handling = 0;
         ev->time = 123456789;
         ev->process.pid = 1000;
+        ev->process.ns_pid = 1;
         ev->process.ppid = 999;
+        ev->process.ns_ppid = 0;
         ev->process.ruid = 0;
         ev->process.euid = 0;
         ev->process.file.path.value = "/usr/bin/test";
@@ -69,7 +73,10 @@ TEST_F(EventToFlatbufferTest, fork_event_serialization)
 
     ASSERT_NE(fb_ev->process(), nullptr);
     EXPECT_EQ(fb_ev->process()->pid(), 1000u);
+    EXPECT_EQ(fb_ev->process()->ns_pid(), 1u);
     EXPECT_EQ(fb_ev->process()->ppid(), 999u);
+    EXPECT_EQ(fb_ev->process()->ns_ppid(), 0u);
+    EXPECT_EQ(fb_ev->kubernetes(), nullptr);
     ASSERT_NE(fb_ev->process()->file(), nullptr);
     EXPECT_STREQ(fb_ev->process()->file()->path()->c_str(), "/usr/bin/test");
     EXPECT_STREQ(fb_ev->process()->cmd()->c_str(), "/usr/bin/test --flag");
@@ -439,6 +446,94 @@ TEST_F(EventToFlatbufferTest, builder_reuse_produces_valid_output)
         ASSERT_NE(fb_ev, nullptr);
         EXPECT_EQ(fb_ev->id(), static_cast<uint64_t>(round + 1));
     }
+}
+
+TEST_F(EventToFlatbufferTest, kubernetes_table_omitted_when_empty)
+{
+    auto ev = makeBaseEvent(FORK, 59);
+    ev->data = owlsm::events::ForkEventData{};
+
+    std::vector<std::shared_ptr<owlsm::events::Event>> msgs = {ev};
+    m_event_serializer.buildOutputBuffer(msgs);
+
+    const auto* fb_ev = getSizePrefixedEvent(m_event_serializer.data());
+    EXPECT_EQ(fb_ev->kubernetes(), nullptr);
+}
+
+TEST_F(EventToFlatbufferTest, kubernetes_omits_absent_container_id_and_empty_labels)
+{
+    auto ev = makeBaseEvent(FORK, 61);
+    owlsm::events::Kubernetes k8s;
+    k8s.node_name = "worker-1";
+    k8s.pod_labels = std::map<std::string, std::string>{};
+    ev->kubernetes = k8s;
+    ev->data = owlsm::events::ForkEventData{};
+
+    std::vector<std::shared_ptr<owlsm::events::Event>> msgs = {ev};
+    m_event_serializer.buildOutputBuffer(msgs);
+
+    const auto* fb_ev = getSizePrefixedEvent(m_event_serializer.data());
+    ASSERT_NE(fb_ev->kubernetes(), nullptr);
+    EXPECT_STREQ(fb_ev->kubernetes()->node_name()->c_str(), "worker-1");
+    EXPECT_FALSE(fb_ev->kubernetes()->container_id().has_value());
+    EXPECT_EQ(fb_ev->kubernetes()->pod_uid(), nullptr);
+    EXPECT_EQ(fb_ev->kubernetes()->pod_namespace(), nullptr);
+    EXPECT_EQ(fb_ev->kubernetes()->pod_name(), nullptr);
+    EXPECT_EQ(fb_ev->kubernetes()->pod_labels(), nullptr);
+    ASSERT_TRUE(fb_ev->kubernetes()->host_event().has_value());
+    EXPECT_EQ(*fb_ev->kubernetes()->host_event(), false);
+}
+
+TEST_F(EventToFlatbufferTest, kubernetes_host_event_only_omits_optional_fields)
+{
+    auto ev = makeBaseEvent(FORK, 62);
+    ev->kubernetes.host_event = true;
+    ev->data = owlsm::events::ForkEventData{};
+
+    std::vector<std::shared_ptr<owlsm::events::Event>> msgs = {ev};
+    m_event_serializer.buildOutputBuffer(msgs);
+
+    const auto* fb_ev = getSizePrefixedEvent(m_event_serializer.data());
+    ASSERT_NE(fb_ev->kubernetes(), nullptr);
+    EXPECT_EQ(fb_ev->kubernetes()->node_name(), nullptr);
+    EXPECT_FALSE(fb_ev->kubernetes()->container_id().has_value());
+    EXPECT_EQ(fb_ev->kubernetes()->pod_uid(), nullptr);
+    EXPECT_EQ(fb_ev->kubernetes()->pod_labels(), nullptr);
+    ASSERT_TRUE(fb_ev->kubernetes()->host_event().has_value());
+    EXPECT_EQ(*fb_ev->kubernetes()->host_event(), true);
+}
+
+TEST_F(EventToFlatbufferTest, kubernetes_object_is_serialized)
+{
+    auto ev = makeBaseEvent(FORK, 60);
+    owlsm::events::Kubernetes k8s;
+    k8s.node_name = "worker-1";
+    k8s.container_id = 0xabc;
+    k8s.host_event = false;
+    k8s.pod_uid = "uid-1";
+    k8s.pod_namespace = "default";
+    k8s.pod_name = "nginx";
+    k8s.pod_labels = std::map<std::string, std::string>{{"app", "nginx"}};
+    ev->kubernetes = k8s;
+    ev->data = owlsm::events::ForkEventData{};
+
+    std::vector<std::shared_ptr<owlsm::events::Event>> msgs = {ev};
+    m_event_serializer.buildOutputBuffer(msgs);
+
+    const auto* fb_ev = getSizePrefixedEvent(m_event_serializer.data());
+    ASSERT_NE(fb_ev->kubernetes(), nullptr);
+    EXPECT_STREQ(fb_ev->kubernetes()->node_name()->c_str(), "worker-1");
+    ASSERT_TRUE(fb_ev->kubernetes()->container_id().has_value());
+    EXPECT_EQ(*fb_ev->kubernetes()->container_id(), 0xabcu);
+    ASSERT_TRUE(fb_ev->kubernetes()->host_event().has_value());
+    EXPECT_EQ(*fb_ev->kubernetes()->host_event(), false);
+    EXPECT_STREQ(fb_ev->kubernetes()->pod_uid()->c_str(), "uid-1");
+    EXPECT_STREQ(fb_ev->kubernetes()->pod_namespace()->c_str(), "default");
+    EXPECT_STREQ(fb_ev->kubernetes()->pod_name()->c_str(), "nginx");
+    ASSERT_NE(fb_ev->kubernetes()->pod_labels(), nullptr);
+    ASSERT_EQ(fb_ev->kubernetes()->pod_labels()->size(), 1u);
+    EXPECT_STREQ(fb_ev->kubernetes()->pod_labels()->Get(0)->key()->c_str(), "app");
+    EXPECT_STREQ(fb_ev->kubernetes()->pod_labels()->Get(0)->value()->c_str(), "nginx");
 }
 
 TEST_F(EventToFlatbufferTest, process_stdio_descriptors)

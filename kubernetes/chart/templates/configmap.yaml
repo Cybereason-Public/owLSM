@@ -1,0 +1,17 @@
+{{- $json := "" -}}
+{{- if .Values.configJson -}}
+{{- $json = .Values.configJson -}}
+{{- else -}}
+{{- $cfg := deepCopy .Values.config -}}
+{{- $json = $cfg | toPrettyJson -}}
+{{- end -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: owlsm-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "owlsm.labels" . | nindent 4 }}
+data:
+  config.json: |
+    {{- $json | nindent 4 }}

@@ -9,6 +9,8 @@ terraform {
     bucket    = "terraform-state-owlsm"
     namespace = "id9uy08ld7kh"
     
+    # Linux CI: terraform init (this key).
+    # K8s CI:   terraform init -backend-config=k8s-backend.hcl -reconfigure
     key                 = "runners/terraform.tfstate"
     config_file_profile = "DEFAULT"
   }

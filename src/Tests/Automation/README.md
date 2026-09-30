@@ -1,5 +1,7 @@
-owLSM automation tests. Test different components of the owLSM.  
+owLSM Linux automation tests. Test different components of the owLSM.  
 We use the ***pytest bdd*** as the testing framework  
+
+This suite is separate from `src/Tests/K8S_Automation` (K8S).
 
 # Setup
 

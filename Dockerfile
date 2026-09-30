@@ -97,3 +97,34 @@ RUN if [ -z "${TARGETARCH}" ] || [ "${TARGETARCH}" = "amd64" ]; then \
     fi
 
 ENV PATH="/usr/local/bin:$PATH"
+
+# Official Go toolchain from go.dev. Used to compile the thin client-go C ABI wrapper
+ARG GO_VERSION=1.26.6
+RUN set -eux; \
+    go_arch="${TARGETARCH}"; \
+    if [ -z "${go_arch}" ]; then \
+        case "$(uname -m)" in \
+            x86_64) go_arch=amd64 ;; \
+            aarch64) go_arch=arm64 ;; \
+            *) echo "Unsupported architecture: $(uname -m)" >&2; exit 1 ;; \
+        esac; \
+    fi; \
+    case "${go_arch}" in \
+        amd64) go_sha256="708effb774be8237570d0add163225abbdfaf4fca28b2611df167beba4feef89" ;; \
+        arm64) go_sha256="d0507e9e9d7fe012aae570108cbd76c15de879e17130ab8cb90d4d7445cb1f2e" ;; \
+        *) echo "Unsupported TARGETARCH=${go_arch}" >&2; exit 1 ;; \
+    esac; \
+    curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-${go_arch}.tar.gz" -o /tmp/go.tgz; \
+    echo "${go_sha256}  /tmp/go.tgz" | sha256sum -c -; \
+    tar -C /usr/local -xzf /tmp/go.tgz; \
+    rm /tmp/go.tgz
+
+ENV PATH="/usr/local/go/bin:${PATH}" \
+    GOMODCACHE=/usr/local/gomodcache
+
+# Prefetch client-go into the image module cache (no official prebuilt .so exists).
+RUN mkdir -p "${GOMODCACHE}" /tmp/owlsm-client-go && \
+    cd /tmp/owlsm-client-go && \
+    go mod init owlsm/kubernetes/client_go && \
+    go get k8s.io/client-go@v0.32.3 k8s.io/apimachinery@v0.32.3 && \
+    rm -rf /tmp/owlsm-client-go

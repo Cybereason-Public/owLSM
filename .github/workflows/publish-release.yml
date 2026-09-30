@@ -19,6 +19,7 @@ jobs:
     runs-on: ["OCI", "owLSM"]
     permissions:
       contents: write
+      packages: write
     steps:
       - name: Validate version and resolve metadata
         id: meta
@@ -34,6 +35,8 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "release_name=$RELEASE_NAME" >> "$GITHUB_OUTPUT"
+          echo "runtime_image=ghcr.io/cybereason-public/owlsm-runtime:${TAG}" >> "$GITHUB_OUTPUT"
+          echo "chart_ref=oci://ghcr.io/cybereason-public/owlsm:${VERSION}" >> "$GITHUB_OUTPUT"
 
       - name: Verify tag exists
         run: |
@@ -42,26 +45,111 @@ jobs:
             exit 1
           }
 
-      - name: Download release artifacts (both arches)
+      - name: Download release artifacts
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          set -e
+          set -euo pipefail
           VERSION="${{ steps.meta.outputs.version }}"
           REPO="${{ github.repository }}"
           mkdir -p release-assets
-          for arch in x86_64 aarch64; do
-            name="release-owlsm-${arch}-${VERSION}"
+
+          download_artifact() {
+            local name="$1"
+            local dest="$2"
+            local json id
             json=$(gh api "/repos/${REPO}/actions/artifacts?name=${name}&per_page=1" --jq '.artifacts[0]')
             [ -z "$json" ] || [ "$json" = "null" ] && { echo "::error::Artifact '$name' not found"; exit 1; }
             [ "$(echo "$json" | jq -r '.expired')" = "true" ] && { echo "::error::Artifact '$name' expired"; exit 1; }
             id=$(echo "$json" | jq -r '.id')
+            mkdir -p "$dest"
             gh api "/repos/${REPO}/actions/artifacts/${id}/zip" > "/tmp/${name}.zip"
-            unzip -o "/tmp/${name}.zip" -d "release-assets/${arch}"
+            unzip -o "/tmp/${name}.zip" -d "$dest"
+          }
+
+          for arch in x86_64 aarch64; do
+            name="release-owlsm-${arch}-${VERSION}"
+            download_artifact "$name" "release-assets/${arch}"
             cp "release-assets/${arch}/owlsm-${arch}-v${VERSION}.tar.gz" release-assets/
             cp "release-assets/${arch}/checksum-${arch}-v${VERSION}.txt" release-assets/
           done
+
+          download_artifact "release-owlsm-runtime-${VERSION}" "release-assets/owlsm-runtime"
+          download_artifact "release-owlsm-chart-${VERSION}" "release-assets/owlsm-chart"
+
           ls -lh release-assets/*.tar.gz release-assets/checksum-*.txt
+          ls -lh release-assets/owlsm-runtime/owlsm-runtime-v${VERSION}.tar
+          ls -lh release-assets/owlsm-chart/owlsm-${VERSION}.tgz
+
+      - name: Login to GHCR
+        env:
+          GHCR_TOKEN: ${{ secrets.GH_PAT_WITH_PERMISSIONS_ONLY_FOR_WRITE_PACKAGES }}
+        run: |
+          set -euo pipefail
+          if [ -z "${GHCR_TOKEN}" ]; then
+            echo "::error::secret GH_PAT_WITH_PERMISSIONS_ONLY_FOR_WRITE_PACKAGES is empty"
+            exit 1
+          fi
+          GHCR_USER="$(curl -fsS -H "Authorization: Bearer ${GHCR_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/user | python3 -c 'import json,sys; print(json.load(sys.stdin).get("login",""))' \
+            || true)"
+          if [ -z "${GHCR_USER}" ]; then
+            GHCR_USER="${{ github.actor }}"
+          fi
+          echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_USER}" --password-stdin
+          echo "GHCR_USER=${GHCR_USER}" >> "$GITHUB_ENV"
+
+      - name: Push owlsm-runtime to GHCR
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.meta.outputs.version }}"
+          LOCAL_IMAGE="owlsm-runtime:v${VERSION}"
+          OFFICIAL_IMAGE="${{ steps.meta.outputs.runtime_image }}"
+          docker load -i "release-assets/owlsm-runtime/owlsm-runtime-v${VERSION}.tar"
+          docker tag "${LOCAL_IMAGE}" "${OFFICIAL_IMAGE}"
+          docker push "${OFFICIAL_IMAGE}"
+          echo "Pushed ${OFFICIAL_IMAGE}"
+
+      - name: Check helm is installed
+        run: |
+          if ! command -v helm >/dev/null 2>&1; then
+            echo "::error::helm is required on this runner but was not found"
+            exit 1
+          fi
+          echo "==> helm: $(helm version --short)"
+
+      - name: Push Helm chart to GHCR
+        env:
+          GHCR_TOKEN: ${{ secrets.GH_PAT_WITH_PERMISSIONS_ONLY_FOR_WRITE_PACKAGES }}
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.meta.outputs.version }}"
+          CHART_TGZ="release-assets/owlsm-chart/owlsm-${VERSION}.tgz"
+          echo "${GHCR_TOKEN}" | helm registry login ghcr.io -u "${GHCR_USER}" --password-stdin
+          helm push "${CHART_TGZ}" oci://ghcr.io/cybereason-public
+          echo "Pushed ${{ steps.meta.outputs.chart_ref }}"
+
+      - name: Set GHCR packages public
+        env:
+          GHCR_TOKEN: ${{ secrets.GH_PAT_WITH_PERMISSIONS_ONLY_FOR_WRITE_PACKAGES }}
+        run: |
+          set +e
+          for pkg in owlsm-runtime owlsm; do
+            if ! curl -fsS -X PATCH \
+              -H "Authorization: Bearer ${GHCR_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/orgs/cybereason-public/packages/container/${pkg}" \
+              -d '{"visibility":"public"}'; then
+              echo "::warning::Could not set ${pkg} to public. Set GHCR package visibility to Public in the GitHub UI."
+            fi
+          done
+
+      - name: Logout GHCR
+        if: always()
+        run: |
+          docker logout ghcr.io >/dev/null 2>&1 || true
+          helm registry logout ghcr.io >/dev/null 2>&1 || true
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -81,4 +169,6 @@ jobs:
             echo "## Release Published"
             echo "| Tag | ${{ steps.meta.outputs.tag }} |"
             echo "| Assets | owlsm-{x86_64,aarch64}-v* + checksums |"
+            echo "| Image | ${{ steps.meta.outputs.runtime_image }} |"
+            echo "| Chart | ${{ steps.meta.outputs.chart_ref }} |"
           } >> "$GITHUB_STEP_SUMMARY"

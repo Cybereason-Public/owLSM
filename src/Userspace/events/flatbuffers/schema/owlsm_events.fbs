@@ -103,6 +103,23 @@ table Process {
     cmd:string;
     stdio_file_descriptors_at_process_creation:StdioFileDescriptors;
     shell_command:string;
+    ns_pid:uint32;
+    ns_ppid:uint32;
+}
+
+table PodLabel {
+    key:string (required);
+    value:string (required);
+}
+
+table Kubernetes {
+    node_name:string;
+    container_id:uint64 = null;
+    pod_uid:string;
+    pod_namespace:string;
+    pod_name:string;
+    pod_labels:[PodLabel];
+    host_event:bool = null;
 }
 
 table RuleMetadata {
@@ -247,6 +264,7 @@ table Event {
     parent_process:Process (required);
     time:uint64;
     data:EventData;
+    kubernetes:Kubernetes;
 }
 
 table Error {

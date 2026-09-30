@@ -1,0 +1,355 @@
+name: K8s Automation Tests Runners
+
+# =============================================================================
+# Provisions K8s controller VMs, recycles the OKE node pool once, runs
+# kind + OKE pytest, aggregates, then optionally destroys the controllers.
+# Sibling of automation-tests-runners.yml. Uses k8s-runners/terraform.tfstate.
+#
+# One K8s CI at a time (shared OKE cluster). Linux CI is a different workflow
+# and stays parallel.
+#
+# k8s-oci runs recycle then pytest, so these VMs are not ephemeral.
+# destroy_runners still tears them down at the end (Phase 11).
+# =============================================================================
+
+on:
+  workflow_dispatch:
+    inputs:
+      image-repository:
+        description: "owlsm image repository for Helm --set"
+        required: false
+        type: string
+        default: "ghcr.io/cybereason-public/test-owlsm-runtime"
+      image-tag:
+        description: "owlsm image tag (e.g. ci-<git-sha>)"
+        required: true
+        type: string
+      destroy_runners:
+        description: "Destroy K8s controller VMs after tests"
+        type: boolean
+        default: true
+      ephemeral_runners:
+        description: "Ignored for K8s (k8s-oci runs recycle then pytest)"
+        type: boolean
+        default: false
+      k8s-tests-command-args:
+        description: "pytest args for src/Tests/K8S_Automation"
+        required: true
+        type: string
+        default: "features/ --junitxml=$AUTOMATION_ROOT_DIR/results.xml -v -s"
+  workflow_call:
+    inputs:
+      image-repository:
+        description: "owlsm image repository for Helm --set"
+        required: false
+        type: string
+        default: "ghcr.io/cybereason-public/test-owlsm-runtime"
+      image-tag:
+        description: "owlsm image tag (e.g. ci-<git-sha>)"
+        required: true
+        type: string
+      destroy_runners:
+        description: "Destroy K8s controller VMs after tests"
+        type: boolean
+        default: true
+      ephemeral_runners:
+        description: "Ignored for K8s (k8s-oci runs recycle then pytest)"
+        type: boolean
+        default: false
+      k8s-tests-command-args:
+        description: "pytest args for src/Tests/K8S_Automation"
+        required: false
+        type: string
+        default: "features/ --junitxml=$AUTOMATION_ROOT_DIR/results.xml -v -s"
+    secrets:
+      GH_RUNNER_PAT:
+        required: true
+      SSH_PUBLIC_KEY:
+        required: true
+      OKE_CLUSTER_OCID:
+        required: true
+      OKE_COMPARTMENT_OCID:
+        required: true
+      OKE_NODE_SUBNET_ID:
+        required: true
+      OKE_NODE_IMAGE_ID:
+        required: true
+      OKE_AVAILABILITY_DOMAIN_1:
+        required: true
+      OKE_AVAILABILITY_DOMAIN_2:
+        required: true
+      OKE_SSH_PRIVATE_KEY:
+        required: true
+      OKE_SSH_PUBLIC_KEY:
+        required: true
+    outputs:
+      runners_ready:
+        description: "Whether K8s controllers were successfully provisioned"
+        value: ${{ jobs.provision-k8s-runners.outputs.runners_ready }}
+
+concurrency:
+  group: owlsm-k8s-ci
+  cancel-in-progress: false
+
+env:
+  TF_VAR_github_pat: ${{ secrets.GH_RUNNER_PAT }}
+  TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
+  TF_VAR_github_repo_url: ${{ github.server_url }}/${{ github.repository }}
+  TF_VAR_run_id: ${{ github.run_id }}
+  TF_VAR_ephemeral_runner: "false"
+  TF_WORKING_DIR: terraform
+  K8S_TF_BACKEND_CONFIG: k8s-backend.hcl
+  K8S_TF_VAR_FILE: k8s-runners.tfvars.json
+  ALLOWED_FAILED_TESTS: 0
+  ALLOWED_SKIPPED_TESTS: 0
+
+jobs:
+  provision-k8s-runners:
+    name: Provision K8s Controller VMs
+    runs-on: ["OCI", "owLSM"]
+    outputs:
+      runners_ready: ${{ steps.apply.outputs.runners_ready }}
+      runner_labels: ${{ steps.runner_count.outputs.labels }}
+      runner_count: ${{ steps.runner_count.outputs.count }}
+      automation_count: ${{ steps.runner_count.outputs.automation_count }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Calculate expected runner count and labels
+        id: runner_count
+        run: |
+          TFVARS="${{ env.TF_WORKING_DIR }}/${{ env.K8S_TF_VAR_FILE }}"
+          COUNT=$(jq '.runners | length' "$TFVARS")
+          LABELS=$(jq -c '[.runners[] | select(.purpose == "automation") | .runner_labels[0]]' "$TFVARS")
+          AUTOMATION_COUNT=$(jq '[.runners[] | select(.purpose == "automation")] | length' "$TFVARS")
+          echo "count=$COUNT" >> "$GITHUB_OUTPUT"
+          echo "labels=$LABELS" >> "$GITHUB_OUTPUT"
+          echo "automation_count=$AUTOMATION_COUNT" >> "$GITHUB_OUTPUT"
+          echo "Provisioned K8s controllers: $COUNT"
+          echo "Labels: $LABELS"
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.14.4"
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init -backend-config="${{ env.K8S_TF_BACKEND_CONFIG }}" -reconfigure
+
+      - name: Terraform Plan
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform plan -var-file="${{ env.K8S_TF_VAR_FILE }}" -out=tfplan
+
+      - name: Terraform Apply
+        id: apply
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          terraform apply -auto-approve tfplan
+          echo "runners_ready=true" >> $GITHUB_OUTPUT
+
+      - name: Wait for controllers to become available
+        id: wait_runners
+        if: steps.apply.outputs.runners_ready == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GH_RUNNER_PAT }}
+        run: |
+          set +e
+          ${{ env.TF_WORKING_DIR }}/scripts/wait-for-runners.sh \
+            "${{ github.repository }}" \
+            "run-${{ github.run_id }}" \
+            "${{ steps.runner_count.outputs.count }}" \
+            "${{ env.TF_WORKING_DIR }}/${{ env.K8S_TF_VAR_FILE }}" \
+            500
+
+          EXIT_CODE=$?
+          echo "wait_exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+          if [ "$EXIT_CODE" -eq 0 ]; then
+            exit 0
+          elif [ "$EXIT_CODE" -eq 2 ]; then
+            echo "::warning::Some controllers failed to register. Will retry failed instances."
+            exit 0
+          else
+            echo "::error::No K8s controllers came online."
+            exit 1
+          fi
+
+      - name: Retry failed controllers
+        id: retry_runners
+        if: steps.wait_runners.outputs.wait_exit_code == '2'
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        env:
+          GH_TOKEN: ${{ secrets.GH_RUNNER_PAT }}
+        run: |
+          FAILED='${{ steps.wait_runners.outputs.failed_runners }}'
+          echo "==> Failed controllers to retry: $FAILED"
+
+          TARGET_FLAGS=""
+          for key in $(echo "$FAILED" | jq -r '.[]'); do
+            RESOURCE="oci_core_instance.gh_runner[\"$key\"]"
+            echo "==> Tainting $RESOURCE..."
+            terraform taint "$RESOURCE"
+            TARGET_FLAGS="$TARGET_FLAGS -target=$RESOURCE"
+          done
+
+          echo "==> Re-applying Terraform (only failed instances)..."
+          terraform apply -auto-approve -var-file="${{ env.K8S_TF_VAR_FILE }}" $TARGET_FLAGS
+
+          FAILED_COUNT=$(echo "$FAILED" | jq 'length')
+          echo "==> Waiting for $FAILED_COUNT re-provisioned controller(s)..."
+
+          set +e
+          scripts/wait-for-runners.sh \
+            "${{ github.repository }}" \
+            "run-${{ github.run_id }}" \
+            "${{ steps.runner_count.outputs.count }}" \
+            "${{ env.K8S_TF_VAR_FILE }}"
+
+          RETRY_EXIT=$?
+          set -e
+
+          if [ "$RETRY_EXIT" -eq 0 ]; then
+            echo "==> All K8s controllers online after retry!"
+          else
+            echo "::error::Controllers still not online after retry (exit=$RETRY_EXIT)."
+            exit 1
+          fi
+
+      - name: Summary
+        if: always()
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: |
+          echo "## Prepare K8s Controllers Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Action:** Provision K8s controllers" >> $GITHUB_STEP_SUMMARY
+          echo "**Terraform state:** k8s-runners/terraform.tfstate" >> $GITHUB_STEP_SUMMARY
+
+          if terraform output -json runner_public_ips 2>/dev/null; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Controller IPs" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            terraform output -json runner_public_ips >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Repository:** ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Run ID:** ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Cleanup workspace
+        if: always()
+        run: |
+          cd ${{ github.workspace }}
+          sudo git clean -ffdx
+          echo "==> Cleanup completed!"
+
+  recycle-oke:
+    name: Recycle OKE node pool
+    needs: provision-k8s-runners
+    if: needs.provision-k8s-runners.outputs.runners_ready == 'true'
+    uses: ./.github/workflows/oke-recycle.yml
+    secrets:
+      OKE_CLUSTER_OCID: ${{ secrets.OKE_CLUSTER_OCID }}
+      OKE_COMPARTMENT_OCID: ${{ secrets.OKE_COMPARTMENT_OCID }}
+      OKE_NODE_SUBNET_ID: ${{ secrets.OKE_NODE_SUBNET_ID }}
+      OKE_NODE_IMAGE_ID: ${{ secrets.OKE_NODE_IMAGE_ID }}
+      OKE_AVAILABILITY_DOMAIN_1: ${{ secrets.OKE_AVAILABILITY_DOMAIN_1 }}
+      OKE_AVAILABILITY_DOMAIN_2: ${{ secrets.OKE_AVAILABILITY_DOMAIN_2 }}
+      OKE_SSH_PRIVATE_KEY: ${{ secrets.OKE_SSH_PRIVATE_KEY }}
+      OKE_SSH_PUBLIC_KEY: ${{ secrets.OKE_SSH_PUBLIC_KEY }}
+
+  run-k8s-tests:
+    name: "K8s Tests (${{ matrix.runner-label }})"
+    needs: [provision-k8s-runners, recycle-oke]
+    if: >-
+      needs.provision-k8s-runners.outputs.runners_ready == 'true' &&
+      needs.recycle-oke.result == 'success'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner-label: ${{ fromJSON(needs.provision-k8s-runners.outputs.runner_labels) }}
+    uses: ./.github/workflows/k8s-automation-tests.yml
+    with:
+      runner-label: ${{ matrix.runner-label }}
+      image-repository: ${{ inputs.image-repository }}
+      image-tag: ${{ inputs.image-tag }}
+      k8s-tests-command-args: ${{ inputs.k8s-tests-command-args }}
+    secrets:
+      OKE_CLUSTER_OCID: ${{ secrets.OKE_CLUSTER_OCID }}
+      OKE_SSH_PRIVATE_KEY: ${{ secrets.OKE_SSH_PRIVATE_KEY }}
+      OKE_SSH_PUBLIC_KEY: ${{ secrets.OKE_SSH_PUBLIC_KEY }}
+
+  aggregate-results:
+    name: Aggregate K8s Test Results
+    needs: [provision-k8s-runners, run-k8s-tests]
+    if: always() && needs.provision-k8s-runners.outputs.runners_ready == 'true'
+    runs-on: ["OCI", "owLSM"]
+    env:
+      RESULTS_DIR: all-results
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Download all K8s test result artifacts
+        uses: actions/download-artifact@v5
+        with:
+          path: ${{ env.RESULTS_DIR }}
+          pattern: k8s-automation-test-results-*
+          merge-multiple: true
+
+      - name: List downloaded results
+        run: ls -la ${{ env.RESULTS_DIR }}/
+
+      - name: Run aggregation script
+        run: |
+          cd scripts/aggregate_automation_results
+          uv venv venv --clear
+          source venv/bin/activate
+          uv pip install -r requirements.txt
+          python3 aggregate_results.py \
+            ${{ github.workspace }}/${{ env.RESULTS_DIR }} \
+            ${{ needs.provision-k8s-runners.outputs.automation_count }} \
+            ${{ github.workspace }}/aggregated-results/aggregated_results.json
+
+      - name: Validate test results
+        run: |
+          FAILED=$(jq '.total_number_of_failed_tests' aggregated-results/aggregated_results.json)
+          SKIPPED=$(jq '.total_number_of_skipped_tests' aggregated-results/aggregated_results.json)
+          echo "Failed tests: $FAILED (allowed: ${{ env.ALLOWED_FAILED_TESTS }})"
+          echo "Skipped tests: $SKIPPED (allowed: ${{ env.ALLOWED_SKIPPED_TESTS }})"
+          if [ "$FAILED" -gt "${{ env.ALLOWED_FAILED_TESTS }}" ] || [ "$SKIPPED" -gt "${{ env.ALLOWED_SKIPPED_TESTS }}" ]; then
+            echo "::error::Test thresholds exceeded — failed: $FAILED, skipped: $SKIPPED"
+            exit 1
+          fi
+
+      - name: Upload aggregated results
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: k8s-aggregated-test-results
+          path: aggregated-results/aggregated_results.json
+          retention-days: 30
+
+      - name: Cleanup workspace
+        if: always()
+        run: |
+          cd ${{ github.workspace }}
+          sudo git clean -ffdx
+          echo "==> Cleanup completed!"
+
+  destroy-k8s-runners:
+    name: Destroy K8s Controller VMs
+    needs: [provision-k8s-runners, recycle-oke, run-k8s-tests, aggregate-results]
+    if: >-
+      always() &&
+      inputs.destroy_runners == true &&
+      needs.provision-k8s-runners.outputs.runners_ready == 'true'
+    uses: ./.github/workflows/k8s-destroy-runners.yml
+    secrets:
+      GH_RUNNER_PAT: ${{ secrets.GH_RUNNER_PAT }}
+      SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}

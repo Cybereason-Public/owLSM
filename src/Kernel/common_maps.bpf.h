@@ -24,6 +24,7 @@ extern const struct command_line_t   empty_command_line_t                  SEC("
 extern const struct printed_message  empty_printed_message                 SEC(".rodata");
 extern const volatile struct ebpf_features g_ebpf_features                 SEC(".rodata");
 extern const volatile int            legacy_exec_enabled                   SEC(".rodata");
+extern const volatile int            k8s_enabled                           SEC(".rodata");
 
 #ifndef DEFINE_MAPS
 extern
@@ -342,3 +343,15 @@ struct {
         __type(key,        u32);
         __type(value,      unsigned char);
 } kthread_exec_pids SEC(".maps");
+
+#ifndef DEFINE_MAPS
+extern
+#endif
+struct {
+    __uint(type, BPF_MAP_TYPE_HASH);
+    __uint(max_entries, PID_MAX_LIMIT);
+    __uint(map_flags,   BPF_F_NO_PREALLOC);
+    __type(key, u64);
+    __type(value, u64);
+    __uint(pinning,    LIBBPF_PIN_BY_NAME);
+} cgroup_id_to_container_id SEC(".maps");

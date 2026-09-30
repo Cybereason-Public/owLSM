@@ -7,4 +7,5 @@ namespace owlsm::globals
     constexpr int MAX_LOG_FILES = 5;
     constexpr unsigned int LIBBPF_LOG_MESSAGE_SIZE = 1024U;
     constexpr unsigned long long NANOSECONDS_IN_SECOND = 1000000000ULL;
+    constexpr int CONTAINER_ID_U64_HEX_LENGTH = 16;
 }
