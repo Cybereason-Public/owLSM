@@ -35,6 +35,7 @@ public:
     virtual void bpfDetach() override;
     virtual void bpfDestroy() override;
     void addAndAttachProbe(std::shared_ptr<AbstractProbe> probe);
+    int cgroupIdToContainerIdMapFd() const;
 
 private:
     void startRingbuffers();

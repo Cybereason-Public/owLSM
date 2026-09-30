@@ -116,6 +116,7 @@ def main():
 
     # --- Automation logs ---
     copy_dir(Path("/tmp/automation_logs"), "automation", log)
+    copy_dir(Path("/tmp/k8s_automation_logs"), "k8s_automation", log)
 
     # --- Runner logs ---
     copy_dir(RUNNER_DIAG_DIR, "runner/_diag", log)

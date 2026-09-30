@@ -32,6 +32,8 @@ Userspace/
 ├── rules_managment/                # Rule loading, regex-to-DFA conversion, and bpf map population
 │   ├── dfa_builder.hpp/.cpp        # Regex→AST→NFA→DFA pipeline and KMP DFA builder
 │   └── ...
+├── kubernetes/                     # Kubernetes related code
+│   └── client_go/                  # k8s go-client. Compile to c-shared library (libowlsm_k8s.so)
 └── 3rd_party/                      # Vendored dependencies (DO NOT MODIFY CODE IN THESE FILES)
     ├── cxxopts/                    # CLI parsing
     ├── flatbuffers/                # FlatBuffers runtime headers (v25.12.19)

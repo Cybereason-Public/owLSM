@@ -62,7 +62,9 @@ BPF_SRC        := common_maps.bpf.c \
                   Programs/shell_command_monitoring/dash/dash_shell_command.bpf.c
 
 BPF_OBJ        := $(BPF_SRC:.bpf.c=.bpf.o)
+BPF_OBJ_NO_LEGACY_EXEC := $(filter-out Programs/syscall_monitoring/legacy_on_exec.bpf.o,$(BPF_OBJ))
 BPF_MERGED     := Programs/syscall_monitoring/all_bpf.o
+BPF_MERGED_NO_LEGACY_EXEC := Programs/syscall_monitoring/all_bpf_no_legacy_exec.o
 BPF_SKEL       := Programs/syscall_monitoring/all_bpf.skel.h
 FEATURES_TEST_BPF_OBJ := features_test.bpf.o
 FEATURES_TEST_SKEL := features_test.skel.h
@@ -75,9 +77,9 @@ all: $(BPF_SKEL) $(FEATURES_TEST_SKEL)
 verifier_end:
 	@rm -rf /sys/fs/bpf/dummy
 
-verifier_start: verifier_end $(BPF_MERGED)
-	@echo "==> Loading BPF programs for verification..."
-	bpftool prog loadall $(BPF_MERGED) /sys/fs/bpf/dummy
+verifier_start: verifier_end $(BPF_MERGED_NO_LEGACY_EXEC)
+	@echo "==> Loading BPF programs for verification (without legacy exec)..."
+	bpftool prog loadall $(BPF_MERGED_NO_LEGACY_EXEC) /sys/fs/bpf/dummy
 
 generate_constants: $(CONSTANTS_H)
 
@@ -93,6 +95,11 @@ $(CONSTANTS_H): $(CONSTANTS_JSON)
 $(BPF_MERGED): $(BPF_OBJ)
 	bpftool gen object $@ $^
 
+# Same merge without legacy exec — bpftool loadall cannot skip programs, and
+# exec_hook cannot share exec_prog_array with bprm_creds_from_file.
+$(BPF_MERGED_NO_LEGACY_EXEC): $(BPF_OBJ_NO_LEGACY_EXEC)
+	bpftool gen object $@ $^
+
 # Generate skeleton from merged object
 $(BPF_SKEL): $(BPF_MERGED)
 	bpftool gen skeleton $< > $@
@@ -101,4 +108,4 @@ $(FEATURES_TEST_SKEL): $(FEATURES_TEST_BPF_OBJ)
 	bpftool gen skeleton $< > $@
 
 clean:
-	$(RM) $(BPF_OBJ) $(BPF_MERGED) $(BPF_SKEL) $(FEATURES_TEST_BPF_OBJ) $(FEATURES_TEST_SKEL)
+	$(RM) $(BPF_OBJ) $(BPF_MERGED) $(BPF_MERGED_NO_LEGACY_EXEC) $(BPF_SKEL) $(FEATURES_TEST_BPF_OBJ) $(FEATURES_TEST_SKEL)

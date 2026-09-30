@@ -4,6 +4,7 @@ Creates installation directory structure for owlsm or unit_tests.
 
 Usage:
     scripts/package.py owlsm
+    scripts/package.py owlsm-k8s
     scripts/package.py unit_tests
 """
 
@@ -25,7 +26,7 @@ _ARCH_LIBRARY_SEARCH_PATHS = {
     "x86_64": ["/usr/lib/x86_64-linux-gnu", "/lib/x86_64-linux-gnu"],
     "aarch64": ["/usr/lib/aarch64-linux-gnu", "/lib/aarch64-linux-gnu"],
 }
-
+K8S_SO_DIR = PROJECT_ROOT / "src" / "Userspace" / "kubernetes" / "client_go"
 
 def host_arch():
     """Return normalized host arch (x86_64 or aarch64)."""
@@ -40,8 +41,7 @@ def host_arch():
 
 def library_search_paths():
     arch = host_arch()
-    return _ARCH_LIBRARY_SEARCH_PATHS[arch] + _COMMON_LIBRARY_SEARCH_PATHS
-
+    return [str(K8S_SO_DIR)] + _ARCH_LIBRARY_SEARCH_PATHS[arch] + _COMMON_LIBRARY_SEARCH_PATHS
 
 RESOURCES_SRC = PROJECT_ROOT / "src" / "Userspace" / "resources"
 FLATBUFFERS_SRC = PROJECT_ROOT / "src" / "Userspace" / "events" / "flatbuffers"
@@ -52,6 +52,13 @@ MODES = {
     "owlsm": {
         "binary": PROJECT_ROOT / "src" / "Userspace" / "owlsm",
         "output": PROJECT_ROOT / "build" / "owlsm",
+        "with_rules_generator_bin": True,
+        "with_resources": True,
+        "with_flatbuffers": True,
+    },
+    "owlsm-k8s": {
+        "binary": PROJECT_ROOT / "src" / "Userspace" / "owlsm",
+        "output": PROJECT_ROOT / "build" / "owlsm-k8s",
         "with_rules_generator_bin": True,
         "with_resources": True,
         "with_flatbuffers": True,

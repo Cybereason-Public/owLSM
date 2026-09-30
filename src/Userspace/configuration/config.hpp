@@ -76,11 +76,18 @@ struct KernelConfig
     log_level log_level = LOG_LEVEL_ERROR;
 };
 
+struct KubernetesConfig
+{
+    bool enabled = false;
+    std::string root_proc_path;
+};
+
 struct Config 
 {
     FeaturesConfig features;
     UserspaceConfig userspace;
     KernelConfig kernel;
+    KubernetesConfig kubernetes;
     RulesConfig rules_config;
 };
 

@@ -1,0 +1,94 @@
+name: Destroy K8s Runners
+
+# =============================================================================
+# Destroys the K8s controller VMs (k8s-kind, k8s-oci) via Terraform and
+# deregisters offline K8s runners from GitHub. Sibling of destroy-runners.yml.
+# Uses k8s-runners/terraform.tfstate — does not touch the Linux runner state.
+#
+# OCI credentials are in the runner image at /home/ghrunner/.oci/
+# (config file + private API key). Terraform uses them automatically.
+# =============================================================================
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+  workflow_call:
+    secrets:
+      GH_RUNNER_PAT:
+        required: true
+      SSH_PUBLIC_KEY:
+        required: true
+
+env:
+  TF_VAR_github_pat: ${{ secrets.GH_RUNNER_PAT }}
+  TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
+  TF_VAR_github_repo_url: ${{ github.server_url }}/${{ github.repository }}
+  TF_VAR_run_id: ${{ github.run_id }}
+  TF_WORKING_DIR: terraform
+  K8S_TF_BACKEND_CONFIG: k8s-backend.hcl
+  K8S_TF_VAR_FILE: k8s-runners.tfvars.json
+
+jobs:
+  destroy-k8s-runners:
+    name: Destroy K8s Controller VMs
+    runs-on: ["OCI", "owLSM"]
+
+    steps:
+      # =====================================================================
+      # Setup
+      # =====================================================================
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.14.4"
+          terraform_wrapper: false
+
+      # =====================================================================
+      # Terraform Init & Destroy (K8s state only)
+      # -reconfigure: backend.tf defaults to the Linux state
+      # -var-file: overrides runners.auto.tfvars.json (Linux VMs)
+      # =====================================================================
+      - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init -backend-config="${{ env.K8S_TF_BACKEND_CONFIG }}" -reconfigure
+
+      - name: Terraform Destroy
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform destroy -auto-approve -var-file="${{ env.K8S_TF_VAR_FILE }}"
+
+      # =====================================================================
+      # Deregister offline K8s runners from GitHub
+      # Shared label owLSM-k8s — Linux destroy uses owLSM-automation
+      # =====================================================================
+      - name: Deregister offline K8s runners from GitHub
+        env:
+          GH_TOKEN: ${{ secrets.GH_RUNNER_PAT }}
+        run: |
+          ${{ env.TF_WORKING_DIR }}/scripts/deregister-runners.sh \
+            "${{ github.repository }}" \
+            "owLSM-k8s"
+
+      # =====================================================================
+      # Summary
+      # =====================================================================
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Destroy K8s Runners Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Action:** Destroy K8s controllers and deregister from GitHub" >> $GITHUB_STEP_SUMMARY
+          echo "**Terraform state:** k8s-runners/terraform.tfstate" >> $GITHUB_STEP_SUMMARY
+          echo "**Repository:** ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Run ID:** ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Cleanup workspace
+        if: always()
+        run: |
+          cd ${{ github.workspace }}
+          sudo git clean -ffdx
+          echo "==> Cleanup completed!"

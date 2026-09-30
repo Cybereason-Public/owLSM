@@ -39,6 +39,7 @@ namespace owlsm
         m_skel->rodata->anti_tampering_ptrace_action = static_cast<int>(owlsm::globals::g_config.features.anti_tampering.events.ptrace);
         m_skel->rodata->g_ebpf_features = m_ebpf_features;
         m_skel->rodata->legacy_exec_enabled = owlsm::globals::g_config.features.legacy_exec;
+        m_skel->rodata->k8s_enabled = owlsm::globals::g_config.kubernetes.enabled;
 
         disableUnavailableProbes();
         setupLegacyExecHooks();
@@ -78,6 +79,20 @@ namespace owlsm
         }
 
         LOG_INFO("Attached all probes");
+    }
+
+    int ProbeManager::cgroupIdToContainerIdMapFd() const
+    {
+        if (!m_skel)
+        {
+            throw std::runtime_error("cgroup_id_to_container_id map is unavailable before bpfLoad");
+        }
+        const int map_fd = bpf_map__fd(m_skel->maps.cgroup_id_to_container_id);
+        if (map_fd < 0)
+        {
+            throw std::runtime_error("cgroup_id_to_container_id map fd is invalid");
+        }
+        return map_fd;
     }
 
     void ProbeManager::bpfDetach()

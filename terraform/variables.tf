@@ -109,5 +109,8 @@ variable "runners" {
     runner_labels            = optional(list(string), ["ubuntu-22"]) # first label must represent unique runner distributive
     pv_encryption_in_transit = optional(bool, true)
     purpose                  = optional(string, "automation")
+    # Existing reserved public IP OCID (console). Terraform attaches it and
+    # detaches on destroy. The IP itself is never deleted.
+    reserved_public_ip_id    = optional(string, null)
   }))
 }

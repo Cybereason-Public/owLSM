@@ -1,30 +1,25 @@
 {
-    "mcpServers": {
-      "pySigma Docs": {
-        "url": "https://gitmcp.io/SigmaHQ/pySigma?tab=readme-ov-file"
-      },
-      "sigma Docs": {
-        "url": "https://gitmcp.io/SigmaHQ/sigma?tab=readme-ov-file"
-      },
-      "sigma-specification Docs": {
-        "url": "https://gitmcp.io/SigmaHQ/sigma-specification?tab=readme-ov-file"
-      },
-      "libbpf Docs": {
-        "url": "https://gitmcp.io/libbpf/libbpf"
-      },
-      "mcp-language-server-docs": {
-        "url": "https://gitmcp.io/isaacphi/mcp-language-server"
-      },
-      "cpp-lsp": {
-        "command": "/root/go/bin/mcp-language-server",
-        "args": ["--workspace", "~/owLSM", "--lsp", "clangd"]
-      },
-      "python-lsp": {
-        "command": "/root/go/bin/mcp-language-server",
-        "args": ["--workspace", "~/owLSM/Rules/RulesGenerator", "--lsp", "pyright-langserver", "--", "--stdio"]
-      },
-        "flatbuffers Docs": {
-        "url": "https://gitmcp.io/google/flatbuffers"
-      }
+  "mcpServers": {
+    "pySigma Docs": {
+      "url": "https://gitmcp.io/SigmaHQ/pySigma"
+    },
+    "sigma Docs": {
+      "url": "https://gitmcp.io/SigmaHQ/sigma"
+    },
+    "sigma-specification Docs": {
+      "url": "https://gitmcp.io/SigmaHQ/sigma-specification"
+    },
+    "libbpf Docs": {
+      "url": "https://gitmcp.io/libbpf/libbpf"
+    },
+    "flatbuffers Docs": {
+      "url": "https://gitmcp.io/google/flatbuffers"
+    },
+    "tetragon Docs": {
+      "url": "https://gitmcp.io/cilium/tetragon"
+    },
+    "kubearmor Docs": {
+      "url": "https://gitmcp.io/kubearmor/kubearmor"
     }
   }
+}

@@ -29,6 +29,11 @@ locals {
       }
     )
   }
+
+  runners_with_reserved_ip = {
+    for key, runner in local.active_runners : key => runner
+    if can(regex("^ocid1\\.publicip\\.", try(runner.reserved_public_ip_id, "")))
+  }
 }
 
 # =============================================================================
@@ -73,7 +78,7 @@ resource "oci_core_instance" "gh_runner" {
 
   create_vnic_details {
     subnet_id        = var.subnet_id
-    assign_public_ip = true
+    assign_public_ip = !contains(keys(local.runners_with_reserved_ip), each.key)
     display_name     = "${local.runner_display_names[each.key]}-vnic"
     nsg_ids          = var.network_security_group_ids
   }
@@ -98,5 +103,45 @@ resource "oci_core_instance" "gh_runner" {
       condition     = length(each.value.image_id) > 0
       error_message = "image_id must not be empty for runner '${each.key}'."
     }
+  }
+}
+
+data "oci_core_private_ips" "reserved" {
+  for_each   = local.runners_with_reserved_ip
+  ip_address = oci_core_instance.gh_runner[each.key].private_ip
+  subnet_id  = var.subnet_id
+}
+
+# Attach a console-created reserved public IP. Do not create/destroy the IP
+# in this state — K8s terraform destroy must only unassign it.
+resource "terraform_data" "attach_reserved_public_ip" {
+  for_each = local.runners_with_reserved_ip
+
+  input = {
+    public_ip_id  = each.value.reserved_public_ip_id
+    private_ip_id = data.oci_core_private_ips.reserved[each.key].private_ips[0].id
+  }
+
+  provisioner "local-exec" {
+    interpreter = ["/bin/bash", "-c"]
+    command     = <<-EOT
+      set -euo pipefail
+      export OCI_CLI_SUPPRESS_FILE_PERMISSIONS_WARNING=True
+      oci network public-ip update --force \
+        --public-ip-id "${self.input.public_ip_id}" \
+        --private-ip-id "${self.input.private_ip_id}"
+    EOT
+  }
+
+  provisioner "local-exec" {
+    when        = destroy
+    interpreter = ["/bin/bash", "-c"]
+    command     = <<-EOT
+      set -euo pipefail
+      export OCI_CLI_SUPPRESS_FILE_PERMISSIONS_WARNING=True
+      oci network public-ip update --force \
+        --public-ip-id "${self.input.public_ip_id}" \
+        --private-ip-id ""
+    EOT
   }
 }

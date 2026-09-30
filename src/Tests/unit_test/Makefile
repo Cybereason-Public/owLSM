@@ -117,13 +117,19 @@ USERSPACE_IMPL_SRC := $(USERSPACE_SRC_DIR)/logger.cpp \
                       $(USERSPACE_SRC_DIR)/ringbuffers_messages_handlers.cpp \
                       $(USERSPACE_SRC_DIR)/events/event_to_json.cpp \
                       $(USERSPACE_SRC_DIR)/events/event_to_flatbuffer.cpp \
+                      $(USERSPACE_SRC_DIR)/events/kubernetes_event_enrichment.cpp \
                       $(USERSPACE_SRC_DIR)/globals/global_objects.cpp \
                       $(USERSPACE_SRC_DIR)/globals/global_strings.cpp \
                       $(USERSPACE_SRC_DIR)/shell_detection/shells_db.cpp \
                       $(USERSPACE_SRC_DIR)/shell_detection/shells_finder.cpp \
                       $(USERSPACE_SRC_DIR)/shell_detection/shell_binary_info_extractor.cpp \
                       $(USERSPACE_SRC_DIR)/async_event_work/shell_async_worker.cpp \
-                      $(USERSPACE_SRC_DIR)/probes_objects/uprobe_probe.cpp
+                      $(USERSPACE_SRC_DIR)/probes_objects/uprobe_probe.cpp \
+                      $(USERSPACE_SRC_DIR)/kubernetes/kubernetes_pod_cache.cpp \
+                      $(USERSPACE_SRC_DIR)/kubernetes/cgroup_path.cpp \
+                      $(USERSPACE_SRC_DIR)/kubernetes/nri_container_cache.cpp \
+                      $(USERSPACE_SRC_DIR)/kubernetes/nri_plugin.cpp \
+                      $(USERSPACE_SRC_DIR)/kubernetes/kubernetes_client_stub.cpp
 
 # Object files under .obj/ (do not drop .o into Userspace / test source trees)
 KERNEL_TEST_OBJS    := $(patsubst $(KERNEL_TESTS_DIR)/%.cpp,$(OBJ_DIR)/kernel/%.o,$(KERNEL_TEST_SRC))

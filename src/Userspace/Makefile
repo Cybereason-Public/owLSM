@@ -4,6 +4,13 @@
 
 # ---- Variables from parent Makefile --------------------------
 VERSION        ?= 1.0.0
+K8S            ?=
+
+ifneq ($(K8S),)
+ifneq ($(K8S),1)
+$(error K8S must be 1 if set, got '$(K8S)')
+endif
+endif
 
 # ---- Compiler ------------------------------------------------
 CXX            := clang++
@@ -39,12 +46,29 @@ else
     LDFLAGS    += -Wl,-z,relro,-z,now -pie
 endif
 
+K8S_CLIENT_GO_DIR := $(CURDIR)/kubernetes/client_go
+K8S_CLIENT_SRC    := kubernetes/kubernetes_client.cpp
+K8S_STUB_SRC      := kubernetes/kubernetes_client_stub.cpp
+
 LDLIBS         := -lbpf -lelf -lz -lzstd -lssl -lcrypto -lsqlite3 -ldw -lbz2
 
 # ---- Source / Objects ----------------------------------------
 # Find all .cpp files recursively (exclude vendored 3rd_party).
 SRC            := $(sort $(patsubst ./%,%,$(shell find . -name '*.cpp' -type f ! -path './3rd_party/*')))
+
+ifeq ($(K8S),1)
+CPPFLAGS       += -DOWLSM_KUBERNETES
+SRC            := $(filter-out $(K8S_STUB_SRC),$(SRC))
+LDFLAGS        += -L$(K8S_CLIENT_GO_DIR)
+LDLIBS         += -lowlsm_k8s
+K8S_LINK_DEPS  := k8s
+OBJ_DIR        := .obj-k8s
+else
+SRC            := $(filter-out $(K8S_CLIENT_SRC),$(SRC))
+K8S_LINK_DEPS  :=
 OBJ_DIR        := .obj
+endif
+
 OBJS           := $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(SRC))
 DEPS           := $(OBJS:.o=.d)
 
@@ -58,7 +82,7 @@ SCHEMA_INC     := configuration/schema.inc
 BINARY         := owlsm
 
 # ---- Build Rules ---------------------------------------------
-.PHONY: all clean
+.PHONY: all clean k8s
 
 all: $(BINARY)
 
@@ -72,12 +96,16 @@ $(OBJ_DIR)/%.o: %.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(DEPFLAGS) -c $< -o $@
 
-$(BINARY): $(OBJS)
+k8s:
+	$(MAKE) -C $(K8S_CLIENT_GO_DIR)
+
+$(BINARY): $(OBJS) $(K8S_LINK_DEPS)
 	$(CXX) $(OBJS) -o $@ $(LDFLAGS) $(LDLIBS)
 
 clean:
 	$(RM) $(BINARY)
 	$(RM) $(SCHEMA_INC)
-	$(RM) -r $(OBJ_DIR)
+	$(RM) -r .obj .obj-k8s
+	$(MAKE) -C $(K8S_CLIENT_GO_DIR) clean
 
 -include $(DEPS)

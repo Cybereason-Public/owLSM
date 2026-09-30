@@ -4,7 +4,12 @@ build/
 *.bpf.o
 src/Userspace/configuration/schema.inc
 src/Userspace/.obj/*
+src/Userspace/kubernetes/client_go/libowlsm_k8s.so
+src/Userspace/kubernetes/client_go/libowlsm_k8s.h
 *.skel.h
+*.d
+src/Userspace/owlsm
+src/Tests/unit_test/unit_tests
 
 # Python
 __pycache__/
@@ -53,3 +58,9 @@ src/Tests/Automation/resources/protected_process
 # terraform
 terraform/.terraform/*
 terraform/.terraform.lock.hcl
+
+# local binaries
+kubectl
+
+# Local planning notes
+Plan/
