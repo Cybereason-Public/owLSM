@@ -3,10 +3,12 @@ import os
 import pytest
 
 from Utils.cluster_utils import (
+    cleanup_cluster_objects,
     close_cluster_ssh,
     create_kind_cluster,
     delete_kind_cluster,
     deploy_test_pod,
+    forget_manifest_pods,
     ensure_connection_to_cluster,
     init_global_cluster_object,
     load_owlsm_runtime_local_image_into_kind,
@@ -45,10 +47,12 @@ def pytest_sessionstart(session):
             load_owlsm_runtime_local_image_into_kind()
         else:
             logger.log_info(
-                "OWLSM image is GHCR; skipping kind load, kind nodes will pull it"
+                f"OWLSM image is GHCR; skipping {global_strings.KIND} load, {global_strings.KIND} nodes will pull it"
             )
     elif global_strings.CLUSTER_TYPE == global_strings.OCI:
-        logger.log_info("CLUSTER_TYPE=oci; skipping kind create and kind load")
+        logger.log_info(
+            f"CLUSTER_TYPE={global_strings.OCI}; skipping {global_strings.KIND} create and {global_strings.KIND} load"
+        )
     else:
         raise RuntimeError(
             f"unsupported OWLSM_CLUSTER_TYPE={global_strings.CLUSTER_TYPE}"
@@ -77,7 +81,7 @@ def pytest_sessionfinish(session, exitstatus):
     if global_strings.CLUSTER_TYPE == global_strings.KIND:
         _run_cleanup_step("delete_kind_cluster", delete_kind_cluster)
     elif global_strings.CLUSTER_TYPE == global_strings.OCI:
-        logger.log_info("CLUSTER_TYPE=oci; skipping kind delete")
+        logger.log_info(f"CLUSTER_TYPE={global_strings.OCI}; skipping {global_strings.KIND} delete")
         _run_cleanup_step("close_cluster_ssh", close_cluster_ssh)
     else:
         _run_cleanup_step("close_cluster_ssh", close_cluster_ssh)
@@ -97,6 +101,8 @@ def pytest_bdd_before_scenario(request, feature, scenario):
 def pytest_bdd_after_scenario(request, feature, scenario):
     logger.log_info(f"AFTER scenario: '{scenario.name}' in feature: '{feature.name}'")
     save_log_files(scenario.name)
+    cleanup_cluster_objects()
+    forget_manifest_pods()
 
 
 def pytest_bdd_before_step(request, feature, scenario, step, step_func):

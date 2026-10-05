@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 from pathlib import Path
 import shutil
 
+from Utils.cluster_utils import get_cluster
 from Utils.logger_utils import logger
 from Utils.owlsm_utils import copy_owlsm_logger_log
 from globals.global_strings import global_strings
@@ -28,6 +31,8 @@ def save_log_files(scenario_name: str) -> None:
         _copy_if_exists(global_strings.LOG_PATH, log_storage_path)
         _copy_if_exists(global_strings.OWLSM_OUTPUT_LOG, log_storage_path)
         _copy_if_exists(global_strings.OWLSM_LOGGER_LOG, log_storage_path)
+        for node_log in global_strings.AUTOMATION_ROOT_DIR.glob("owlsm.*.log"):
+            _copy_if_exists(node_log, log_storage_path)
         logger.log_info(f"Saved log files to {log_storage_path}")
     except Exception as e:
         logger.log_error(f"Failed to save log files: {e}")
@@ -47,6 +52,31 @@ def remove_old_log_directories() -> None:
         logger.log_info(f"Removed oldest log directory: {oldest_dir}")
     except Exception as e:
         logger.log_error(f"Failed to cleanup old log directories: {e}")
+
+
+def count_owlsm_log_messages(needles: list[str]) -> dict[str, tuple[int, list[str]]]:
+    node_name, text = _read_main_node_owlsm_logger()
+    results: dict[str, tuple[int, list[str]]] = {}
+    for needle in needles:
+        count = 0
+        samples: list[str] = []
+        for line in text.splitlines():
+            found = line.count(needle)
+            if found == 0:
+                continue
+            count += found
+            if len(samples) < 5:
+                samples.append(f"{node_name}: {line.strip()}")
+        results[needle] = (count, samples)
+    return results
+
+
+def _read_main_node_owlsm_logger() -> tuple[str, str]:
+    node_name = get_cluster().main_node.name
+    copy_owlsm_logger_log()
+    text = global_strings.OWLSM_LOGGER_LOG.read_text(encoding="utf-8", errors="ignore")
+    logger.log_info(f"owlsm logger on {node_name} is {len(text.splitlines())} lines")
+    return node_name, text
 
 
 def _truncate_file(path: Path) -> None:

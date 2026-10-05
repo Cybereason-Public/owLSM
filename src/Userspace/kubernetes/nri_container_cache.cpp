@@ -101,7 +101,12 @@ void NriContainerCache::remove(const char* container_id)
         deleteEntryFromBpfMapIfOwner(cgroup_it->second, *truncated_id);
         m_container_id_to_cgroup_id.erase(cgroup_it);
     }
-    m_container_id_to_pod_uid.erase(*truncated_id);
+    const auto pod_it = m_container_id_to_pod_uid.find(*truncated_id);
+    if (pod_it != m_container_id_to_pod_uid.end())
+    {
+        m_removed_container_id_to_pod_uid.put(*truncated_id, pod_it->second);
+        m_container_id_to_pod_uid.erase(pod_it);
+    }
     m_pending.erase(*truncated_id);
 }
 
@@ -114,18 +119,27 @@ void NriContainerCache::clear()
     }
     m_container_id_to_cgroup_id.clear();
     m_container_id_to_pod_uid.clear();
+    m_removed_container_id_to_pod_uid.clear();
     m_pending.clear();
 }
 
 std::optional<std::string> NriContainerCache::lookupPodUid(const std::uint64_t container_id) const
 {
-    std::shared_lock lock(m_mutex);
-    const auto it = m_container_id_to_pod_uid.find(container_id);
-    if (it == m_container_id_to_pod_uid.end())
     {
-        return std::nullopt;
+        std::shared_lock lock(m_mutex);
+        const auto it = m_container_id_to_pod_uid.find(container_id);
+        if (it != m_container_id_to_pod_uid.end())
+        {
+            return it->second;
+        }
     }
-    return it->second;
+    std::unique_lock lock(m_mutex);
+    const auto it = m_container_id_to_pod_uid.find(container_id);
+    if (it != m_container_id_to_pod_uid.end())
+    {
+        return it->second;
+    }
+    return m_removed_container_id_to_pod_uid.get(container_id);
 }
 
 std::optional<std::uint64_t> NriContainerCache::lookupCgroupId(const std::uint64_t container_id) const

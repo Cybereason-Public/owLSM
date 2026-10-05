@@ -13,6 +13,8 @@ K8S_Automation/
 ├── requirements.txt     # Python dependencies
 ├── conftest.py          # session/scenario hooks
 ├── features/            # Gherkin features + all_test.py (pytest-bdd scenario bindings)
+├── resources/manifests/ # Kubernetes YAML applied by scenarios
+├── state_db/            # tracks objects that created in the scenario
 ├── steps/               # pytest-bdd step definitions
 ├── globals/             # GlobalStrings, GlobalObjects, GlobalNumbers
 └── Utils/               # cluster, owlsm, file, log, logger helpers
@@ -36,7 +38,7 @@ See [README.md](README.md) for the full local build-and-run flow (kind, no secre
 - OWLSM_CLUSTER_TYPE: kind (default; pytest creates/deletes the cluster) vs oci (kubeconfig already on the controller vm;
 - controller vm is the VM that controls the cluster. Pytest and GH runner runs on the controller VM.
 
-## Log files
+## Log Files
 
 - `automation.log` — test framework logger (`Utils/logger_utils.py`)
 - `owLSM_output.log` — owlsm container stdout (via `kubectl logs`)

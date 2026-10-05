@@ -71,6 +71,22 @@ echo "Waiting for $EXPECTED_NODE_COUNT nodes to be Ready"
 "$KUBECTL" --context "$KUBE_CONTEXT" wait --for=condition=Ready nodes --all --timeout=180s
 "$KUBECTL" --context "$KUBE_CONTEXT" get nodes -o wide
 
+# fs.inotify is a host kernel limit. Kind nodes share it, and cluster.yaml cannot set it.
+echo "Raising host inotify limits"
+raise_inotify_limit() {
+    local key="$1"
+    local minimum="$2"
+    local current
+    current="$(sysctl -n "$key")"
+    if [[ "$current" -lt "$minimum" ]]; then
+        sysctl -w "${key}=${minimum}"
+    else
+        echo "  $key=$current"
+    fi
+}
+raise_inotify_limit fs.inotify.max_user_instances 8192
+raise_inotify_limit fs.inotify.max_user_watches 524288
+
 echo "Checking NRI socket and bpffs on each node"
 while IFS= read -r node; do
     if ! docker exec "$node" test -S /var/run/nri/nri.sock; then

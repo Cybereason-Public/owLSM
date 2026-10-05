@@ -1,5 +1,7 @@
 import os
 
+from globals.global_strings import global_strings
+
 
 class GlobalNumbers:
     _instance = None
@@ -15,7 +17,7 @@ class GlobalNumbers:
             return
 
         self.MIN_NUMBER_OF_NODES_IN_TEST_CLUSTER = 2
-        cluster_type = os.environ.get("OWLSM_CLUSTER_TYPE", "kind")
+        cluster_type = os.environ.get("OWLSM_CLUSTER_TYPE", global_strings.KIND)
         default_rollout = "180" if cluster_type == "oci" else "120"
         default_pod_ready = "90" if cluster_type == "oci" else "30"
         self.OWLSM_ROLLOUT_TIMEOUT_SECONDS = int(

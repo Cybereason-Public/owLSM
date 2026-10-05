@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: owlsm-preexisting
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: owlsm-preexisting
+  namespace: owlsm-preexisting
+spec:
+  replicas: 100
+  selector:
+    matchLabels:
+      app: owlsm-preexisting
+  template:
+    metadata:
+      labels:
+        app: owlsm-preexisting
+      annotations:
+        owlsm/alias: sample
+    spec:
+      nodeName: <main_node_name>
+      terminationGracePeriodSeconds: 1
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: owlsm-preexisting
+          image: busybox:1.36
+          imagePullPolicy: IfNotPresent
+          command: ["sleep", "infinity"]
