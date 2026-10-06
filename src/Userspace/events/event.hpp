@@ -102,7 +102,7 @@ struct Process
     explicit Process(const process_t& p)
         : pid(p.pid) , ns_pid(p.ns_pid) , ppid(p.ppid) , ns_ppid(p.ns_ppid) , unique_process_id(p.unique_process_id) , unique_ppid_id(p.unique_ppid_id)
         , ruid(p.ruid) , rgid(p.rgid) , euid(p.euid) , egid(p.egid) , suid(p.suid) , cgroup_id(p.cgroup_id)
-        , container_id(p.container_id) , start_time(p.start_time) , ptrace_flags(p.ptrace_flags) , file(p.file) , cmd(p.cmd)
+        , container_id(p.container_id.id) , start_time(p.start_time) , ptrace_flags(p.ptrace_flags) , file(p.file) , cmd(p.cmd)
         , stdio_file_descriptors_at_process_creation(p.stdio_file_descriptors_at_process_creation) , shell_command(p.shell_command) {}
 };
 

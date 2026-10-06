@@ -5,11 +5,11 @@ package main
 #include "owlsm_k8s.h"
 #include <stdlib.h>
 
-static inline void owlsm_k8s_nri_call_upsert(owlsm_k8s_nri_upsert_fn fn, const char* id, const char* uid, const char* path)
+static inline void owlsm_k8s_nri_call_upsert(owlsm_k8s_nri_upsert_fn fn, const char* id, const char* uid, const char* path, const char* ns)
 {
     if (fn != NULL)
     {
-        fn(id, uid, path);
+        fn(id, uid, path, ns);
     }
 }
 
@@ -75,11 +75,13 @@ func (p *nriPlugin) Configure(_ context.Context, _, _, _ string) (api.EventMask,
 
 func (p *nriPlugin) Synchronize(_ context.Context, pods []*api.PodSandbox, containers []*api.Container) ([]*api.ContainerUpdate, error) {
 	uids := make(map[string]string, len(pods))
+	namespaces := make(map[string]string, len(pods))
 	for _, pod := range pods {
 		if pod == nil {
 			continue
 		}
 		uids[pod.GetId()] = pod.GetUid()
+		namespaces[pod.GetId()] = pod.GetNamespace()
 	}
 	for _, ctr := range containers {
 		if ctr == nil {
@@ -89,7 +91,7 @@ func (p *nriPlugin) Synchronize(_ context.Context, pods []*api.PodSandbox, conta
 		if linux := ctr.GetLinux(); linux != nil {
 			path = linux.GetCgroupsPath()
 		}
-		nriUpsert(ctr.GetId(), uids[ctr.GetPodSandboxId()], path)
+		nriUpsert(ctr.GetId(), uids[ctr.GetPodSandboxId()], path, namespaces[ctr.GetPodSandboxId()])
 	}
 	callSyncDone()
 	return nil, nil
@@ -124,31 +126,35 @@ func upsertFromNri(pod *api.PodSandbox, ctr *api.Container) error {
 		return nil
 	}
 	uid := ""
+	namespace := ""
 	if pod != nil {
 		uid = pod.GetUid()
+		namespace = pod.GetNamespace()
 	}
 	path := ""
 	if linux := ctr.GetLinux(); linux != nil {
 		path = linux.GetCgroupsPath()
 	}
-	nriUpsert(ctr.GetId(), uid, path)
+	nriUpsert(ctr.GetId(), uid, path, namespace)
 	return nil
 }
 
-func nriUpsert(id, uid, path string) {
+func nriUpsert(id, uid, path, namespace string) {
 	cID := C.CString(id)
 	cUID := C.CString(uid)
 	cPath := C.CString(path)
+	cNS := C.CString(namespace)
 	defer C.free(unsafe.Pointer(cID))
 	defer C.free(unsafe.Pointer(cUID))
 	defer C.free(unsafe.Pointer(cPath))
+	defer C.free(unsafe.Pointer(cNS))
 	g_nriMu.Lock()
 	fn := C.owlsm_k8s_nri_upsert_fn(nil)
 	if g_nri != nil {
 		fn = g_nri.upsert
 	}
 	g_nriMu.Unlock()
-	C.owlsm_k8s_nri_call_upsert(fn, cID, cUID, cPath)
+	C.owlsm_k8s_nri_call_upsert(fn, cID, cUID, cPath, cNS)
 }
 
 func callSyncDone() {

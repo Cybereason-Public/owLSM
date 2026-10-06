@@ -1,5 +1,6 @@
 #include "allocators.bpf.h"
 #include "fill_event_structs.bpf.h"
+#include "k8s_ignored_events.h"
 #include "pids_to_ignore.bpf.h"
 
 #define FILE_CREATE_EVENT
@@ -17,6 +18,11 @@ int BPF_PROG(fc_hook, const struct path *dir, struct dentry *dentry, umode_t mod
     }
 
     if(is_current_pid_related())
+    {
+        return ALLOW;
+    }
+
+    if (k8s_ignore_current_process())
     {
         return ALLOW;
     }

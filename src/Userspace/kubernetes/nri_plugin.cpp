@@ -3,7 +3,9 @@
 #include "logger.hpp"
 
 #include <chrono>
+#include <cstdlib>
 #include <stdexcept>
+#include <string>
 
 namespace owlsm::kubernetes
 {
@@ -12,11 +14,11 @@ constexpr int FIRST_SYNC_TIMEOUT_MS = 5000;
 
 NriPlugin* g_nri_plugin = nullptr;
 
-extern "C" void owlsmK8sOnNriUpsert(const char* container_id, const char* pod_uid, const char* cgroups_path)
+extern "C" void owlsmK8sOnNriUpsert(const char* container_id, const char* pod_uid, const char* cgroups_path, const char* pod_namespace)
 {
     if (g_nri_plugin != nullptr)
     {
-        g_nri_plugin->handleUpsert(container_id, pod_uid, cgroups_path);
+        g_nri_plugin->handleUpsert(container_id, pod_uid, cgroups_path, pod_namespace);
     }
 }
 
@@ -53,6 +55,7 @@ void NriPlugin::start()
 {
     m_stopping.store(false);
     g_nri_plugin = this;
+    readOwlsmPodUid();
     startSession();
     if (!waitForFirstSync())
     {
@@ -102,9 +105,9 @@ std::optional<std::string> NriPlugin::lookupPodUid(const std::uint64_t container
     return m_cache.lookupPodUid(container_id);
 }
 
-void NriPlugin::handleUpsert(const char* container_id, const char* pod_uid, const char* cgroups_path)
+void NriPlugin::handleUpsert(const char* container_id, const char* pod_uid, const char* cgroups_path, const char* pod_namespace)
 {
-    m_cache.upsert(container_id, pod_uid, cgroups_path);
+    m_cache.upsert(container_id, pod_uid, cgroups_path, pod_namespace);
 }
 
 void NriPlugin::handleRemove(const char* container_id)
@@ -124,6 +127,16 @@ void NriPlugin::handleDisconnected()
     std::lock_guard lock(m_mutex);
     m_disconnected = true;
     m_cv.notify_all();
+}
+
+void NriPlugin::readOwlsmPodUid()
+{
+    const std::string pod_uid = std::getenv("POD_UID") ? std::getenv("POD_UID") : "";
+    if (pod_uid.empty())
+    {
+        throw std::runtime_error("POD_UID is unset; owlsm pod containers will not be marked");
+    }
+    m_cache.setOwlsmPodUid(pod_uid);
 }
 
 void NriPlugin::startSession()

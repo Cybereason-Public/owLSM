@@ -41,6 +41,10 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+            - name: POD_UID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.uid
           {{- with .Values.resources }}
           resources:
             {{- toYaml . | nindent 12 }}

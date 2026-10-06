@@ -126,5 +126,7 @@ namespace owlsm::config {
     {
         get_if_present(j, "enabled", o.enabled);
         get_if_present(j, "root_proc_path", o.root_proc_path);
+        get_if_present(j, "ignore_host_events", o.ignore_host_events);
+        get_if_present(j, "ignore_kube_system_events", o.ignore_kube_system_events);
     }
 }
