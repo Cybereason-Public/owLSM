@@ -52,6 +52,11 @@ public:
         return existing->second->second;
     }
 
+    bool contains(const TKey& key) const
+    {
+        return m_index.find(key) != m_index.end();
+    }
+
     template<typename TPred>
     std::optional<TValue> findIf(TPred pred)
     {

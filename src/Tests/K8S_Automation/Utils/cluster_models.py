@@ -180,16 +180,20 @@ class Node:
     pods_by_alias: dict[str, Pod] = field(default_factory=dict)
     test_pod_uid: str = ""
 
-    def run_ssh_command(self, command: str, check: bool = True) -> str:
+    def run_ssh_command(self, command: str, check: bool = True, log_output: bool = True) -> str:
         if self.live_ssh_connection_to_node is None:
             raise RuntimeError(f"no SSH connection to node {self.name}")
         _stdin, stdout, stderr = self.live_ssh_connection_to_node.exec_command(command)
         exit_status = stdout.channel.recv_exit_status()
         output = stdout.read().decode().strip()
         error_output = stderr.read().decode().strip()
+        if log_output:
+            logged_output = output
+        else:
+            logged_output = f"<{len(output)} bytes>"
         logger.log_info(
             f"SSH on {self.name}: command={command!r} exit_status={exit_status} "
-            f"stdout={output!r} stderr={error_output!r}"
+            f"stdout={logged_output!r} stderr={error_output!r}"
         )
         if check and exit_status != 0:
             raise RuntimeError(

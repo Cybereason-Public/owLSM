@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <mutex>
 #include <optional>
+#include <string>
 #include <thread>
 
 namespace owlsm::kubernetes
@@ -28,6 +29,7 @@ public:
     void clear();
     std::size_t size() const;
     std::optional<std::string> lookupPodUid(const std::uint64_t container_id) const;
+    std::string describeLookupState(const std::uint64_t container_id) const;
     void handleUpsert(const char* container_id, const char* pod_uid, const char* cgroups_path);
     void handleRemove(const char* container_id);
     void handleSyncDone();

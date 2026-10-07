@@ -41,6 +41,11 @@ std::optional<std::string> KubernetesClient::lookupPodUid(const std::uint64_t) c
     return std::nullopt;
 }
 
+std::string KubernetesClient::describeLookupState(const std::uint64_t) const
+{
+    return "cache=none";
+}
+
 std::optional<PodInfo> KubernetesClient::lookupPodInfo(const std::string&) const
 {
     return std::nullopt;

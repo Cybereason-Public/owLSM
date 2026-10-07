@@ -7,6 +7,7 @@ import time
 from pathlib import Path
 
 from Utils.cluster_models import StdoutReader
+from Utils.container_snapshot import log_container_snapshot
 from Utils.cluster_utils import (
     delete_manifests,
     get_cluster,
@@ -95,6 +96,16 @@ def wait_until_owlsm_process_running_on_all_nodes() -> bool:
     return False
 
 
+def wait_until_probes_attached() -> bool:
+    deadline = time.time() + global_numbers.OWLSM_ROLLOUT_TIMEOUT_SECONDS
+    while time.time() < deadline:
+        if _pod_stdout_has_json_event_on_all_nodes():
+            logger.log_info("owlsm pod stdout has a JSON event on every node")
+            return True
+        time.sleep(0.5)
+    return False
+
+
 def count_nodes_with_owlsm_process() -> int:
     count = 0
     for node in get_cluster().nodes():
@@ -147,7 +158,9 @@ def _ensure_owlsm_running_and_reading_logs() -> None:
     assert wait_until_owlsm_process_running_on_all_nodes(), (
         "owlsm process is not running on all nodes"
     )
+    assert wait_until_probes_attached(), "owlsm probes are not attached"
     start_owlsm_stdout_reader()
+    log_container_snapshot("owlsm-ready")
 
 
 def _wait_for_owlsm_rollout() -> None:
@@ -183,30 +196,54 @@ def wait_until_owlsm_pod_log_has_json_event() -> bool:
     deadline = time.time() + global_numbers.OWLSM_ROLLOUT_TIMEOUT_SECONDS
     node_name = get_cluster().main_node.name
     while time.time() < deadline:
-        pod_name = owlsm_pod_name_on_node(node_name)
-        if pod_name:
-            result = run_kubectl(
-                [
-                    "logs",
-                    "-n",
-                    global_strings.OWLSM_NAMESPACE,
-                    pod_name,
-                    "-c",
-                    global_strings.OWLSM_CONTAINER_NAME,
-                    "--tail=20",
-                ],
-                check=False,
-            )
-            if result.returncode == 0:
-                for line in (result.stdout or "").splitlines():
-                    try:
-                        event = json.loads(line)
-                    except json.JSONDecodeError:
-                        continue
-                    if isinstance(event, dict) and event.get("type"):
-                        logger.log_info("owlsm pod log has JSON events")
-                        return True
+        if _pod_stdout_has_json_event(node_name):
+            logger.log_info("owlsm pod log has JSON events")
+            return True
         time.sleep(0.5)
+    return False
+
+
+def _pod_stdout_has_json_event_on_all_nodes() -> bool:
+    for node in get_cluster().nodes():
+        if not _pod_stdout_has_json_event(node.name):
+            return False
+    return True
+
+
+def _pod_stdout_has_json_event(node_name: str) -> bool:
+    pod_name = owlsm_pod_name_on_node(node_name)
+    if not pod_name:
+        logger.log_info(f"owlsm pod is not on {node_name} yet")
+        return False
+    result = run_kubectl(
+        [
+            "logs",
+            "-n",
+            global_strings.OWLSM_NAMESPACE,
+            pod_name,
+            "-c",
+            global_strings.OWLSM_CONTAINER_NAME,
+            "--tail=20",
+        ],
+        check=False,
+    )
+    if result.returncode != 0:
+        logger.log_info(f"owlsm pod log is not readable yet on {node_name}")
+        return False
+    if _text_has_json_event(result.stdout or ""):
+        return True
+    logger.log_info(f"owlsm pod stdout has no JSON event yet on {node_name}")
+    return False
+
+
+def _text_has_json_event(text: str) -> bool:
+    for line in text.splitlines():
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(event, dict) and event.get("type"):
+            return True
     return False
 
 
@@ -239,15 +276,7 @@ def wait_until_owlsm_stdout_has_json_event() -> bool:
 def _output_log_has_json_event(log_path) -> bool:
     if not log_path.is_file():
         return False
-    with log_path.open("r", encoding="utf-8", errors="ignore") as log_file:
-        for line in log_file:
-            try:
-                event = json.loads(line)
-            except json.JSONDecodeError:
-                continue
-            if isinstance(event, dict) and event.get("type"):
-                return True
-    return False
+    return _text_has_json_event(log_path.read_text(encoding="utf-8", errors="ignore"))
 
 
 def stop_owlsm_stdout_reader() -> None:

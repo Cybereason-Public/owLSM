@@ -25,6 +25,7 @@ public:
 
     std::optional<std::string> lookupPodUid(const std::uint64_t container_id) const;
     std::optional<std::uint64_t> lookupCgroupId(const std::uint64_t container_id) const;
+    std::string describeLookupState(const std::uint64_t container_id) const;
     std::size_t size() const;
 
 private:

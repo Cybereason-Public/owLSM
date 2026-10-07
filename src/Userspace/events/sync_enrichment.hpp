@@ -34,7 +34,7 @@ public:
             }
             if (owlsm::globals::g_config.kubernetes.enabled)
             {
-                m_kubernetes_enrichment.enrich(event->kubernetes, event->process.container_id);
+                m_kubernetes_enrichment.enrich(event->kubernetes, *event);
             }
         }
         catch (const std::exception& e)

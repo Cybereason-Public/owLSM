@@ -14,6 +14,7 @@ from Utils.cluster_utils import (
     load_owlsm_runtime_local_image_into_kind,
     should_load_owlsm_runtime_local_image_into_kind,
 )
+from Utils.container_snapshot import log_container_snapshot
 from Utils.log_utils import clear_owlsm_log_and_output, remove_old_log_directories, save_log_files
 from Utils.logger_utils import logger
 from Utils.owlsm_utils import (
@@ -93,6 +94,7 @@ def pytest_bdd_before_scenario(request, feature, scenario):
         if is_owlsm_deployed_cluster_wide():
             start_owlsm_stdout_reader()
         logger.log_info(f"BEFORE scenario: '{scenario.name}' in feature: '{feature.name}'")
+        log_container_snapshot("before-scenario")
     except Exception as e:
         logger.log_error(f"Failed to clear scenario logs: {e}")
         assert False, f"Failed to clear scenario logs: {e}"
@@ -100,6 +102,7 @@ def pytest_bdd_before_scenario(request, feature, scenario):
 
 def pytest_bdd_after_scenario(request, feature, scenario):
     logger.log_info(f"AFTER scenario: '{scenario.name}' in feature: '{feature.name}'")
+    log_container_snapshot("after-scenario")
     save_log_files(scenario.name)
     cleanup_cluster_objects()
     forget_manifest_pods()

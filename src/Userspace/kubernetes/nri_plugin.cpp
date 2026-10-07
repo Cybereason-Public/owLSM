@@ -102,6 +102,11 @@ std::optional<std::string> NriPlugin::lookupPodUid(const std::uint64_t container
     return m_cache.lookupPodUid(container_id);
 }
 
+std::string NriPlugin::describeLookupState(const std::uint64_t container_id) const
+{
+    return m_cache.describeLookupState(container_id);
+}
+
 void NriPlugin::handleUpsert(const char* container_id, const char* pod_uid, const char* cgroups_path)
 {
     m_cache.upsert(container_id, pod_uid, cgroups_path);

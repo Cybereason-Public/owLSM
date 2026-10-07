@@ -89,6 +89,11 @@ std::optional<std::string> KubernetesClient::lookupPodUid(const std::uint64_t co
     return m_nri_plugin.lookupPodUid(container_id);
 }
 
+std::string KubernetesClient::describeLookupState(const std::uint64_t container_id) const
+{
+    return m_nri_plugin.describeLookupState(container_id);
+}
+
 std::optional<PodInfo> KubernetesClient::lookupPodInfo(const std::string& uid) const
 {
     return m_cache.lookupPodInfo(uid);
