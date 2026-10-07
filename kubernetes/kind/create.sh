@@ -72,6 +72,8 @@ echo "Waiting for $EXPECTED_NODE_COUNT nodes to be Ready"
 "$KUBECTL" --context "$KUBE_CONTEXT" get nodes -o wide
 
 # fs.inotify is a host kernel limit. Kind nodes share it, and cluster.yaml cannot set it.
+# inotify_init returns EMFILE ("too many open files") once max_user_instances is hit.
+# The runner is not root, and sysctl -w still exits 0 after "permission denied, ignoring".
 echo "Raising host inotify limits"
 raise_inotify_limit() {
     local key="$1"
@@ -79,13 +81,22 @@ raise_inotify_limit() {
     local current
     current="$(sysctl -n "$key")"
     if [[ "$current" -lt "$minimum" ]]; then
-        sysctl -w "${key}=${minimum}"
-    else
-        echo "  $key=$current"
+        if [[ "$(id -u)" -eq 0 ]]; then
+            sysctl -w "${key}=${minimum}"
+        else
+            sudo sysctl -w "${key}=${minimum}"
+        fi
+        current="$(sysctl -n "$key")"
     fi
+    if [[ "$current" -lt "$minimum" ]]; then
+        echo "error: $key is $current, need at least $minimum" >&2
+        exit 1
+    fi
+    echo "  $key=$current"
 }
-raise_inotify_limit fs.inotify.max_user_instances 8192
-raise_inotify_limit fs.inotify.max_user_watches 524288
+raise_inotify_limit fs.inotify.max_user_instances 65536
+raise_inotify_limit fs.inotify.max_user_watches 1048576
+raise_inotify_limit fs.inotify.max_queued_events 65536
 
 echo "Checking NRI socket and bpffs on each node"
 while IFS= read -r node; do
