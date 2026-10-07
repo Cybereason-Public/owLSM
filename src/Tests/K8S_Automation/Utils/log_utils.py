@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import shlex
 import shutil
 
 from Utils.cluster_utils import get_cluster
@@ -14,6 +15,7 @@ def clear_owlsm_log_and_output() -> None:
         _truncate_file(global_strings.LOG_PATH)
     if global_strings.OWLSM_OUTPUT_LOG.is_file():
         _truncate_file(global_strings.OWLSM_OUTPUT_LOG)
+    _truncate_node_owlsm_logs()
 
 
 def save_log_files(scenario_name: str) -> None:
@@ -77,6 +79,14 @@ def _read_main_node_owlsm_logger() -> tuple[str, str]:
     text = global_strings.OWLSM_LOGGER_LOG.read_text(encoding="utf-8", errors="ignore")
     logger.log_info(f"owlsm logger on {node_name} is {len(text.splitlines())} lines")
     return node_name, text
+
+
+def _truncate_node_owlsm_logs() -> None:
+    log_path = shlex.quote(global_strings.OWLSM_CONTAINER_LOG_PATH)
+    command = f"if [ -f {log_path} ]; then truncate -s 0 {log_path}; fi"
+    for node in get_cluster().nodes():
+        node.run_ssh_command(command)
+        logger.log_info(f"Truncated owlsm logger on {node.name}")
 
 
 def _truncate_file(path: Path) -> None:
