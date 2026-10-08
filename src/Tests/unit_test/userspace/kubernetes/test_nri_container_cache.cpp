@@ -3,6 +3,7 @@
 #include "kubernetes/container_id.hpp"
 
 #include <filesystem>
+#include <string>
 #include <system_error>
 #include <sys/stat.h>
 
@@ -91,16 +92,41 @@ TEST_F(NriContainerCacheTest, remove_drops_cpp_rows)
     const auto truncated = owlsm::kubernetes::ContainerId::toU64(
         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
     ASSERT_TRUE(truncated.has_value());
-    EXPECT_FALSE(m_cache.lookupPodUid(*truncated).has_value());
+    EXPECT_EQ(m_cache.lookupPodUid(*truncated).value_or(""), "pod-uid-1");
     EXPECT_FALSE(m_cache.lookupCgroupId(*truncated).has_value());
     EXPECT_EQ(m_cache.size(), 0u);
 }
 
 TEST_F(NriContainerCacheTest, clear_empties_maps)
 {
-    m_cache.upsert("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                   "pod-uid-1",
-                   "kubepods.slice/ctr.scope");
+    const char* id = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    m_cache.upsert(id, "pod-uid-1", "kubepods.slice/ctr.scope");
+    m_cache.remove(id);
     m_cache.clear();
+    const auto truncated = owlsm::kubernetes::ContainerId::toU64(id);
+    ASSERT_TRUE(truncated.has_value());
+    EXPECT_FALSE(m_cache.lookupPodUid(*truncated).has_value());
     EXPECT_EQ(m_cache.size(), 0u);
+}
+
+TEST_F(NriContainerCacheTest, removed_pod_uid_lru_drops_the_oldest_entry)
+{
+    const char* oldest_id = "0000000000000000aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    m_cache.upsert(oldest_id, "pod-uid-oldest", "kubepods.slice/ctr.scope");
+    m_cache.remove(oldest_id);
+    for (int index = 1; index <= 50; ++index)
+    {
+        std::string id = std::to_string(index);
+        id.append(64 - id.size(), 'b');
+        m_cache.upsert(id.c_str(), "pod-uid", "kubepods.slice/ctr.scope");
+        m_cache.remove(id.c_str());
+    }
+    const auto oldest = owlsm::kubernetes::ContainerId::toU64(oldest_id);
+    ASSERT_TRUE(oldest.has_value());
+    EXPECT_FALSE(m_cache.lookupPodUid(*oldest).has_value());
+    std::string newest_id = std::to_string(50);
+    newest_id.append(64 - newest_id.size(), 'b');
+    const auto newest = owlsm::kubernetes::ContainerId::toU64(newest_id);
+    ASSERT_TRUE(newest.has_value());
+    EXPECT_EQ(m_cache.lookupPodUid(*newest).value_or(""), "pod-uid");
 }

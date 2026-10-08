@@ -190,8 +190,10 @@ TEST_F(KubernetesEventEnrichmentTest, build_resets_existing_fields)
 TEST_F(KubernetesEventEnrichmentTest, enrich_reads_container_id_argument)
 {
     owlsm::events::Kubernetes kubernetes;
+    owlsm::events::Event event;
+    event.process.container_id = 0xabc;
     const owlsm::events::KubernetesEventEnrichment enricher;
-    enricher.enrich(kubernetes, 0xabc);
+    enricher.enrich(kubernetes, event);
 
     EXPECT_FALSE(kubernetes.host_event);
     EXPECT_EQ(kubernetes.container_id, 0xabcu);
@@ -205,7 +207,7 @@ TEST_F(KubernetesEventEnrichmentTest, enrich_with_zero_container_id_is_host_even
     owlsm::events::Kubernetes kubernetes;
     kubernetes.pod_name = "stale";
     const owlsm::events::KubernetesEventEnrichment enricher;
-    enricher.enrich(kubernetes, 0);
+    enricher.enrich(kubernetes, owlsm::events::Event{});
 
     EXPECT_TRUE(kubernetes.host_event);
     EXPECT_EQ(kubernetes.container_id, 0u);

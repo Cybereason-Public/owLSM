@@ -2,11 +2,14 @@
 #include "globals/global_objects.hpp"
 #include "logger.hpp"
 
+#include <3rd_party/magic_enum/magic_enum.hpp>
+
 namespace owlsm::events
 {
 
-void KubernetesEventEnrichment::enrich(Kubernetes& kubernetes, const unsigned long long container_id) const
+void KubernetesEventEnrichment::enrich(Kubernetes& kubernetes, const Event& event) const
 {
+    const unsigned long long container_id = event.process.container_id;
     std::optional<std::string> pod_uid;
     std::optional<kubernetes::PodInfo> pod_info;
     if (container_id != 0)
@@ -14,20 +17,58 @@ void KubernetesEventEnrichment::enrich(Kubernetes& kubernetes, const unsigned lo
         pod_uid = owlsm::globals::g_kubernetes_client.lookupPodUid(container_id);
         if (!pod_uid.has_value() || pod_uid->empty())
         {
-            LOG_ERROR("container_id_to_pod_uid miss container_id=" << container_id);
+            if (shouldLogMiss(container_id))
+            {
+                LOG_ERROR("container_id_to_pod_uid miss container_id=" << container_id
+                    << " event=" << magic_enum::enum_name(event.type)
+                    << " pid=" << event.process.pid
+                    << " ns_pid=" << event.process.ns_pid
+                    << " cgroup_id=" << event.process.cgroup_id
+                    << " exe=" << oneLogField(event.process.file.path.value)
+                    << " cmd=" << oneLogField(event.process.cmd.value)
+                    << " " << owlsm::globals::g_kubernetes_client.describeLookupState(container_id));
+            }
             pod_uid.reset();
         }
         else
         {
             pod_info = owlsm::globals::g_kubernetes_client.lookupPodInfo(*pod_uid);
-            if (!pod_info.has_value())
+            if (!pod_info.has_value() && shouldLogPodUidMiss(*pod_uid))
             {
-                LOG_INFO("pod_uid_to_k8s_info miss pod_uid=" << *pod_uid);
+                LOG_INFO("pod_uid_to_k8s_info miss pod_uid=" << *pod_uid
+                    << " container_id=" << container_id
+                    << " event=" << magic_enum::enum_name(event.type)
+                    << " pid=" << event.process.pid
+                    << " cmd=" << oneLogField(event.process.cmd.value));
             }
         }
     }
 
     build(kubernetes, owlsm::globals::g_kubernetes_client.nodeName(), container_id, pod_uid, pod_info);
+}
+
+bool KubernetesEventEnrichment::shouldLogMiss(const unsigned long long container_id) const
+{
+    const std::lock_guard lock(m_logged_miss_mutex);
+    return m_logged_miss_container_ids.insert(container_id).second;
+}
+
+bool KubernetesEventEnrichment::shouldLogPodUidMiss(const std::string& pod_uid) const
+{
+    const std::lock_guard lock(m_logged_miss_mutex);
+    return m_logged_miss_pod_uids.insert(pod_uid).second;
+}
+
+std::string KubernetesEventEnrichment::oneLogField(std::string value)
+{
+    for (char& character : value)
+    {
+        if (character == '\n' || character == '\r')
+        {
+            character = ' ';
+        }
+    }
+    return value;
 }
 
 void KubernetesEventEnrichment::build(Kubernetes& kubernetes,

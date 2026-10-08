@@ -6,6 +6,7 @@
 #include <bpf/bpf.h>
 
 #include <mutex>
+#include <sstream>
 
 namespace owlsm::kubernetes
 {
@@ -77,6 +78,18 @@ void NriContainerCache::upsert(const char* container_id, const char* pod_uid, co
     }
 
     std::unique_lock lock(m_mutex);
+    const auto pod_it = m_container_id_to_pod_uid.find(*truncated_id);
+    const auto cgroup_it = m_container_id_to_cgroup_id.find(*truncated_id);
+    const bool uid_changed = !raw_uid.empty() && (pod_it == m_container_id_to_pod_uid.end() || pod_it->second != raw_uid);
+    const bool cgroup_changed = cgroup_it == m_container_id_to_cgroup_id.end() || cgroup_it->second != *cgroup_id;
+    if (uid_changed || cgroup_changed)
+    {
+        LOG_INFO("nri upsert container=" << raw_id
+            << " truncated=" << *truncated_id
+            << " pod_uid=" << raw_uid
+            << " cgroup_id=" << *cgroup_id
+            << " path=" << raw_path);
+    }
     if (!raw_uid.empty())
     {
         m_container_id_to_pod_uid[*truncated_id] = raw_uid;
@@ -95,14 +108,39 @@ void NriContainerCache::remove(const char* container_id)
     }
 
     std::unique_lock lock(m_mutex);
+    std::string removed_pod_uid;
+    bool had_row = false;
     const auto cgroup_it = m_container_id_to_cgroup_id.find(*truncated_id);
     if (cgroup_it != m_container_id_to_cgroup_id.end())
     {
+        had_row = true;
         deleteEntryFromBpfMapIfOwner(cgroup_it->second, *truncated_id);
         m_container_id_to_cgroup_id.erase(cgroup_it);
     }
-    m_container_id_to_pod_uid.erase(*truncated_id);
+    const auto pod_it = m_container_id_to_pod_uid.find(*truncated_id);
+    if (pod_it != m_container_id_to_pod_uid.end())
+    {
+        had_row = true;
+        removed_pod_uid = pod_it->second;
+        m_removed_container_id_to_pod_uid.put(*truncated_id, pod_it->second);
+        m_container_id_to_pod_uid.erase(pod_it);
+    }
+    const auto pending_it = m_pending.find(*truncated_id);
+    if (pending_it != m_pending.end())
+    {
+        had_row = true;
+        if (removed_pod_uid.empty())
+        {
+            removed_pod_uid = pending_it->second.pod_uid;
+        }
+    }
     m_pending.erase(*truncated_id);
+    if (had_row)
+    {
+        LOG_INFO("nri remove container=" << (container_id ? container_id : "")
+            << " truncated=" << *truncated_id
+            << " pod_uid=" << removed_pod_uid);
+    }
 }
 
 void NriContainerCache::clear()
@@ -114,18 +152,27 @@ void NriContainerCache::clear()
     }
     m_container_id_to_cgroup_id.clear();
     m_container_id_to_pod_uid.clear();
+    m_removed_container_id_to_pod_uid.clear();
     m_pending.clear();
 }
 
 std::optional<std::string> NriContainerCache::lookupPodUid(const std::uint64_t container_id) const
 {
-    std::shared_lock lock(m_mutex);
-    const auto it = m_container_id_to_pod_uid.find(container_id);
-    if (it == m_container_id_to_pod_uid.end())
     {
-        return std::nullopt;
+        std::shared_lock lock(m_mutex);
+        const auto it = m_container_id_to_pod_uid.find(container_id);
+        if (it != m_container_id_to_pod_uid.end())
+        {
+            return it->second;
+        }
     }
-    return it->second;
+    std::unique_lock lock(m_mutex);
+    const auto it = m_container_id_to_pod_uid.find(container_id);
+    if (it != m_container_id_to_pod_uid.end())
+    {
+        return it->second;
+    }
+    return m_removed_container_id_to_pod_uid.get(container_id);
 }
 
 std::optional<std::uint64_t> NriContainerCache::lookupCgroupId(const std::uint64_t container_id) const
@@ -137,6 +184,23 @@ std::optional<std::uint64_t> NriContainerCache::lookupCgroupId(const std::uint64
         return std::nullopt;
     }
     return it->second;
+}
+
+std::string NriContainerCache::describeLookupState(const std::uint64_t container_id) const
+{
+    std::shared_lock lock(m_mutex);
+    const auto pod_it = m_container_id_to_pod_uid.find(container_id);
+    const auto cgroup_it = m_container_id_to_cgroup_id.find(container_id);
+    const auto pending_it = m_pending.find(container_id);
+    std::ostringstream state;
+    state << "in_pod_map=" << (pod_it != m_container_id_to_pod_uid.end() ? 1 : 0)
+        << " in_cgroup_map=" << (cgroup_it != m_container_id_to_cgroup_id.end() ? 1 : 0)
+        << " mapped_cgroup_id=" << (cgroup_it != m_container_id_to_cgroup_id.end() ? cgroup_it->second : 0)
+        << " pending=" << (pending_it != m_pending.end() ? 1 : 0)
+        << " pending_pod_uid=" << (pending_it != m_pending.end() ? pending_it->second.pod_uid : "")
+        << " pending_path=" << (pending_it != m_pending.end() ? pending_it->second.cgroups_path : "")
+        << " in_removed_lru=" << (m_removed_container_id_to_pod_uid.contains(container_id) ? 1 : 0);
+    return state.str();
 }
 
 std::size_t NriContainerCache::size() const

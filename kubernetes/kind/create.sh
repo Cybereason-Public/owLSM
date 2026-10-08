@@ -71,23 +71,77 @@ echo "Waiting for $EXPECTED_NODE_COUNT nodes to be Ready"
 "$KUBECTL" --context "$KUBE_CONTEXT" wait --for=condition=Ready nodes --all --timeout=180s
 "$KUBECTL" --context "$KUBE_CONTEXT" get nodes -o wide
 
+# fs.inotify is a host kernel limit. Kind nodes share it, and cluster.yaml cannot set it.
+# inotify_init returns EMFILE ("too many open files") once max_user_instances is hit.
+# The runner is not root, and sysctl -w still exits 0 after "permission denied, ignoring".
+echo "Raising host inotify limits"
+raise_inotify_limit() {
+    local key="$1"
+    local minimum="$2"
+    local current
+    current="$(sysctl -n "$key")"
+    if [[ "$current" -lt "$minimum" ]]; then
+        if [[ "$(id -u)" -eq 0 ]]; then
+            sysctl -w "${key}=${minimum}"
+        else
+            sudo sysctl -w "${key}=${minimum}"
+        fi
+        current="$(sysctl -n "$key")"
+    fi
+    if [[ "$current" -lt "$minimum" ]]; then
+        echo "error: $key is $current, need at least $minimum" >&2
+        exit 1
+    fi
+    echo "  $key=$current"
+}
+raise_inotify_limit fs.inotify.max_user_instances 65536
+raise_inotify_limit fs.inotify.max_user_watches 1048576
+raise_inotify_limit fs.inotify.max_queued_events 65536
+
+# Kind nodes share the host kernel. A new bpffs mount in each node's mount namespace is a
+# separate filesystem, so pinned maps under /sys/fs/bpf/owLSM stay on that node.
+# BPF_FS_MAGIC from linux/magic.h.
+BPF_FS_MAGIC="cafe4a11"
+
+mount_private_bpffs() {
+    local node="$1"
+    echo "  $node: mounting a private bpffs on /sys/fs/bpf"
+    docker exec "$node" mkdir -p /sys/fs/bpf
+    if docker exec "$node" mountpoint -q /sys/fs/bpf; then
+        docker exec "$node" mount --make-rprivate /sys/fs/bpf
+    fi
+    docker exec "$node" mount -t bpf bpf /sys/fs/bpf
+    local fstype
+    fstype="$(docker exec "$node" stat -f -c %t /sys/fs/bpf)"
+    fstype="${fstype,,}"
+    if [[ "$fstype" != "$BPF_FS_MAGIC" ]]; then
+        echo "error: /sys/fs/bpf on $node is not a bpf filesystem (type $fstype)" >&2
+        exit 1
+    fi
+}
+
 echo "Checking NRI socket and bpffs on each node"
+kind_nodes=()
 while IFS= read -r node; do
     if ! docker exec "$node" test -S /var/run/nri/nri.sock; then
         echo "error: NRI socket /var/run/nri/nri.sock missing on $node" >&2
         exit 1
     fi
     echo "  $node: /var/run/nri/nri.sock ok"
-    if ! docker exec "$node" mountpoint -q /sys/fs/bpf; then
-        echo "  $node: mounting bpffs on /sys/fs/bpf"
-        docker exec "$node" mount -t bpf bpf /sys/fs/bpf
-    fi
-    if ! docker exec "$node" mountpoint -q /sys/fs/bpf; then
-        echo "error: /sys/fs/bpf is not a bpf filesystem on $node" >&2
+    mount_private_bpffs "$node"
+    kind_nodes+=("$node")
+done < <(kind get nodes --name "$CLUSTER_NAME")
+
+if [[ "${#kind_nodes[@]}" -ge 2 ]]; then
+    # bpffs accepts directories, which is how maps are pinned. It rejects regular files.
+    docker exec "${kind_nodes[0]}" mkdir /sys/fs/bpf/owlsm-kind-bpffs-marker
+    if docker exec "${kind_nodes[1]}" test -d /sys/fs/bpf/owlsm-kind-bpffs-marker; then
+        echo "error: kind nodes share /sys/fs/bpf" >&2
         exit 1
     fi
-    echo "  $node: /sys/fs/bpf ok"
-done < <(kind get nodes --name "$CLUSTER_NAME")
+    docker exec "${kind_nodes[0]}" rmdir /sys/fs/bpf/owlsm-kind-bpffs-marker
+    echo "  bpffs is private on each node"
+fi
 
 "$SCRIPT_DIR/enable_ssh.sh" --cluster "$CLUSTER_NAME"
 

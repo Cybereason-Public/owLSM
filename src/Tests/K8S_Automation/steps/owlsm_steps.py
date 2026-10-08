@@ -8,6 +8,7 @@ from Utils.owlsm_utils import (
     remove_owlsm,
     upgrade_owlsm_values_and_ensure_running,
     wait_until_owlsm_process_running_on_all_nodes,
+    wait_until_probes_attached,
 )
 from globals.global_strings import global_strings
 
@@ -17,6 +18,7 @@ from globals.global_strings import global_strings
 @then("owlsm is deployed cluster wide")
 def owlsm_is_deployed_cluster_wide():
     if is_owlsm_deployed_cluster_wide() and wait_until_owlsm_process_running_on_all_nodes():
+        assert wait_until_probes_attached(), "owlsm probes are not attached"
         return
     logger.log_info("Deploying owlsm cluster wide")
     deploy_owlsm_and_ensure_running(
