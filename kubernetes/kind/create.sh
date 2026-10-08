@@ -133,12 +133,13 @@ while IFS= read -r node; do
 done < <(kind get nodes --name "$CLUSTER_NAME")
 
 if [[ "${#kind_nodes[@]}" -ge 2 ]]; then
-    docker exec "${kind_nodes[0]}" touch /sys/fs/bpf/.owlsm-kind-bpffs-marker
-    if docker exec "${kind_nodes[1]}" test -e /sys/fs/bpf/.owlsm-kind-bpffs-marker; then
+    # bpffs accepts directories, which is how maps are pinned. It rejects regular files.
+    docker exec "${kind_nodes[0]}" mkdir /sys/fs/bpf/owlsm-kind-bpffs-marker
+    if docker exec "${kind_nodes[1]}" test -d /sys/fs/bpf/owlsm-kind-bpffs-marker; then
         echo "error: kind nodes share /sys/fs/bpf" >&2
         exit 1
     fi
-    docker exec "${kind_nodes[0]}" rm -f /sys/fs/bpf/.owlsm-kind-bpffs-marker
+    docker exec "${kind_nodes[0]}" rmdir /sys/fs/bpf/owlsm-kind-bpffs-marker
     echo "  bpffs is private on each node"
 fi
 
