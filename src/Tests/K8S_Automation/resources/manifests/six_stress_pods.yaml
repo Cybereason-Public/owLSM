@@ -1,0 +1,166 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: owlsm-stress
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: owlsm-stress-write
+  namespace: owlsm-stress
+  labels:
+    app: owlsm-stress-write
+    owlsm-automation: pod
+  annotations:
+    owlsm/alias: write
+spec:
+  nodeName: <main_node_name>
+  restartPolicy: Never
+  terminationGracePeriodSeconds: 1
+  tolerations:
+    - key: node-role.kubernetes.io/control-plane
+      operator: Exists
+      effect: NoSchedule
+  containers:
+    - name: owlsm-stress-write
+      image: busybox:1.36
+      imagePullPolicy: IfNotPresent
+      command:
+        - /bin/sh
+        - -c
+        - echo owlsm-stress-write > /tmp/owlsm-stress-write && exec /bin/sleep infinity
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: owlsm-stress-create
+  namespace: owlsm-stress
+  labels:
+    app: owlsm-stress-create
+    owlsm-automation: pod
+  annotations:
+    owlsm/alias: create
+spec:
+  nodeName: <main_node_name>
+  restartPolicy: Never
+  terminationGracePeriodSeconds: 1
+  tolerations:
+    - key: node-role.kubernetes.io/control-plane
+      operator: Exists
+      effect: NoSchedule
+  containers:
+    - name: owlsm-stress-create
+      image: busybox:1.36
+      imagePullPolicy: IfNotPresent
+      command:
+        - /bin/sh
+        - -c
+        - /bin/touch /tmp/owlsm-stress-create && exec /bin/sleep infinity
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: owlsm-stress-mkdir
+  namespace: owlsm-stress
+  labels:
+    app: owlsm-stress-mkdir
+    owlsm-automation: pod
+  annotations:
+    owlsm/alias: mkdir
+spec:
+  nodeName: <main_node_name>
+  restartPolicy: Never
+  terminationGracePeriodSeconds: 1
+  tolerations:
+    - key: node-role.kubernetes.io/control-plane
+      operator: Exists
+      effect: NoSchedule
+  containers:
+    - name: owlsm-stress-mkdir
+      image: busybox:1.36
+      imagePullPolicy: IfNotPresent
+      command:
+        - /bin/sh
+        - -c
+        - /bin/mkdir /tmp/owlsm-stress-mkdir && exec /bin/sleep infinity
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: owlsm-stress-chmod
+  namespace: owlsm-stress
+  labels:
+    app: owlsm-stress-chmod
+    owlsm-automation: pod
+  annotations:
+    owlsm/alias: chmod
+spec:
+  nodeName: <main_node_name>
+  restartPolicy: Never
+  terminationGracePeriodSeconds: 1
+  tolerations:
+    - key: node-role.kubernetes.io/control-plane
+      operator: Exists
+      effect: NoSchedule
+  containers:
+    - name: owlsm-stress-chmod
+      image: busybox:1.36
+      imagePullPolicy: IfNotPresent
+      command:
+        - /bin/sh
+        - -c
+        - /bin/touch /tmp/owlsm-stress-chmod && /bin/chmod 777 /tmp/owlsm-stress-chmod && exec /bin/sleep infinity
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: owlsm-stress-exec
+  namespace: owlsm-stress
+  labels:
+    app: owlsm-stress-exec
+    owlsm-automation: pod
+  annotations:
+    owlsm/alias: exec
+spec:
+  nodeName: <main_node_name>
+  restartPolicy: Never
+  terminationGracePeriodSeconds: 1
+  tolerations:
+    - key: node-role.kubernetes.io/control-plane
+      operator: Exists
+      effect: NoSchedule
+  containers:
+    - name: owlsm-stress-exec
+      image: busybox:1.36
+      imagePullPolicy: IfNotPresent
+      command:
+        - /bin/sh
+        - -c
+        - exec /bin/sleep 86400
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: owlsm-stress-fork
+  namespace: owlsm-stress
+  labels:
+    app: owlsm-stress-fork
+    owlsm-automation: pod
+  annotations:
+    owlsm/alias: fork
+spec:
+  nodeName: <main_node_name>
+  restartPolicy: Never
+  terminationGracePeriodSeconds: 1
+  tolerations:
+    - key: node-role.kubernetes.io/control-plane
+      operator: Exists
+      effect: NoSchedule
+  containers:
+    - name: owlsm-stress-fork
+      image: busybox:1.36
+      imagePullPolicy: IfNotPresent
+      command:
+        - /bin/sh
+        - -c
+        - /bin/true && exec /bin/sleep infinity

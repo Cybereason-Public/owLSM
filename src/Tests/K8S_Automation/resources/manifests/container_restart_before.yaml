@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: owlsm-restart
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: owlsm-restart-before
+  namespace: owlsm-restart
+  labels:
+    app: owlsm-restart-before
+  annotations:
+    owlsm/alias: before
+spec:
+  nodeName: <main_node_name>
+  restartPolicy: Always
+  terminationGracePeriodSeconds: 1
+  tolerations:
+    - key: node-role.kubernetes.io/control-plane
+      operator: Exists
+      effect: NoSchedule
+  containers:
+    - name: owlsm-restart-before
+      image: busybox:1.36
+      imagePullPolicy: IfNotPresent
+      command: ["sleep", "infinity"]

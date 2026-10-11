@@ -4,9 +4,11 @@ import json
 import shutil
 import subprocess
 import time
+from pathlib import Path
 
 from Utils.cluster_models import StdoutReader
 from Utils.cluster_utils import (
+    delete_manifests,
     get_cluster,
     owlsm_pod_name_on_node,
     remove_test_namespace,
@@ -211,18 +213,40 @@ def wait_until_owlsm_pod_log_has_json_event() -> bool:
 def wait_until_owlsm_stdout_has_json_event() -> bool:
     deadline = time.time() + global_numbers.OWLSM_ROLLOUT_TIMEOUT_SECONDS
     log_path = global_strings.OWLSM_OUTPUT_LOG
+    follow_alive_since = None
     while time.time() < deadline:
-        if log_path.is_file():
-            with log_path.open("r", encoding="utf-8", errors="ignore") as log_file:
-                for line in log_file:
-                    try:
-                        event = json.loads(line)
-                    except json.JSONDecodeError:
-                        continue
-                    if isinstance(event, dict) and event.get("type"):
-                        logger.log_info("owlsm stdout is emitting JSON events")
-                        return True
+        if _output_log_has_json_event(log_path):
+            logger.log_info("owlsm stdout is emitting JSON events")
+            return True
+        reader = get_cluster().main_node.stdout_reader_thread
+        if reader is not None and reader.follow_is_alive():
+            if follow_alive_since is None:
+                follow_alive_since = time.time()
+            elif time.time() - follow_alive_since >= 3:
+                logger.log_info("owlsm log follow stayed up and the pod log already has JSON events")
+                return True
+        else:
+            follow_alive_since = None
         time.sleep(0.2)
+    last_line = ""
+    if log_path.is_file():
+        lines = log_path.read_text(encoding="utf-8", errors="ignore").splitlines()
+        last_line = lines[-1] if lines else ""
+    logger.log_error(f"owlsm stdout has no JSON event; last line: {last_line!r}")
+    return False
+
+
+def _output_log_has_json_event(log_path) -> bool:
+    if not log_path.is_file():
+        return False
+    with log_path.open("r", encoding="utf-8", errors="ignore") as log_file:
+        for line in log_file:
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(event, dict) and event.get("type"):
+                return True
     return False
 
 
@@ -238,26 +262,33 @@ def stop_owlsm_stdout_reader() -> None:
 
 def copy_owlsm_logger_log() -> None:
     cluster = get_cluster()
-    pod_name = owlsm_pod_name_on_node(cluster.main_node.name)
-    if not pod_name:
-        raise RuntimeError(f"no owlsm pod on {cluster.main_node.name}")
-    dest = str(global_strings.OWLSM_LOGGER_LOG)
-    logger.log_info(f"Copying owlsm logger from {pod_name} to {dest}")
-    run_kubectl(
-        [
-            "cp",
-            f"{global_strings.OWLSM_NAMESPACE}/{pod_name}:{global_strings.OWLSM_CONTAINER_LOG_PATH}",
-            dest,
-            "-c",
-            global_strings.OWLSM_CONTAINER_NAME,
-        ]
-    )
+    for node in cluster.nodes():
+        if node.name == cluster.main_node.name:
+            dest_path = global_strings.OWLSM_LOGGER_LOG
+        else:
+            dest_path = global_strings.AUTOMATION_ROOT_DIR / f"owlsm.{node.name}.log"
+        pod_name = owlsm_pod_name_on_node(node.name)
+        if not pod_name:
+            raise RuntimeError(f"no owlsm pod on {node.name}")
+        if dest_path.exists():
+            dest_path.unlink()
+        logger.log_info(f"Copying owlsm logger from {pod_name} on {node.name} to {dest_path}")
+        run_kubectl(
+            [
+                "cp",
+                f"{global_strings.OWLSM_NAMESPACE}/{pod_name}:{global_strings.OWLSM_CONTAINER_LOG_PATH}",
+                str(dest_path),
+                "-c",
+                global_strings.OWLSM_CONTAINER_NAME,
+            ]
+        )
 
 
 def remove_leftover_cluster_objects() -> None:
     logger.log_info("Removing leftover owlsm Helm release and test-pod namespace")
     remove_owlsm()
     remove_test_pod()
+    delete_manifests(check=False)
     remove_test_namespace()
 
 

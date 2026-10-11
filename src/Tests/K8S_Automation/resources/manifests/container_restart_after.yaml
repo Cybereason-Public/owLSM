@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: owlsm-restart-after
+  namespace: owlsm-restart
+  labels:
+    app: owlsm-restart-after
+  annotations:
+    owlsm/alias: after
+spec:
+  nodeName: <main_node_name>
+  restartPolicy: Always
+  terminationGracePeriodSeconds: 1
+  tolerations:
+    - key: node-role.kubernetes.io/control-plane
+      operator: Exists
+      effect: NoSchedule
+  containers:
+    - name: owlsm-restart-after
+      image: busybox:1.36
+      imagePullPolicy: IfNotPresent
+      command: ["sleep", "infinity"]

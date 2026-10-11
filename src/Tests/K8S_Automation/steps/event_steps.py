@@ -4,7 +4,7 @@ import time
 import jmespath
 from pytest_bdd import given, parsers, then, when
 
-from Utils.cluster_utils import get_cluster, get_test_pod
+from Utils.cluster_utils import get_cluster
 from Utils.logger_utils import logger
 from globals.global_strings import global_strings
 
@@ -58,15 +58,15 @@ def is_event_in_output(datatable, duration) -> tuple[bool, dict]:
 
 
 def process_dynamic_placeholders(data: dict) -> dict:
-    test_pod = get_test_pod()
     replacements = {
         "<main_node_name>": get_cluster().main_node.name,
-        "<test_pod_name>": test_pod.name,
-        "<test_pod_namespace>": test_pod.namespace,
-        "<test_pod_uid>": test_pod.uid,
-        "<test_pod_label_app>": test_pod.labels.get("app", ""),
-        "<test_pod_container_id>": _container_id_u64(test_pod.container_id),
     }
+    for alias, pod in get_cluster().main_node.pods_by_alias.items():
+        replacements[f"<{alias}_name>"] = pod.name
+        replacements[f"<{alias}_namespace>"] = pod.namespace
+        replacements[f"<{alias}_uid>"] = pod.uid
+        replacements[f"<{alias}_label_app>"] = pod.labels.get("app", "")
+        replacements[f"<{alias}_container_id>"] = _container_id_u64(pod.container_id)
     processed = {}
     for key, value in data.items():
         for placeholder, replacement in replacements.items():

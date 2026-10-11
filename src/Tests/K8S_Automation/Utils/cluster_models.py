@@ -60,6 +60,10 @@ class StdoutReader:
     def is_running(self) -> bool:
         return self._thread is not None and self._thread.is_alive()
 
+    def follow_is_alive(self) -> bool:
+        process = self._process
+        return process is not None and process.poll() is None
+
     def _truncate_output_log(self) -> None:
         log_path = global_strings.OWLSM_OUTPUT_LOG
         log_path.parent.mkdir(parents=True, exist_ok=True)
@@ -67,11 +71,30 @@ class StdoutReader:
             pass
 
     def _run(self) -> None:
-        pod_name = self._owlsm_pod_name()
-        if not pod_name:
-            logger.log_error(f"no owlsm pod on {self.node_name}; stdout reader exiting")
-            return
-        self._follow_logs(pod_name)
+        while not self._stop_event.is_set():
+            pod_name = self._owlsm_pod_name()
+            if not pod_name:
+                logger.log_error(f"no owlsm pod on {self.node_name}; stdout reader retrying")
+                if self._stop_event.wait(0.5):
+                    return
+                continue
+            self._follow_logs(pod_name)
+            if self._stop_event.is_set():
+                return
+            logger.log_info(
+                f"owlsm log follow ended on {self.node_name}; last output line: {self._last_output_line()!r}"
+            )
+            if self._stop_event.wait(0.5):
+                return
+
+    def _last_output_line(self) -> str:
+        log_path = global_strings.OWLSM_OUTPUT_LOG
+        if not log_path.is_file():
+            return ""
+        lines = log_path.read_text(encoding="utf-8", errors="ignore").splitlines()
+        if not lines:
+            return ""
+        return lines[-1]
 
     def _follow_logs(self, pod_name: str) -> None:
         from Utils.cluster_utils import kubectl_command
@@ -154,6 +177,7 @@ class Node:
     live_ssh_connection_to_node: Optional[paramiko.SSHClient] = None
     stdout_reader_thread: Optional[StdoutReader] = None
     pod_uid_to_pod_info: dict[str, Pod] = field(default_factory=dict)
+    pods_by_alias: dict[str, Pod] = field(default_factory=dict)
     test_pod_uid: str = ""
 
     def run_ssh_command(self, command: str, check: bool = True) -> str:
