@@ -80,23 +80,39 @@ node_ip() {
     docker inspect -f '{{.NetworkSettings.Networks.kind.IPAddress}}' "$node"
 }
 
+write_askpass() {
+    local path="$1"
+    local quoted="'${SSH_PASSWORD//\'/\'\\\'\'}'"
+    printf '#!/bin/sh\nprintf %%s\\\\n %s\n' "$quoted" > "$path"
+    chmod 700 "$path"
+}
+
+ssh_hostname() {
+    local ip="$1"
+    local askpass rc
+    askpass="$(mktemp)"
+    write_askpass "$askpass"
+    set +e
+    SSH_ASKPASS="$askpass" \
+        SSH_ASKPASS_REQUIRE=force \
+        DISPLAY="${DISPLAY:-:0}" \
+        ssh -n \
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            -o PreferredAuthentications=password \
+            -o PubkeyAuthentication=no \
+            -o NumberOfPasswordPrompts=1 \
+            -o ConnectTimeout=10 \
+            "${SSH_USER}@${ip}" hostname
+    rc=$?
+    set -e
+    rm -f "$askpass"
+    return "$rc"
+}
+
 while IFS= read -r node; do
     enable_ssh_on_node "$node"
 done < <(kind get nodes --name "$CLUSTER_NAME")
-
-if ! command -v sshpass >/dev/null 2>&1; then
-    echo "Installing sshpass on the host (needed to test password SSH)"
-    sudo apt-get update
-    # apt also configures any half-installed package. A broken one, such as
-    # wlp-agent on the runner image, makes apt fail after sshpass is installed.
-    if ! sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends sshpass; then
-        if ! command -v sshpass >/dev/null 2>&1; then
-            echo "error: sshpass is not installed" >&2
-            exit 1
-        fi
-        echo "warning: apt failed after installing sshpass; continuing"
-    fi
-fi
 
 echo "Testing SSH on each node"
 while IFS= read -r node; do
@@ -105,13 +121,7 @@ while IFS= read -r node; do
         echo "error: no kind-network IP for $node" >&2
         exit 1
     fi
-    hostname="$(sshpass -p "$SSH_PASSWORD" ssh -n \
-        -o StrictHostKeyChecking=no \
-        -o UserKnownHostsFile=/dev/null \
-        -o PreferredAuthentications=password \
-        -o PubkeyAuthentication=no \
-        -o ConnectTimeout=10 \
-        "${SSH_USER}@${ip}" hostname)"
+    hostname="$(ssh_hostname "$ip")"
     echo "  $node ($ip) hostname=$hostname"
 done < <(kind get nodes --name "$CLUSTER_NAME")
 
