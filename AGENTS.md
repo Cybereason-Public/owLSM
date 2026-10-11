@@ -261,3 +261,6 @@ When we have an error in the runtime phase we need to log it and return some kin
 
 #### Global Variables
 - ALL_CAPS with underscores: `MAX_NEEDLE_LENGTH`
+
+#### feature files
+All the `|` in a column table must be aligned in the same line.

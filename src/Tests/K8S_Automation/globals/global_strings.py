@@ -44,6 +44,8 @@ class GlobalStrings:
         self.OWLSM_APP_NAME = "owlsm"
         self.OWLSM_IMAGE_REPOSITORY = os.environ.get("OWLSM_IMAGE_REPOSITORY", "owlsm")
         self.OWLSM_IMAGE_TAG = os.environ.get("OWLSM_IMAGE_TAG", "local")
+        self.MANIFESTS_DIR = self.AUTOMATION_ROOT_DIR / "resources" / "manifests"
+        self.TEST_POD_ALIAS = "test_pod"
         self.TEST_POD_NAME = "test-pod"
         self.TEST_POD_NAMESPACE = "owlsm-test-pod"
         self.TEST_POD_IMAGE = "busybox:1.36"

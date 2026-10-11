@@ -87,7 +87,15 @@ done < <(kind get nodes --name "$CLUSTER_NAME")
 if ! command -v sshpass >/dev/null 2>&1; then
     echo "Installing sshpass on the host (needed to test password SSH)"
     sudo apt-get update
-    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends sshpass
+    # apt also configures any half-installed package. A broken one, such as
+    # wlp-agent on the runner image, makes apt fail after sshpass is installed.
+    if ! sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends sshpass; then
+        if ! command -v sshpass >/dev/null 2>&1; then
+            echo "error: sshpass is not installed" >&2
+            exit 1
+        fi
+        echo "warning: apt failed after installing sshpass; continuing"
+    fi
 fi
 
 echo "Testing SSH on each node"
