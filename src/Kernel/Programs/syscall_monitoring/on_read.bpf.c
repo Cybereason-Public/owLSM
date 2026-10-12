@@ -2,6 +2,7 @@
 #include "fill_event_structs.bpf.h"
 #include "preprocessor_definitions/fs.bpf.h"
 #include "pids_to_ignore.bpf.h"
+#include "k8s_ignored_events.bpf.h"
 
 #define READ_EVENT
 #include "tail_calls_manager.bpf.h"
@@ -28,6 +29,11 @@ int BPF_PROG(read_hook, struct file *file, int mask)
     }
 
     if(is_current_pid_related())
+    {
+        return ALLOW;
+    }
+
+    if(k8s_ignore_current_process())
     {
         return ALLOW;
     }

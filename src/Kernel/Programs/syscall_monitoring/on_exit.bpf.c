@@ -2,6 +2,7 @@
 #include "pids_to_ignore.bpf.h"
 #include "protected_processes.bpf.h"
 #include "active_shells.bpf.h"
+#include "k8s_ignored_events.bpf.h"
 
 SEC("fentry/do_exit")
 int BPF_PROG(exit_hook, long code)
@@ -11,6 +12,7 @@ int BPF_PROG(exit_hook, long code)
     struct task_struct *task = (struct task_struct *)bpf_get_current_task();
     pid_t tgid = BPF_CORE_READ(task, tgid);
     pid_t pid  = BPF_CORE_READ(task, pid);
+    bool send_event = TRUE;
     
     if(!is_userspace_program())
     {
@@ -46,12 +48,24 @@ int BPF_PROG(exit_hook, long code)
     fill_event_process_from_cache(&event->process);
     fill_event_parent_process_from_cache(&event->process, &event->parent_process);
 
+    if (k8s_ignore_current_process())
+    {
+        send_event = FALSE;
+    }
+
     add_process_to_dead_proccesses_lru(&event->process);
     delete_shell_command_from_dead_process(event->process.unique_process_id);
     delete_process_from_alive_process_cache(pid);
     delete_pid_from_active_shell_pids(pid);
     
-    bpf_ringbuf_submit(event, 0);
+    if(send_event)
+    {
+        bpf_ringbuf_submit(event, 0);
+    }
+    else
+    {
+        bpf_ringbuf_discard(event, 0);
+    }
     return ALLOW; 
 }
 

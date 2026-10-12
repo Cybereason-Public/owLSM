@@ -39,6 +39,7 @@
 
  #include "allocators.bpf.h"
  #include "fill_event_structs.bpf.h"
+ #include "k8s_ignored_events.bpf.h"
  #include "pids_to_ignore.bpf.h"
  #include "active_shells.bpf.h"
  #include "dash_nodes.h"
@@ -896,6 +897,11 @@ int exitList(struct pt_regs *ctx)
     {
         return 0;
     }
+
+    if(k8s_ignore_current_process())
+    {
+        return 0;
+    }
     
     unsigned long long pid_tgid = bpf_get_current_pid_tgid();
     unsigned int pid = pid_tgid >> 32;
@@ -1000,6 +1006,11 @@ int exitList_2(struct pt_regs *ctx)
      set_hook_name("enter_setprompt", 15);
      
      if (is_current_pid_related())
+     {
+         return 0;
+     }
+
+     if(k8s_ignore_current_process())
      {
          return 0;
      }

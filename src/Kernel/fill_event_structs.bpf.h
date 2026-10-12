@@ -42,14 +42,8 @@ statfunc unsigned long long build_process_unique_id(unsigned long pid, unsigned 
     return ((__u64)pid << 32) | (start_time >> 32);
 }
 
-statfunc void fill_process_container_id(struct process_t *process)
+statfunc const struct container_id_t *get_container_id_t_of_current_task(void)
 {
-    if (!k8s_enabled)
-    {
-        return;
-    }
-    
-    process->container_id = 0;
     for (int i = 0; i < 16; i++)
     {
         const u64 ancestor = bpf_get_current_ancestor_cgroup_id(i);
@@ -57,11 +51,31 @@ statfunc void fill_process_container_id(struct process_t *process)
         {
             break;
         }
-        const u64 *container_id = bpf_map_lookup_elem(&cgroup_id_to_container_id, &ancestor);
-        if (container_id)
+        const struct container_id_t *container = bpf_map_lookup_elem(&cgroup_id_to_container_id, &ancestor);
+        if (container)
         {
-            process->container_id = *container_id;
+            return container;
         }
+    }
+    return NULL;
+}
+
+statfunc void fill_process_container_id(struct process_t *process)
+{
+    if (!k8s_config.k8s_enabled)
+    {
+        return;
+    }
+    
+    process->container_id.id = 0;
+    process->container_id.is_owlsm_container = false;
+    process->container_id.is_kube_system = false;
+    const struct container_id_t *container = get_container_id_t_of_current_task();
+    if (container)
+    {
+        process->container_id.id = container->id;
+        process->container_id.is_owlsm_container = container->is_owlsm_container;
+        process->container_id.is_kube_system = container->is_kube_system;
     }
 }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "constants.h"
+#include "k8s.h"
 
 #define ERROR_DETAILS_MAX 512
 #undef PATH_MAX
@@ -91,7 +92,7 @@ struct process_t
     unsigned int suid;
   
     unsigned long long cgroup_id;
-    unsigned long long container_id;
+    struct container_id_t container_id;
     unsigned long long start_time;
     unsigned int ptrace_flags;
   

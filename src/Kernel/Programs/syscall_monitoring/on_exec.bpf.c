@@ -1,5 +1,6 @@
 #include "allocators.bpf.h"
 #include "fill_event_structs.bpf.h"
+#include "k8s_ignored_events.bpf.h"
 #include "pids_to_ignore.bpf.h"
 
 #define EXEC_EVENT
@@ -143,7 +144,20 @@ int BPF_PROG(bprm_creds_from_file, struct linux_binprm *bprm)
     event->data.exec.new_process.ppid = event->process.ppid;
     event->data.exec.new_process.unique_ppid_id = event->process.unique_ppid_id;
     
-    // `runc init` process will happen before NRI Start hook, so it will cause the process to have container_id = 0. And `runc init` exec's to the user defined container entrypoint after NRI start hook, so we need to recalculate the container_id.
+    /*
+    The flow of a container creation is:
+    1) `runc` is a host process
+    2) `runc` forks and child exec's into the `runc init` process. Both are still in host cgroup.
+    3) `runc` adds the child pid to the new container cgroup.
+    4) NRI `Start/ContainerCreated` hooks are called and update the `cgroup_id_to_container_id` map, which tells us a new container was created.
+       - all the hooks up to now had both processes as host processes with container_id = 0. So the cache still has both processes as host processes with container_id = 0.
+       - From this moment we can treat `runc init` as a container process. However, we decided to keep treating it as a host process. Here are the reasons:
+         * Treating it as a host event means the first events out of this container will be of the entrypoint process which is "easier to grasp" by less technical users.
+         * Treating it as a container process will require us to update the `old_process` container_id & cgroup_id.
+         * It was created as a host process, and usually owlsm doesn't update such fields (if it was cmdline, identity, process name those are worth updating from compute vs value standpoint). 
+    5) `runc init` exec's into the user defined container entrypoint.
+       We update the container_id of the new process, as its not updated by `fill_process_t_from_bprm`, so before the update its 0.
+    */
     fill_process_container_id(&event->data.exec.new_process);
 
     if(update_process_in_alive_process_cache(pid, &event->data.exec.new_process) != SUCCESS)
@@ -153,6 +167,12 @@ int BPF_PROG(bprm_creds_from_file, struct linux_binprm *bprm)
     }
 
     bpf_map_delete_elem(&pid_to_exec_cmd_map, &pid);
+
+    // This looks at the old_process, which if is `runc init` we treat it as a host process.
+    if (should_ignore_container(&event->process.container_id))
+    {
+        goto allow_event;
+    }
 
     store_currently_handled_event(event);
     bpf_ringbuf_discard(event, 0);

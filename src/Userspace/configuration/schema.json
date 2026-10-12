@@ -136,6 +136,12 @@
                 "root_proc_path": {
                     "type": "string",
                     "minLength": 1
+                },
+                "ignore_host_events": {
+                    "type": "boolean"
+                },
+                "ignore_kube_system_events": {
+                    "type": "boolean"
                 }
             }
         },

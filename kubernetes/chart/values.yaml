@@ -50,6 +50,8 @@ config:
   kubernetes:
     enabled: true
     root_proc_path: /host/proc
+    ignore_host_events: false
+    ignore_kube_system_events: true
 
 priorityClassName: ""
 

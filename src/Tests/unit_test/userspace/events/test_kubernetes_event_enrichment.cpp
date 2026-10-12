@@ -57,7 +57,7 @@ TEST_F(KubernetesEventEnrichmentTest, event_constructor_copies_process_t_contain
 {
     event_t raw{};
     raw.type = FORK;
-    raw.process.container_id = 0xabc;
+    raw.process.container_id.id = 0xabc;
 
     const owlsm::events::Event event(raw);
     EXPECT_EQ(event.process.container_id, 0xabcu);

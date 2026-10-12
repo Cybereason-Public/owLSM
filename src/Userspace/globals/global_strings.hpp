@@ -12,6 +12,7 @@ namespace owlsm::globals
     constexpr const char* RESOURCES_DIR_NAME = "resources";
     constexpr const char* TRACE_FS_SYSCALLS_DIR = "/sys/kernel/tracing/events/syscalls";
     constexpr const char* DEFAULT_HOST_PROC_DIR = "/proc";
+    constexpr const char* KUBE_SYSTEM_NAMESPACE = "kube-system";
 
     extern const std::string CURRENT_PROCESS_DIR;
     extern const std::string DB_PATH;

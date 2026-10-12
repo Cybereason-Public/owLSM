@@ -1,5 +1,6 @@
 #include "allocators.bpf.h"
 #include "fill_event_structs.bpf.h"
+#include "k8s_ignored_events.bpf.h"
 #include "pids_to_ignore.bpf.h"
 
 #define CHOWN_EVENT
@@ -19,7 +20,12 @@ int BPF_PROG(chown_hook, struct path *path, kuid_t *uid, kgid_t *gid)
     {
         return ALLOW;
     }
-    
+
+    if(k8s_ignore_current_process())
+    {
+        return ALLOW;
+    }
+
     struct event_t *event = allocate_event_with_basic_stats();
     if (!event)
     {

@@ -28,12 +28,13 @@ public:
     void clear();
     std::size_t size() const;
     std::optional<std::string> lookupPodUid(const std::uint64_t container_id) const;
-    void handleUpsert(const char* container_id, const char* pod_uid, const char* cgroups_path);
+    void handleUpsert(const char* container_id, const char* pod_uid, const char* cgroups_path, const char* pod_namespace);
     void handleRemove(const char* container_id);
     void handleSyncDone();
     void handleDisconnected();
 
 private:
+    void readOwlsmPodUid();
     void startSession();
     bool waitForFirstSync();
     void reconnectLoop();

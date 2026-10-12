@@ -1,6 +1,7 @@
 #include "allocators.bpf.h"
 #include "fill_event_structs.bpf.h"
 #include "pids_to_ignore.bpf.h"
+#include "k8s_ignored_events.bpf.h"
 
 #define MKDIR_EVENT
 #include "tail_calls_manager.bpf.h"
@@ -15,6 +16,11 @@ int BPF_PROG(mkdir_hook, const struct path *dir, struct dentry *dentry, umode_t 
     }
 
     if(is_current_pid_related())
+    {
+        return ALLOW;
+    }
+
+    if(k8s_ignore_current_process())
     {
         return ALLOW;
     }

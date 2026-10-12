@@ -1,6 +1,7 @@
 #include "kubernetes/nri_container_cache.hpp"
 #include "kubernetes/cgroup_path.hpp"
 #include "kubernetes/container_id.hpp"
+#include "globals/global_strings.hpp"
 #include "logger.hpp"
 
 #include <bpf/bpf.h>
@@ -22,11 +23,18 @@ void NriContainerCache::setMapFd(const int map_fd)
     m_map_fd = map_fd;
 }
 
-void NriContainerCache::upsert(const char* container_id, const char* pod_uid, const char* cgroups_path)
+void NriContainerCache::setOwlsmPodUid(const std::string& pod_uid)
+{
+    std::unique_lock lock(m_mutex);
+    m_owlsm_pod_uid = pod_uid;
+}
+
+void NriContainerCache::upsert(const char* container_id, const char* pod_uid, const char* cgroups_path, const char* pod_namespace)
 {
     const std::string raw_id = container_id ? container_id : "";
     std::string raw_uid = pod_uid ? pod_uid : "";
     std::string raw_path = cgroups_path ? cgroups_path : "";
+    std::string raw_namespace = pod_namespace ? pod_namespace : "";
     if (raw_id.empty())
     {
         return;
@@ -53,6 +61,10 @@ void NriContainerCache::upsert(const char* container_id, const char* pod_uid, co
                 {
                     raw_uid = pending->second.pod_uid;
                 }
+                if (raw_namespace.empty())
+                {
+                    raw_namespace = pending->second.pod_namespace;
+                }
             }
         }
     }
@@ -71,19 +83,21 @@ void NriContainerCache::upsert(const char* container_id, const char* pod_uid, co
     if (!cgroup_id.has_value())
     {
         std::unique_lock lock(m_mutex);
-        m_pending[*truncated_id] = PendingInsert{raw_uid, raw_path};
+        m_pending[*truncated_id] = PendingInsert{raw_uid, raw_path, raw_namespace};
         LOG_INFO("nri upsert deferred: cgroup stat failed container=" << raw_id << " path=" << raw_path);
         return;
     }
 
     std::unique_lock lock(m_mutex);
+    const auto container = makeContainerId(*truncated_id, raw_uid, raw_namespace);
     if (!raw_uid.empty())
     {
-        m_container_id_to_pod_uid[*truncated_id] = raw_uid;
+        m_container_id_to_pod_uid[container] = raw_uid;
     }
-    m_container_id_to_cgroup_id[*truncated_id] = *cgroup_id;
-    m_pending.erase(*truncated_id);
-    UpdateBpfMap(*cgroup_id, *truncated_id);
+    m_container_id_to_cgroup_id.erase(container);
+    m_container_id_to_cgroup_id.emplace(container, *cgroup_id);
+    m_pending.erase(container);
+    updateBpfMap(*cgroup_id, container);
 }
 
 void NriContainerCache::remove(const char* container_id)
@@ -113,9 +127,9 @@ void NriContainerCache::remove(const char* container_id)
 void NriContainerCache::clear()
 {
     std::unique_lock lock(m_mutex);
-    for (const auto& [container_id, cgroup_id] : m_container_id_to_cgroup_id)
+    for (const auto& [container, cgroup_id] : m_container_id_to_cgroup_id)
     {
-        deleteEntryFromBpfMapIfOwner(cgroup_id, container_id);
+        deleteEntryFromBpfMapIfOwner(cgroup_id, container.id);
     }
     m_container_id_to_cgroup_id.clear();
     m_container_id_to_pod_uid.clear();
@@ -159,13 +173,24 @@ std::size_t NriContainerCache::size() const
     return m_container_id_to_cgroup_id.size();
 }
 
-void NriContainerCache::UpdateBpfMap(const std::uint64_t cgroup_id, const std::uint64_t container_id)
+container_id_t NriContainerCache::makeContainerId(const std::uint64_t container_id,
+                                                 const std::string& pod_uid,
+                                                 const std::string& pod_namespace) const
+{
+    container_id_t container{};
+    container.id = container_id;
+    container.is_owlsm_container = !m_owlsm_pod_uid.empty() && pod_uid == m_owlsm_pod_uid;
+    container.is_kube_system = (pod_namespace == owlsm::globals::KUBE_SYSTEM_NAMESPACE);
+    return container;
+}
+
+void NriContainerCache::updateBpfMap(const std::uint64_t cgroup_id, const container_id_t& container)
 {
     if (m_map_fd < 0)
     {
         return;
     }
-    if (bpf_map_update_elem(m_map_fd, &cgroup_id, &container_id, BPF_ANY) != 0)
+    if (bpf_map_update_elem(m_map_fd, &cgroup_id, &container, BPF_ANY) != 0)
     {
         LOG_INFO("nri bpf update failed cgroup_id=" << cgroup_id);
     }
@@ -178,12 +203,12 @@ void NriContainerCache::deleteEntryFromBpfMapIfOwner(const std::uint64_t cgroup_
         return;
     }
 
-    std::uint64_t current = 0;
+    container_id_t current{};
     if (bpf_map_lookup_elem(m_map_fd, &cgroup_id, &current) != 0)
     {
         return;
     }
-    if (current != container_id)
+    if (current.id != container_id)
     {
         return;
     }

@@ -37,6 +37,16 @@ def chmod_file(file: File) -> None:
     _run_on_target(file, command)
 
 
+def assert_file_mode(file: File, mode: str) -> None:
+    command = f"stat -c %a {shlex.quote(file.path)}"
+    logger.log_info(f"Checking mode of {file.path} on {_target_name(file)}")
+    actual = _run_on_target(file, command)
+    if actual != mode:
+        raise RuntimeError(
+            f"{file.path} on {_target_name(file)} has mode {actual}, expected {mode}"
+        )
+
+
 def create_dir(file: File) -> None:
     command = f"mkdir {shlex.quote(file.path)}"
     if file.permissions != 0:
@@ -51,23 +61,22 @@ def delete_dir(file: File) -> None:
     _run_on_target(file, command)
 
 
-def _run_on_target(file: File, command: str) -> None:
+def _run_on_target(file: File, command: str) -> str:
     target = file.target
     if isinstance(target, Node):
-        target.run_ssh_command(command)
-        return
+        return target.run_ssh_command(command)
     if isinstance(target, Pod):
-        _run_on_pod(target, command)
-        return
+        return _run_on_pod(target, command)
     raise RuntimeError("File.target must be a Pod or Node")
 
 
-def _run_on_pod(pod: Pod, command: str) -> None:
+def _run_on_pod(pod: Pod, command: str) -> str:
     args = ["exec", "-n", pod.namespace, pod.name]
     if pod.container_name:
         args.extend(["-c", pod.container_name])
     args.extend(["--", "sh", "-c", command])
-    run_kubectl(args)
+    result = run_kubectl(args)
+    return (result.stdout or "").strip()
 
 
 def _chmod_command(file: File) -> str:

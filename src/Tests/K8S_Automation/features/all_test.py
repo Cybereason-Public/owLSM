@@ -37,6 +37,29 @@ def test_chmod_event_stops_after_helm_disables_chmod():
     pass
 
 
+@scenario("ignore_events.feature", "owlsm ignores kube-system events by default")
+def test_owlsm_ignores_kube_system_events_by_default():
+    pass
+
+
+@scenario(
+    "ignore_events.feature",
+    "owlsm always ignores owlsm pod events that are not part of the owlsm process tree",
+)
+def test_owlsm_always_ignores_owlsm_pod_events_that_are_not_part_of_the_owlsm_process_tree():
+    pass
+
+
+@scenario("ignore_events.feature", "owlsm ignores host events")
+def test_owlsm_ignores_host_events():
+    pass
+
+
+@scenario("ignore_events.feature", "owlsm ignores preexisting kube-system pods and host events")
+def test_owlsm_ignores_preexisting_kube_system_pods_and_host_events():
+    pass
+
+
 @scenario(
     "owlsm_container_stress.feature",
     "six pods start and exit without kubernetes mapping misses",
