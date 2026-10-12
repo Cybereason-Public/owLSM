@@ -1,5 +1,6 @@
 #include "allocators.bpf.h"
 #include "fill_event_structs.bpf.h"
+#include "k8s_ignored_events.bpf.h"
 #include "pids_to_ignore.bpf.h"
 
 #define EXEC_EVENT
@@ -139,6 +140,11 @@ int BPF_PROG(exec_hook, struct file *file)
         goto allow_event;
     }
     bpf_map_delete_elem(&exec_pids, &pid);
+
+    if (should_ignore_container(&event->process.container_id))
+    {
+        goto allow_event;
+    }
 
     store_currently_handled_event(event);
     bpf_ringbuf_discard(event, 0);

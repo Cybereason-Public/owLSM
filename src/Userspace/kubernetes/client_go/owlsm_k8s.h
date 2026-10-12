@@ -38,7 +38,8 @@ typedef void (*owlsm_k8s_pod_delete_fn)(const char* uid);
 
 typedef void (*owlsm_k8s_nri_upsert_fn)(const char* container_id,
                                         const char* pod_uid,
-                                        const char* cgroups_path);
+                                        const char* cgroups_path,
+                                        const char* pod_namespace);
 typedef void (*owlsm_k8s_nri_remove_fn)(const char* container_id);
 typedef void (*owlsm_k8s_nri_sync_done_fn)(void);
 typedef void (*owlsm_k8s_nri_disconnected_fn)(void);

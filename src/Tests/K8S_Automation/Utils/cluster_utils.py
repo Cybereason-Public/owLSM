@@ -380,6 +380,20 @@ def kubectl_command(args: list[str]) -> list[str]:
     return command
 
 
+def main_node_owlsm_pod() -> Pod:
+    node = get_cluster().main_node
+    name = owlsm_pod_name_on_node(node.name)
+    if not name:
+        raise RuntimeError(f"no owlsm pod on {node.name}")
+    return Pod(
+        name=name,
+        namespace=global_strings.OWLSM_NAMESPACE,
+        uid="",
+        node_name=node.name,
+        container_name=global_strings.OWLSM_CONTAINER_NAME,
+    )
+
+
 def owlsm_pod_name_on_node(node_name: str) -> str:
     result = run_kubectl(
         [

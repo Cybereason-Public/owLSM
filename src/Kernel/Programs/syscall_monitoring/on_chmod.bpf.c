@@ -1,5 +1,6 @@
 #include "allocators.bpf.h"
 #include "fill_event_structs.bpf.h"
+#include "k8s_ignored_events.bpf.h"
 #include "pids_to_ignore.bpf.h"
 
 #define CHMOD_EVENT
@@ -15,6 +16,11 @@ int BPF_PROG(chmod_hook, const struct path *path, umode_t mode)
     }
     
     if(is_current_pid_related())
+    {
+        return ALLOW;
+    }
+
+    if(k8s_ignore_current_process())
     {
         return ALLOW;
     }

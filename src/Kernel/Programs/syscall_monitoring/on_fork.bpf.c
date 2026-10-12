@@ -1,6 +1,7 @@
 #include "fill_event_structs.bpf.h"
 #include "pids_to_ignore.bpf.h"
 #include "protected_processes.bpf.h"
+#include "k8s_ignored_events.bpf.h"
 
 SEC("fentry/wake_up_new_task")
 int BPF_PROG(fork_hook, struct task_struct *child_task)
@@ -28,6 +29,11 @@ int BPF_PROG(fork_hook, struct task_struct *child_task)
     if(is_current_pid_related() == TRUE)
     {
         add_pid_to_related_pids(pid);
+        return ALLOW;
+    }
+
+    if(k8s_ignore_current_process())
+    {
         return ALLOW;
     }
 

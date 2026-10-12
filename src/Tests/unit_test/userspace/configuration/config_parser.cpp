@@ -225,11 +225,31 @@ TEST_F(ConfigParserTest, kubernetes_fields_are_parsed_and_default_disabled)
     owlsm::config::ConfigParser default_parser(std::string(CONFIG_JSON_ONLY_FEATURES_4), schema_str);
     EXPECT_FALSE(default_parser.getConfig().kubernetes.enabled);
     EXPECT_TRUE(default_parser.getConfig().kubernetes.root_proc_path.empty());
+    EXPECT_FALSE(default_parser.getConfig().kubernetes.ignore_host_events);
+    EXPECT_TRUE(default_parser.getConfig().kubernetes.ignore_kube_system_events);
+
+    owlsm::config::ConfigParser enabled_only_parser(R"({"kubernetes": {"enabled": true, "root_proc_path": "/host/proc"}})",
+                                                    schema_str);
+    const auto& enabled_only = enabled_only_parser.getConfig().kubernetes;
+    EXPECT_TRUE(enabled_only.enabled);
+    EXPECT_EQ(enabled_only.root_proc_path, "/host/proc");
+    EXPECT_FALSE(enabled_only.ignore_host_events);
+    EXPECT_TRUE(enabled_only.ignore_kube_system_events);
 
     owlsm::config::ConfigParser k8s_parser(
-        R"({"kubernetes": {"enabled": true, "root_proc_path": "/host/proc"}})",
+        R"({"kubernetes": {"enabled": true, "root_proc_path": "/host/proc", "ignore_host_events": true, "ignore_kube_system_events": false}})",
         schema_str);
     const auto& kubernetes = k8s_parser.getConfig().kubernetes;
     EXPECT_TRUE(kubernetes.enabled);
     EXPECT_EQ(kubernetes.root_proc_path, "/host/proc");
+    EXPECT_TRUE(kubernetes.ignore_host_events);
+    EXPECT_FALSE(kubernetes.ignore_kube_system_events);
+}
+
+TEST_F(ConfigParserTest, kubernetes_ignore_flags_reject_non_boolean)
+{
+    const std::string schema_str(reinterpret_cast<const char*>(g_schema_json), g_schema_json_len);
+
+    EXPECT_ANY_THROW(owlsm::config::ConfigParser(R"({"kubernetes": {"ignore_host_events": "true"}})", schema_str));
+    EXPECT_ANY_THROW(owlsm::config::ConfigParser(R"({"kubernetes": {"ignore_kube_system_events": 1}})", schema_str));
 }

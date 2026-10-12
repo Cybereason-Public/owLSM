@@ -2,6 +2,7 @@
 #include "allocators.bpf.h"
 #include "fill_event_structs.bpf.h"
 #include "pids_to_ignore.bpf.h"
+#include "k8s_ignored_events.bpf.h"
 
 #define NETWORK_EVENT
 #define CONNECT_EVENT
@@ -19,6 +20,11 @@ int BPF_PROG(connect_hook, struct socket *sock, struct sockaddr *address, int ad
 {
     set_hook_name("connect_hook", 12);
     if(is_current_pid_related())
+    {
+        return ALLOW;
+    }
+
+    if(k8s_ignore_current_process())
     {
         return ALLOW;
     }

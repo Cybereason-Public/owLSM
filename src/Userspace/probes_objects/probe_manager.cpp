@@ -23,7 +23,7 @@ namespace owlsm
         open_opts.sz = sizeof(open_opts);
         open_opts.pin_root_path = globals::SYS_FS_BPF_OWLSM_PATH;
         m_skel = std::shared_ptr<all_bpf>(all_bpf__open_opts(&open_opts), 
-                                          [](all_bpf* skel) { if(skel) all_bpf__destroy(skel); });
+                                          [](all_bpf* skel) { if (skel) all_bpf__destroy(skel); });
         if (!m_skel) 
         {
             throw std::runtime_error("failed to open skeleton. errno: " + std::to_string(errno));
@@ -39,7 +39,9 @@ namespace owlsm
         m_skel->rodata->anti_tampering_ptrace_action = static_cast<int>(owlsm::globals::g_config.features.anti_tampering.events.ptrace);
         m_skel->rodata->g_ebpf_features = m_ebpf_features;
         m_skel->rodata->legacy_exec_enabled = owlsm::globals::g_config.features.legacy_exec;
-        m_skel->rodata->k8s_enabled = owlsm::globals::g_config.kubernetes.enabled;
+        m_skel->rodata->k8s_config.k8s_enabled = owlsm::globals::g_config.kubernetes.enabled;
+        m_skel->rodata->k8s_config.ignore_host_events = owlsm::globals::g_config.kubernetes.ignore_host_events;
+        m_skel->rodata->k8s_config.ignore_kube_system_events = owlsm::globals::g_config.kubernetes.ignore_kube_system_events;
 
         disableUnavailableProbes();
         setupLegacyExecHooks();
@@ -81,20 +83,6 @@ namespace owlsm
         LOG_INFO("Attached all probes");
     }
 
-    int ProbeManager::cgroupIdToContainerIdMapFd() const
-    {
-        if (!m_skel)
-        {
-            throw std::runtime_error("cgroup_id_to_container_id map is unavailable before bpfLoad");
-        }
-        const int map_fd = bpf_map__fd(m_skel->maps.cgroup_id_to_container_id);
-        if (map_fd < 0)
-        {
-            throw std::runtime_error("cgroup_id_to_container_id map fd is invalid");
-        }
-        return map_fd;
-    }
-
     void ProbeManager::bpfDetach()
     {
         all_bpf__detach(m_skel.get());
@@ -119,14 +107,14 @@ namespace owlsm
     {
         auto event_ring_buffer_ptr = std::shared_ptr<ring_buffer>(
             ring_buffer__new(bpf_map__fd(m_skel->maps.rb), handle_event_callback, nullptr, nullptr),
-            [](ring_buffer* rb) { if(rb) ring_buffer__free(rb); });
+            [](ring_buffer* rb) { if (rb) ring_buffer__free(rb); });
         if (!event_ring_buffer_ptr)
         {
             throw std::runtime_error("failed to create event ring buffer. errno: " + std::to_string(errno));
         }
         auto error_ring_buffer_ptr = std::shared_ptr<ring_buffer>(
             ring_buffer__new(bpf_map__fd(m_skel->maps.errors), handle_error_callback, nullptr, nullptr),
-            [](ring_buffer* rb) { if(rb) ring_buffer__free(rb); });
+            [](ring_buffer* rb) { if (rb) ring_buffer__free(rb); });
         if (!error_ring_buffer_ptr)
         {
             throw std::runtime_error("failed to create error ring buffer. errno: " + std::to_string(errno));
@@ -137,7 +125,7 @@ namespace owlsm
     void ProbeManager::saveEbpfAttachTime()
     {
         struct timespec ts;
-        if(clock_gettime(CLOCK_MONOTONIC, &ts) != 0)
+        if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0)
         {
             throw std::runtime_error("clock_gettime. errno " + std::to_string(errno));
         }
@@ -190,6 +178,20 @@ namespace owlsm
         probe->bpfAttach();
         std::lock_guard<std::mutex> lock(m_probes_mutex);
         m_probes.push_back(std::move(probe));
+    }
+
+    int ProbeManager::cgroupIdToContainerIdMapFd() const
+    {
+        if (!m_skel)
+        {
+            throw std::runtime_error("cgroup_id_to_container_id map is unavailable before bpfLoad");
+        }
+        const int map_fd = bpf_map__fd(m_skel->maps.cgroup_id_to_container_id);
+        if (map_fd < 0)
+        {
+            throw std::runtime_error("cgroup_id_to_container_id map fd is invalid");
+        }
+        return map_fd;
     }
 
     void ProbeManager::disableUnavailableProbes()

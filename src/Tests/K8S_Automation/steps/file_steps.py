@@ -1,7 +1,7 @@
 from pytest_bdd import given, parsers, then, when
 
-from Utils.cluster_utils import get_cluster, get_pod, get_test_pod, pods_in_manifest
-from Utils.file_utils import File, chmod_file, create_file
+from Utils.cluster_utils import get_cluster, get_pod, get_test_pod, main_node_owlsm_pod, pods_in_manifest
+from Utils.file_utils import File, assert_file_mode, chmod_file, create_file
 
 
 @given(parsers.parse('I ensure the file "{filepath}" exists on main_node'))
@@ -32,24 +32,41 @@ def i_chmod_the_file_in_the_test_pod(filepath, mode):
     chmod_file(_test_pod_file(filepath, int(mode, 8)))
 
 
-@given(parsers.parse('I chmod the file "{filepath}" to "{mode}" in every pod from "{manifest}"'))
-@when(parsers.parse('I chmod the file "{filepath}" to "{mode}" in every pod from "{manifest}"'))
-@then(parsers.parse('I chmod the file "{filepath}" to "{mode}" in every pod from "{manifest}"'))
-def i_chmod_the_file_in_every_pod_from_manifest(filepath, mode, manifest):
+@given(parsers.parse('I create and chmod the file "{filepath}" to "{mode}" in every pod from "{manifest}"'))
+@when(parsers.parse('I create and chmod the file "{filepath}" to "{mode}" in every pod from "{manifest}"'))
+@then(parsers.parse('I create and chmod the file "{filepath}" to "{mode}" in every pod from "{manifest}"'))
+def i_create_and_chmod_the_file_in_every_pod_from_manifest(filepath, mode, manifest):
     permissions = int(mode, 8)
     for pod in pods_in_manifest(manifest):
         create_file(File(path=filepath, target=pod))
         chmod_file(File(path=filepath, permissions=permissions, target=pod))
 
 
-@given(parsers.parse('I chmod the file "{filepath}" to "{mode}" in pod "{alias}"'))
-@when(parsers.parse('I chmod the file "{filepath}" to "{mode}" in pod "{alias}"'))
-@then(parsers.parse('I chmod the file "{filepath}" to "{mode}" in pod "{alias}"'))
-def i_chmod_the_file_in_pod(filepath, mode, alias):
+@given(parsers.parse('I create and chmod the file "{filepath}" to "{mode}" in pod "{alias}"'))
+@when(parsers.parse('I create and chmod the file "{filepath}" to "{mode}" in pod "{alias}"'))
+@then(parsers.parse('I create and chmod the file "{filepath}" to "{mode}" in pod "{alias}"'))
+def i_create_and_chmod_the_file_in_pod(filepath, mode, alias):
     pod = get_pod(alias)
     permissions = int(mode, 8)
     create_file(File(path=filepath, target=pod))
     chmod_file(File(path=filepath, permissions=permissions, target=pod))
+
+
+@given(parsers.parse('I create and chmod the file "{filepath}" to "{mode}" in the owlsm container'))
+@when(parsers.parse('I create and chmod the file "{filepath}" to "{mode}" in the owlsm container'))
+@then(parsers.parse('I create and chmod the file "{filepath}" to "{mode}" in the owlsm container'))
+def i_create_and_chmod_the_file_in_the_owlsm_container(filepath, mode):
+    pod = main_node_owlsm_pod()
+    permissions = int(mode, 8)
+    create_file(File(path=filepath, target=pod))
+    chmod_file(File(path=filepath, permissions=permissions, target=pod))
+
+
+@given(parsers.parse('I ensure the file "{filepath}" has mode "{mode}" in the owlsm container'))
+@when(parsers.parse('I ensure the file "{filepath}" has mode "{mode}" in the owlsm container'))
+@then(parsers.parse('I ensure the file "{filepath}" has mode "{mode}" in the owlsm container'))
+def i_ensure_the_file_has_mode_in_the_owlsm_container(filepath, mode):
+    assert_file_mode(File(path=filepath, target=main_node_owlsm_pod()), mode)
 
 
 def _main_node_file(filepath: str, permissions: int = 0) -> File:

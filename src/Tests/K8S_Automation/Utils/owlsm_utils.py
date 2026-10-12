@@ -206,8 +206,37 @@ def wait_until_owlsm_pod_log_has_json_event() -> bool:
                     if isinstance(event, dict) and event.get("type"):
                         logger.log_info("owlsm pod log has JSON events")
                         return True
+                if _owlsm_logger_says_probes_attached(pod_name):
+                    logger.log_info("owlsm probes are attached")
+                    return True
         time.sleep(0.5)
     return False
+
+
+def _owlsm_logger_says_probes_attached(pod_name: str) -> bool:
+    log_path = global_strings.OWLSM_CONTAINER_LOG_PATH
+    # The log file is on a host mount, so a previous process can leave "Attached all probes" behind.
+    script = (
+        f"start=$(grep -n 'Starting OWLSM' {log_path} | tail -n 1 | cut -d: -f1); "
+        f"attached=$(grep -n 'Attached all probes' {log_path} | tail -n 1 | cut -d: -f1); "
+        'test -n "$start" && test -n "$attached" && test "$attached" -gt "$start"'
+    )
+    result = run_kubectl(
+        [
+            "exec",
+            "-n",
+            global_strings.OWLSM_NAMESPACE,
+            pod_name,
+            "-c",
+            global_strings.OWLSM_CONTAINER_NAME,
+            "--",
+            "sh",
+            "-c",
+            script,
+        ],
+        check=False,
+    )
+    return result.returncode == 0
 
 
 def wait_until_owlsm_stdout_has_json_event() -> bool:
@@ -223,7 +252,7 @@ def wait_until_owlsm_stdout_has_json_event() -> bool:
             if follow_alive_since is None:
                 follow_alive_since = time.time()
             elif time.time() - follow_alive_since >= 3:
-                logger.log_info("owlsm log follow stayed up and the pod log already has JSON events")
+                logger.log_info("owlsm log follow stayed up")
                 return True
         else:
             follow_alive_since = None

@@ -37,6 +37,7 @@ BPF_CFLAGS     := -O2 -g -Wall -Wno-unused-function -Wno-c23-extensions -target 
 # ---- BPF Source Files ----------------------------------------
 BPF_SRC        := common_maps.bpf.c \
                   error_reports.bpf.c \
+                  k8s_ignored_events.bpf.c \
                   event_and_rule_matcher.bpf.c \
                   dfa.bpf.c \
                   Programs/syscall_monitoring/on_chown.bpf.c \

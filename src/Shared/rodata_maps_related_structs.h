@@ -1,5 +1,6 @@
 #pragma once
 #include "bpf_header_includes.h"
+#include "k8s.h"
 #include "rules_structs.h"
 
 #define MAX_PERCPU_ARRAY_SIZE 1024

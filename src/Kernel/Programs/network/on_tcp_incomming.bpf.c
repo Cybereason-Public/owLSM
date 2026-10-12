@@ -3,6 +3,7 @@
 #include "fill_event_structs.bpf.h"
 #include "pids_to_ignore.bpf.h"
 #include "preprocessor_definitions/defs.bpf.h"
+#include "k8s_ignored_events.bpf.h"
 
 #define NETWORK_EVENT
 #define ACCEPT_EVENT
@@ -43,6 +44,11 @@ int BPF_PROG(accept_hook, struct socket *sock, struct socket *newsock)
 {
     set_hook_name("accept_hook", 11);
     if(is_current_pid_related())
+    {
+        return ALLOW;
+    }
+
+    if(k8s_ignore_current_process())
     {
         return ALLOW;
     }

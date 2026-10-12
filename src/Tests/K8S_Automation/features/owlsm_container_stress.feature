@@ -184,7 +184,7 @@ Scenario: chmod on one hundred pods that existed before owlsm started
     When I remove owlsm from the cluster
     And I deploy the manifest "hundred_preexisting_pods.yaml"
     And owlsm is deployed cluster wide
-    And I chmod the file "/tmp/owlsm-preexisting" to "777" in every pod from "hundred_preexisting_pods.yaml"
+    And I create and chmod the file "/tmp/owlsm-preexisting" to "777" in every pod from "hundred_preexisting_pods.yaml"
     Then I find the event in output in "60" seconds:
         | type                      | CHMOD                            |
         | action                    | ALLOW_EVENT                      |
@@ -211,8 +211,8 @@ Scenario: container restart keeps the pod uid and updates the container id
     And I deploy the manifest "container_restart_before.yaml"
     And owlsm is deployed cluster wide
     And I deploy the manifest "container_restart_after.yaml"
-    And I chmod the file "/tmp/owlsm-restart-before-1" to "777" in pod "before"
-    And I chmod the file "/tmp/owlsm-restart-after-1" to "777" in pod "after"
+    And I create and chmod the file "/tmp/owlsm-restart-before-1" to "777" in pod "before"
+    And I create and chmod the file "/tmp/owlsm-restart-after-1" to "777" in pod "after"
     Then I find the event in output in "30" seconds:
         | type                      | CHMOD                                 |
         | action                    | ALLOW_EVENT                           |
@@ -243,8 +243,8 @@ Scenario: container restart keeps the pod uid and updates the container id
         | kubernetes.container_id   | <after_container_id>                 |
     When I restart pod "before" by killing its init pid and its uid stays the same while its container id changes
     And I restart pod "after" by killing its init pid and its uid stays the same while its container id changes
-    And I chmod the file "/tmp/owlsm-restart-before-2" to "777" in pod "before"
-    And I chmod the file "/tmp/owlsm-restart-after-2" to "777" in pod "after"
+    And I create and chmod the file "/tmp/owlsm-restart-before-2" to "777" in pod "before"
+    And I create and chmod the file "/tmp/owlsm-restart-after-2" to "777" in pod "after"
     Then I find the event in output in "30" seconds:
         | type                      | CHMOD                                 |
         | action                    | ALLOW_EVENT                           |

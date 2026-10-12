@@ -1,6 +1,7 @@
 #include "allocators.bpf.h"
 #include "fill_event_structs.bpf.h"
 #include "pids_to_ignore.bpf.h"
+#include "k8s_ignored_events.bpf.h"
 
 SEC("uprobe")
 int enter_readline(struct pt_regs *ctx)
@@ -8,6 +9,11 @@ int enter_readline(struct pt_regs *ctx)
     set_hook_name("enter_readline", 14);
     
     if(is_current_pid_related())
+    {
+        return 0;
+    }
+
+    if(k8s_ignore_current_process())
     {
         return 0;
     }
@@ -26,7 +32,12 @@ int exit_readline(struct pt_regs *ctx)
     {
         return 0;
     }
-    
+
+    if(k8s_ignore_current_process())
+    {
+        return 0;
+    }
+
     const char *ret = (const char *)PT_REGS_RC(ctx);
     if (!ret)
     {

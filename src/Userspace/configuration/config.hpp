@@ -80,6 +80,8 @@ struct KubernetesConfig
 {
     bool enabled = false;
     std::string root_proc_path;
+    bool ignore_host_events = false;
+    bool ignore_kube_system_events = true;
 };
 
 struct Config 

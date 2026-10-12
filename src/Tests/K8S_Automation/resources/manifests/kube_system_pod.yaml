@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: owlsm-kube-system-event
+  namespace: kube-system
+  labels:
+    app: owlsm-kube-system-event
+    owlsm-automation: pod
+  annotations:
+    owlsm/alias: kube_system
+spec:
+  nodeName: <main_node_name>
+  restartPolicy: Never
+  terminationGracePeriodSeconds: 1
+  tolerations:
+    - key: node-role.kubernetes.io/control-plane
+      operator: Exists
+      effect: NoSchedule
+  containers:
+    - name: owlsm-kube-system-event
+      image: busybox:1.36
+      imagePullPolicy: IfNotPresent
+      command:
+        - /bin/sh
+        - -c
+        - exec /bin/sleep infinity

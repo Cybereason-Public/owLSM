@@ -2,6 +2,7 @@
 #include "fill_event_structs.bpf.h"
 #include "pids_to_ignore.bpf.h"
 #include "active_shells.bpf.h"
+#include "k8s_ignored_events.bpf.h"
 
 #define HOOK_ZLEENTRY_ENTERED 0x01
 #define HOOK_PARSE_EVENT_ENTERED 0x02
@@ -42,6 +43,11 @@ int enter_zleentry(struct pt_regs *ctx)
     {
         return 0;
     }
+
+    if(k8s_ignore_current_process())
+    {
+        return 0;
+    }
     
     check_and_clear_if_both_hooks_entered(HOOK_ZLEENTRY_ENTERED);
     return 0;
@@ -57,6 +63,11 @@ int enter_parse_event(struct pt_regs *ctx)
         return 0;
     }
     
+    if(k8s_ignore_current_process())
+    {
+        return 0;
+    }
+
     check_and_clear_if_both_hooks_entered(HOOK_PARSE_EVENT_ENTERED);
     return 0;
 }
@@ -71,7 +82,12 @@ int exit_zleentry(struct pt_regs *ctx)
     {
         return 0;
     }
-    
+
+    if(k8s_ignore_current_process())
+    {
+        return 0;
+    }
+
     const char *ret = (const char *)PT_REGS_RC(ctx);
     if (!ret)
     {
