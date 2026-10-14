@@ -86,9 +86,10 @@ test: kernel
 	@$(MAKE) -C $(UNIT_TEST_DIR)
 	@python3 $(SCRIPTS_DIR)/package.py unit_tests
 
-profiler: kernel
+profiler: kernel rules_generator
 	@echo "==> Building Userspace profiler..."
 	@$(MAKE) -C $(USERSPACE_DIR) PROFILER_BUILD=1
+	@python3 $(SCRIPTS_DIR)/package.py $(PACKAGE_MODE)
 
 # Top-level directory inside the archive stays "owlsm".
 ifdef ARCH
@@ -134,7 +135,7 @@ help:
 	@echo "  tarball    - Create Linux release tarball (always Linux, ignores K8S=1)"
 	@echo "  automation - Build and setup automation tests"
 	@echo "  rules_generator - Build RulesGenerator binary → Rules/RulesGenerator/rules_generator"
-	@echo "  profiler   - Release userspace build plus -g -DPROFILER_BUILD"
+	@echo "  profiler   - Release userspace build plus -g -DPROFILER_BUILD → build/owlsm/"
 	@echo "  clean      - Clean all build artifacts (Linux and K8s)"
 	@echo "  help       - Show this help message"
 	@echo ""
