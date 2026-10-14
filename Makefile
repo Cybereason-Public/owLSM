@@ -86,10 +86,10 @@ test: kernel
 	@$(MAKE) -C $(UNIT_TEST_DIR)
 	@python3 $(SCRIPTS_DIR)/package.py unit_tests
 
-profiler: kernel rules_generator
+profiler: kernel
 	@echo "==> Building Userspace profiler..."
 	@$(MAKE) -C $(USERSPACE_DIR) PROFILER_BUILD=1
-	@python3 $(SCRIPTS_DIR)/package.py $(PACKAGE_MODE)
+	@python3 $(SCRIPTS_DIR)/package.py profiler
 
 # Top-level directory inside the archive stays "owlsm".
 ifdef ARCH

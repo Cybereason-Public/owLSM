@@ -154,7 +154,7 @@ def require_plotly():
         from plotly.subplots import make_subplots
     except ImportError as error:
         raise RuntimeError(
-            "python3-plotly is not installed. Install it with: apt-get install -y python3-plotly"
+            "plotly is not installed. From profiling/, run: uv venv venv && source venv/bin/activate && uv pip install -r requirements.txt"
         ) from error
     return plotly.graph_objects, make_subplots
 

@@ -6,6 +6,7 @@ Usage:
     scripts/package.py owlsm
     scripts/package.py owlsm-k8s
     scripts/package.py unit_tests
+    scripts/package.py profiler
 """
 
 import platform
@@ -48,20 +49,23 @@ FLATBUFFERS_SRC = PROJECT_ROOT / "src" / "Userspace" / "events" / "flatbuffers"
 RULES_GENERATOR_SRC = PROJECT_ROOT / "Rules" / "RulesGenerator"
 RULES_GENERATOR_BIN = RULES_GENERATOR_SRC / "rules_generator"
 
+_OWLSM_PACKAGE = {
+    "binary": PROJECT_ROOT / "src" / "Userspace" / "owlsm",
+    "output": PROJECT_ROOT / "build" / "owlsm",
+    "with_rules_generator_bin": True,
+    "with_resources": True,
+    "with_flatbuffers": True,
+}
+
 MODES = {
-    "owlsm": {
-        "binary": PROJECT_ROOT / "src" / "Userspace" / "owlsm",
-        "output": PROJECT_ROOT / "build" / "owlsm",
-        "with_rules_generator_bin": True,
-        "with_resources": True,
-        "with_flatbuffers": True,
-    },
+    "owlsm": dict(_OWLSM_PACKAGE),
     "owlsm-k8s": {
-        "binary": PROJECT_ROOT / "src" / "Userspace" / "owlsm",
+        **_OWLSM_PACKAGE,
         "output": PROJECT_ROOT / "build" / "owlsm-k8s",
-        "with_rules_generator_bin": True,
-        "with_resources": True,
-        "with_flatbuffers": True,
+    },
+    "profiler": {
+        **_OWLSM_PACKAGE,
+        "with_rules_generator_bin": False,
     },
     "unit_tests": {
         "binary": PROJECT_ROOT / "src" / "Tests" / "unit_test" / "unit_tests",

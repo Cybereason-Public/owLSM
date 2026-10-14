@@ -14,21 +14,37 @@ Linux x86_64 userspace profiling for owLSM. Build with `make profiler` (producti
 
 # How to run a profiling session
 
-Build the profiler binary, then run one test as root. The run writes SVGs or an HTML file under `profiling/results/`.
+Run one test at a time. The run writes SVGs or an HTML file under `profiling/results/`.
 
 ```bash
+# Run as root, from the root directory
+# start the docker
+docker pull ghcr.io/cybereason-public/owlsm-ci:latest
+docker run -it --rm -v "$PWD":/workspace -w /workspace ghcr.io/cybereason-public/owlsm-ci:latest bash
+
+# Build the profiler binary
 make profiler -j$(nproc)
-sudo python3 profiling/start.py --list
-sudo python3 profiling/start.py Flame_Graph_Idle
-sudo python3 profiling/start.py Flame_Graph_pressure_no_matches
-sudo python3 profiling/start.py Flame_Graph_pressure_yes_matches
-sudo python3 profiling/start.py resources_graph
+
+# exit docker
+exit
+
+# create a venv and install the requirements
+cd profiling
+uv venv venv
+source venv/bin/activate
+uv pip install -r requirements.txt
+
+python start.py --list
+python start.py Flame_Graph_Idle
+python start.py Flame_Graph_pressure_no_matches
+python start.py Flame_Graph_pressure_yes_matches
+python start.py resources_graph
 ```
 
 `Flame_Graph_*` writes `overall.svg` and one SVG per thread.   
 `resources_graph` writes `resources_graph.html` with plotly. Open either in a browser.
 
-The profiling machine needs `perf`, `flamegraph.pl`, and `stackcollapse-perf.pl` for the flame graphs, and `python3-plotly` for the resources graph. See `scripts/oci_testing_machines_setup/ubuntu_24_profiling.sh`.
+The profiling machine needs `perf`, `flamegraph.pl`, and `stackcollapse-perf.pl` for the flame graphs. See `scripts/oci_testing_machines_setup/ubuntu_24_profiling.sh`.
 
 # How to setup the profiling machine
 
