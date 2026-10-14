@@ -105,7 +105,15 @@ class Workload:
             self._make_and_remove_directory()
             self._rename_out_and_back()
             subprocess.run(["/bin/true"], check=True)
-            self._connect_and_send()
+            try:
+                self._connect_and_send()
+            except ConnectionRefusedError:
+                # The listener exits as soon as finish appears. This iteration
+                # can already be past that check, so the last connect finds
+                # nothing listening. That is a clean stop.
+                if self._finish.exists():
+                    return
+                raise
 
     def _touch_pool_file(self, names, next_id):
         name = f"f{next_id}"

@@ -13,6 +13,7 @@ PosixSignalHandler::PosixSignalHandler()
 {
     s_instance = this;
     std::signal(SIGPIPE, signalHandler);
+    std::signal(SIGUSR1, signalHandler);
     std::signal(SIGINT, signalHandler);
     std::signal(SIGTERM, signalHandler);
 }
@@ -33,6 +34,10 @@ void PosixSignalHandler::signalHandler(int signal)
     if(signal == SIGPIPE)
     {
         LOG_INFO("Received SIGPIPE signal, ignoring");
+    }
+    else if(signal == SIGUSR1)
+    {
+        LOG_INFO("Received SIGUSR1 signal, ignoring");
     }
     else if(signal == SIGINT || signal == SIGTERM)
     {

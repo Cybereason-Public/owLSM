@@ -24,11 +24,36 @@ apt-get install -y \
     binutils \
     perl
 
-kernel_tools="linux-tools-$(uname -r)"
+kernel_release="$(uname -r)"
+kernel_tools="linux-tools-${kernel_release}"
 if apt-cache show "${kernel_tools}" >/dev/null 2>&1; then
     apt-get install -y "${kernel_tools}"
 else
     echo "No ${kernel_tools} package for this kernel. Using linux-tools-generic."
+fi
+
+# Ubuntu's linux-oracle-*-tools packages do not ship the perf binary.
+# Install the generic tools for the same kernel series and point the perf
+# wrapper at that binary. cpu-clock sampling works with it on the Oracle kernel.
+if ! perf --version >/dev/null 2>&1; then
+    kernel_base="${kernel_release%%-*}"
+    kernel_series="${kernel_base%.*}"
+    generic_tools="linux-tools-generic-${kernel_series}"
+    if ! apt-cache show "${generic_tools}" >/dev/null 2>&1; then
+        echo "perf is missing and ${generic_tools} is not available."
+        exit 1
+    fi
+    apt-get install -y "${generic_tools}"
+    generic_perf="$(find /usr/lib -type f -name perf -path "*${kernel_series}*" | sort | tail -n 1)"
+    if [ -z "${generic_perf}" ]; then
+        echo "Installed ${generic_tools} but found no perf binary."
+        exit 1
+    fi
+    tools_dir="/usr/lib/linux-tools/${kernel_release}"
+    if [ ! -d "${tools_dir}" ]; then
+        mkdir -p "${tools_dir}"
+    fi
+    ln -sfn "${generic_perf}" "${tools_dir}/perf"
 fi
 
 flamegraph_dir="/opt/FlameGraph"

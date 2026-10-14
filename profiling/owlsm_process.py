@@ -1,5 +1,6 @@
 import signal
 import subprocess
+import threading
 import time
 from pathlib import Path
 
@@ -64,28 +65,26 @@ def start_owlsm(owlsm_bin, config_name, output_dir):
 
     output_dir = Path(output_dir)
     log_path = output_dir / "owlsm.log"
-    events_path = output_dir / "owlsm_events.log"
     stderr_path = output_dir / "owlsm_stderr.log"
     stopper = OwlsmStopper()
-    events_file = events_path.open("w", encoding="utf-8")
     stderr_file = stderr_path.open("w", encoding="utf-8")
     try:
         # -p is only the stopper. Protecting start.py would mark every child it
         # forks after attach as protected, including the workloads and the signal sender.
         # cwd makes the config's relative log_location, "owlsm.log", resolve in this directory.
+        # Events go to /dev/null. Profiling does not read them, and storing the
+        # stream writes several GB under pressure.
         process = subprocess.Popen(
             [str(owlsm_bin), "-c", str(config_path), "-p", str(stopper.pid)],
-            stdout=events_file,
+            stdout=subprocess.DEVNULL,
             stderr=stderr_file,
             cwd=output_dir,
             start_new_session=True,
         )
     except Exception:
-        events_file.close()
         stderr_file.close()
         stopper.close()
         raise
-    events_file.close()
     stderr_file.close()
     owlsm = OwlsmProcess(process, log_path, stderr_path, stopper)
     try:

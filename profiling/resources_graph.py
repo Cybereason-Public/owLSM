@@ -204,11 +204,22 @@ def write_resources_graph(samples, pressure_start, pressure_end, cpu_count, outp
     for wall_time, name in ((pressure_start, "pressure start"), (pressure_end, "pressure end")):
         if wall_time is None:
             continue
+        when = datetime.datetime.fromtimestamp(wall_time)
+        # plotly 5.15 averages a vline's x values with sum() when placing
+        # annotation_text. sum() starts at 0, so a time coordinate raises
+        # TypeError. Draw the line here and the label as its own annotation.
         figure.add_vline(
-            x=datetime.datetime.fromtimestamp(wall_time).isoformat(),
+            x=when,
             line_dash="dash",
             line_color="#222",
-            annotation_text=name,
+        )
+        figure.add_annotation(
+            x=when,
+            y=1,
+            yref="paper",
+            text=name,
+            showarrow=False,
+            yanchor="bottom",
         )
     figure.write_html(str(output_path), include_plotlyjs=True, full_html=True)
 
