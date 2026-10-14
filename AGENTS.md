@@ -78,6 +78,7 @@ docker run -it --rm -v "$PWD":/workspace -w /workspace ghcr.io/cybereason-public
 | `make automation -j$(nproc)` | Build + setup automation tests (depends on all) |
 | `make clean` | Clean all build artifacts |
 | `make DEBUG=1 -j$(nproc)` | Debug build |
+| `make profiler -j$(nproc)` | Linux profiler build |
 
 ### Running
 
