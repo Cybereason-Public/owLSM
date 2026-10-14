@@ -62,5 +62,5 @@ terraform/.terraform.lock.hcl
 # local binaries
 kubectl
 
-# Local planning notes
-Plan/
+# profiling/work/
+profiling/results/

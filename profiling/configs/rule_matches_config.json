@@ -1,0 +1,2508 @@
+{
+  "features": {
+    "file_monitoring": {
+      "enabled": true,
+      "events": {
+        "chmod": true,
+        "chown": true,
+        "file_create": true,
+        "unlink": true,
+        "rename": true,
+        "write": true,
+        "read": true,
+        "mkdir": true,
+        "rmdir": true
+      }
+    },
+    "network_monitoring": {
+      "enabled": true
+    },
+    "shell_commands_monitoring": {
+      "enabled": true
+    },
+    "anti_tampering": {
+      "enabled": true,
+      "events": {
+        "signals": "BLOCK_EVENT",
+        "ptrace": "EXCLUDE_EVENT"
+      }
+    },
+    "legacy_exec": false
+  },
+  "userspace": {
+    "max_events_queue_size": 10000,
+    "output_type": "JSON",
+    "log_level": "LOG_LEVEL_INFO",
+    "set_limits": true,
+    "log_location": "owlsm.log"
+  },
+  "kernel": {
+    "log_level": "LOG_LEVEL_WARNING"
+  },
+  "rules": {
+    "id_to_string": {
+      "0": {
+        "value": "/no/owlsm/00",
+        "string_type": 0
+      },
+      "1": {
+        "value": "/no/owlsm/01",
+        "string_type": 0
+      },
+      "2": {
+        "value": "/no/owlsm/02",
+        "string_type": 0
+      },
+      "3": {
+        "value": "/no/owlsm/03",
+        "string_type": 0
+      },
+      "4": {
+        "value": "/no/owlsm/04",
+        "string_type": 0
+      },
+      "5": {
+        "value": "/no/owlsm/05",
+        "string_type": 0
+      },
+      "6": {
+        "value": "/no/owlsm/06",
+        "string_type": 0
+      },
+      "7": {
+        "value": "/no/owlsm/07",
+        "string_type": 0
+      },
+      "8": {
+        "value": "/no/owlsm/08",
+        "string_type": 0
+      },
+      "9": {
+        "value": "/no/owlsm/09",
+        "string_type": 0
+      },
+      "10": {
+        "value": "/work/",
+        "string_type": 1
+      }
+    },
+    "id_to_predicate": {
+      "0": {
+        "field": "target.file.path",
+        "comparison_type": "startswith",
+        "string_idx": 0,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "1": {
+        "field": "target.file.path",
+        "comparison_type": "startswith",
+        "string_idx": 1,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "2": {
+        "field": "target.file.path",
+        "comparison_type": "startswith",
+        "string_idx": 2,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "3": {
+        "field": "target.file.path",
+        "comparison_type": "startswith",
+        "string_idx": 3,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "4": {
+        "field": "target.file.path",
+        "comparison_type": "startswith",
+        "string_idx": 4,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "5": {
+        "field": "target.file.path",
+        "comparison_type": "startswith",
+        "string_idx": 5,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "6": {
+        "field": "target.file.path",
+        "comparison_type": "startswith",
+        "string_idx": 6,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "7": {
+        "field": "target.file.path",
+        "comparison_type": "startswith",
+        "string_idx": 7,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "8": {
+        "field": "target.file.path",
+        "comparison_type": "startswith",
+        "string_idx": 8,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "9": {
+        "field": "target.file.path",
+        "comparison_type": "startswith",
+        "string_idx": 9,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "10": {
+        "field": "rename.destination_file.path",
+        "comparison_type": "startswith",
+        "string_idx": 0,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "11": {
+        "field": "rename.destination_file.path",
+        "comparison_type": "startswith",
+        "string_idx": 1,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "12": {
+        "field": "rename.destination_file.path",
+        "comparison_type": "startswith",
+        "string_idx": 2,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "13": {
+        "field": "rename.destination_file.path",
+        "comparison_type": "startswith",
+        "string_idx": 3,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "14": {
+        "field": "rename.destination_file.path",
+        "comparison_type": "startswith",
+        "string_idx": 4,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "15": {
+        "field": "rename.destination_file.path",
+        "comparison_type": "startswith",
+        "string_idx": 5,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "16": {
+        "field": "rename.destination_file.path",
+        "comparison_type": "startswith",
+        "string_idx": 6,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "17": {
+        "field": "rename.destination_file.path",
+        "comparison_type": "startswith",
+        "string_idx": 7,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "18": {
+        "field": "rename.destination_file.path",
+        "comparison_type": "startswith",
+        "string_idx": 8,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "19": {
+        "field": "rename.destination_file.path",
+        "comparison_type": "startswith",
+        "string_idx": 9,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "20": {
+        "field": "process.file.path",
+        "comparison_type": "startswith",
+        "string_idx": 0,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "21": {
+        "field": "process.file.path",
+        "comparison_type": "startswith",
+        "string_idx": 1,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "22": {
+        "field": "process.file.path",
+        "comparison_type": "startswith",
+        "string_idx": 2,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "23": {
+        "field": "process.file.path",
+        "comparison_type": "startswith",
+        "string_idx": 3,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "24": {
+        "field": "process.file.path",
+        "comparison_type": "startswith",
+        "string_idx": 4,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "25": {
+        "field": "process.file.path",
+        "comparison_type": "startswith",
+        "string_idx": 5,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "26": {
+        "field": "process.file.path",
+        "comparison_type": "startswith",
+        "string_idx": 6,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "27": {
+        "field": "process.file.path",
+        "comparison_type": "startswith",
+        "string_idx": 7,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "28": {
+        "field": "process.file.path",
+        "comparison_type": "startswith",
+        "string_idx": 8,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "29": {
+        "field": "process.file.path",
+        "comparison_type": "startswith",
+        "string_idx": 9,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "30": {
+        "field": "network.destination_port",
+        "comparison_type": "equal",
+        "string_idx": -1,
+        "numerical_value": 1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "31": {
+        "field": "network.destination_port",
+        "comparison_type": "equal",
+        "string_idx": -1,
+        "numerical_value": 2,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "32": {
+        "field": "network.destination_port",
+        "comparison_type": "equal",
+        "string_idx": -1,
+        "numerical_value": 3,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "33": {
+        "field": "network.destination_port",
+        "comparison_type": "equal",
+        "string_idx": -1,
+        "numerical_value": 4,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "34": {
+        "field": "network.destination_port",
+        "comparison_type": "equal",
+        "string_idx": -1,
+        "numerical_value": 5,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "35": {
+        "field": "network.destination_port",
+        "comparison_type": "equal",
+        "string_idx": -1,
+        "numerical_value": 6,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "36": {
+        "field": "network.destination_port",
+        "comparison_type": "equal",
+        "string_idx": -1,
+        "numerical_value": 7,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "37": {
+        "field": "network.destination_port",
+        "comparison_type": "equal",
+        "string_idx": -1,
+        "numerical_value": 8,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "38": {
+        "field": "network.destination_port",
+        "comparison_type": "equal",
+        "string_idx": -1,
+        "numerical_value": 9,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "39": {
+        "field": "network.destination_port",
+        "comparison_type": "equal",
+        "string_idx": -1,
+        "numerical_value": 10,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "40": {
+        "field": "target.file.path",
+        "comparison_type": "contains",
+        "string_idx": 10,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      },
+      "41": {
+        "field": "rename.destination_file.path",
+        "comparison_type": "contains",
+        "string_idx": 10,
+        "numerical_value": -1,
+        "fieldref": "FIELD_TYPE_NONE"
+      }
+    },
+    "id_to_ip": {},
+    "rules": [
+      {
+        "id": 1,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/00, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "FILE_CREATE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/00, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHOWN"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/00, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHMOD"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/00, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "WRITE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/00, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "READ"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/00, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "UNLINK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/00, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "MKDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/00, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RMDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/01, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "FILE_CREATE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 1
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/01, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHOWN"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 1
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/01, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHMOD"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 1
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/01, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "WRITE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 1
+          }
+        ]
+      },
+      {
+        "id": 13,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/01, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "READ"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 1
+          }
+        ]
+      },
+      {
+        "id": 14,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/01, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "UNLINK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 1
+          }
+        ]
+      },
+      {
+        "id": 15,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/01, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "MKDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 1
+          }
+        ]
+      },
+      {
+        "id": 16,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/01, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RMDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 1
+          }
+        ]
+      },
+      {
+        "id": 17,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/02, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "FILE_CREATE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 2
+          }
+        ]
+      },
+      {
+        "id": 18,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/02, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHOWN"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 2
+          }
+        ]
+      },
+      {
+        "id": 19,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/02, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHMOD"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 2
+          }
+        ]
+      },
+      {
+        "id": 20,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/02, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "WRITE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 2
+          }
+        ]
+      },
+      {
+        "id": 21,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/02, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "READ"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 2
+          }
+        ]
+      },
+      {
+        "id": 22,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/02, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "UNLINK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 2
+          }
+        ]
+      },
+      {
+        "id": 23,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/02, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "MKDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 2
+          }
+        ]
+      },
+      {
+        "id": 24,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/02, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RMDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 2
+          }
+        ]
+      },
+      {
+        "id": 25,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/03, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "FILE_CREATE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 3
+          }
+        ]
+      },
+      {
+        "id": 26,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/03, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHOWN"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 3
+          }
+        ]
+      },
+      {
+        "id": 27,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/03, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHMOD"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 3
+          }
+        ]
+      },
+      {
+        "id": 28,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/03, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "WRITE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 3
+          }
+        ]
+      },
+      {
+        "id": 29,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/03, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "READ"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 3
+          }
+        ]
+      },
+      {
+        "id": 30,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/03, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "UNLINK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 3
+          }
+        ]
+      },
+      {
+        "id": 31,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/03, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "MKDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 3
+          }
+        ]
+      },
+      {
+        "id": 32,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/03, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RMDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 3
+          }
+        ]
+      },
+      {
+        "id": 33,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/04, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "FILE_CREATE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 4
+          }
+        ]
+      },
+      {
+        "id": 34,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/04, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHOWN"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 4
+          }
+        ]
+      },
+      {
+        "id": 35,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/04, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHMOD"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 4
+          }
+        ]
+      },
+      {
+        "id": 36,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/04, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "WRITE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 4
+          }
+        ]
+      },
+      {
+        "id": 37,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/04, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "READ"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 4
+          }
+        ]
+      },
+      {
+        "id": 38,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/04, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "UNLINK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 4
+          }
+        ]
+      },
+      {
+        "id": 39,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/04, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "MKDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 4
+          }
+        ]
+      },
+      {
+        "id": 40,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/04, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RMDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 4
+          }
+        ]
+      },
+      {
+        "id": 41,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/05, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "FILE_CREATE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 5
+          }
+        ]
+      },
+      {
+        "id": 42,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/05, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHOWN"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 5
+          }
+        ]
+      },
+      {
+        "id": 43,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/05, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHMOD"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 5
+          }
+        ]
+      },
+      {
+        "id": 44,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/05, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "WRITE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 5
+          }
+        ]
+      },
+      {
+        "id": 45,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/05, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "READ"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 5
+          }
+        ]
+      },
+      {
+        "id": 46,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/05, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "UNLINK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 5
+          }
+        ]
+      },
+      {
+        "id": 47,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/05, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "MKDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 5
+          }
+        ]
+      },
+      {
+        "id": 48,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/05, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RMDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 5
+          }
+        ]
+      },
+      {
+        "id": 49,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/06, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "FILE_CREATE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 6
+          }
+        ]
+      },
+      {
+        "id": 50,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/06, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHOWN"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 6
+          }
+        ]
+      },
+      {
+        "id": 51,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/06, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHMOD"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 6
+          }
+        ]
+      },
+      {
+        "id": 52,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/06, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "WRITE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 6
+          }
+        ]
+      },
+      {
+        "id": 53,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/06, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "READ"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 6
+          }
+        ]
+      },
+      {
+        "id": 54,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/06, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "UNLINK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 6
+          }
+        ]
+      },
+      {
+        "id": 55,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/06, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "MKDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 6
+          }
+        ]
+      },
+      {
+        "id": 56,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/06, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RMDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 6
+          }
+        ]
+      },
+      {
+        "id": 57,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/07, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "FILE_CREATE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 7
+          }
+        ]
+      },
+      {
+        "id": 58,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/07, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHOWN"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 7
+          }
+        ]
+      },
+      {
+        "id": 59,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/07, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHMOD"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 7
+          }
+        ]
+      },
+      {
+        "id": 60,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/07, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "WRITE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 7
+          }
+        ]
+      },
+      {
+        "id": 61,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/07, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "READ"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 7
+          }
+        ]
+      },
+      {
+        "id": 62,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/07, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "UNLINK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 7
+          }
+        ]
+      },
+      {
+        "id": 63,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/07, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "MKDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 7
+          }
+        ]
+      },
+      {
+        "id": 64,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/07, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RMDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 7
+          }
+        ]
+      },
+      {
+        "id": 65,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/08, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "FILE_CREATE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 8
+          }
+        ]
+      },
+      {
+        "id": 66,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/08, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHOWN"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 8
+          }
+        ]
+      },
+      {
+        "id": 67,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/08, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHMOD"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 8
+          }
+        ]
+      },
+      {
+        "id": 68,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/08, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "WRITE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 8
+          }
+        ]
+      },
+      {
+        "id": 69,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/08, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "READ"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 8
+          }
+        ]
+      },
+      {
+        "id": 70,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/08, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "UNLINK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 8
+          }
+        ]
+      },
+      {
+        "id": 71,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/08, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "MKDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 8
+          }
+        ]
+      },
+      {
+        "id": 72,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/08, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RMDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 8
+          }
+        ]
+      },
+      {
+        "id": 73,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/09, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "FILE_CREATE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 9
+          }
+        ]
+      },
+      {
+        "id": 74,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/09, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHOWN"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 9
+          }
+        ]
+      },
+      {
+        "id": 75,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/09, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHMOD"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 9
+          }
+        ]
+      },
+      {
+        "id": 76,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/09, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "WRITE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 9
+          }
+        ]
+      },
+      {
+        "id": 77,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/09, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "READ"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 9
+          }
+        ]
+      },
+      {
+        "id": 78,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/09, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "UNLINK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 9
+          }
+        ]
+      },
+      {
+        "id": 79,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/09, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "MKDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 9
+          }
+        ]
+      },
+      {
+        "id": 80,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/09, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RMDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 9
+          }
+        ]
+      },
+      {
+        "id": 81,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/00, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RENAME"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 10
+          }
+        ]
+      },
+      {
+        "id": 82,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/01, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RENAME"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 11
+          }
+        ]
+      },
+      {
+        "id": 83,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/02, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RENAME"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 12
+          }
+        ]
+      },
+      {
+        "id": 84,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/03, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RENAME"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 13
+          }
+        ]
+      },
+      {
+        "id": 85,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/04, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RENAME"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 14
+          }
+        ]
+      },
+      {
+        "id": 86,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/05, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RENAME"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 15
+          }
+        ]
+      },
+      {
+        "id": 87,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/06, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RENAME"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 16
+          }
+        ]
+      },
+      {
+        "id": 88,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/07, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RENAME"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 17
+          }
+        ]
+      },
+      {
+        "id": 89,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/08, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RENAME"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 18
+          }
+        ]
+      },
+      {
+        "id": 90,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/09, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RENAME"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 19
+          }
+        ]
+      },
+      {
+        "id": 91,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/00, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "EXEC"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 20
+          }
+        ]
+      },
+      {
+        "id": 92,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/00, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "FORK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 20
+          }
+        ]
+      },
+      {
+        "id": 93,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/00, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "EXIT"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 20
+          }
+        ]
+      },
+      {
+        "id": 94,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/01, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "EXEC"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 21
+          }
+        ]
+      },
+      {
+        "id": 95,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/01, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "FORK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 21
+          }
+        ]
+      },
+      {
+        "id": 96,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/01, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "EXIT"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 21
+          }
+        ]
+      },
+      {
+        "id": 97,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/02, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "EXEC"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 22
+          }
+        ]
+      },
+      {
+        "id": 98,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/02, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "FORK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 22
+          }
+        ]
+      },
+      {
+        "id": 99,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/02, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "EXIT"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 22
+          }
+        ]
+      },
+      {
+        "id": 100,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/03, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "EXEC"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 23
+          }
+        ]
+      },
+      {
+        "id": 101,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/03, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "FORK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 23
+          }
+        ]
+      },
+      {
+        "id": 102,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/03, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "EXIT"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 23
+          }
+        ]
+      },
+      {
+        "id": 103,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/04, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "EXEC"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 24
+          }
+        ]
+      },
+      {
+        "id": 104,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/04, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "FORK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 24
+          }
+        ]
+      },
+      {
+        "id": 105,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/04, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "EXIT"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 24
+          }
+        ]
+      },
+      {
+        "id": 106,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/05, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "EXEC"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 25
+          }
+        ]
+      },
+      {
+        "id": 107,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/05, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "FORK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 25
+          }
+        ]
+      },
+      {
+        "id": 108,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/05, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "EXIT"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 25
+          }
+        ]
+      },
+      {
+        "id": 109,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/06, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "EXEC"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 26
+          }
+        ]
+      },
+      {
+        "id": 110,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/06, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "FORK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 26
+          }
+        ]
+      },
+      {
+        "id": 111,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/06, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "EXIT"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 26
+          }
+        ]
+      },
+      {
+        "id": 112,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/07, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "EXEC"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 27
+          }
+        ]
+      },
+      {
+        "id": 113,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/07, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "FORK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 27
+          }
+        ]
+      },
+      {
+        "id": 114,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/07, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "EXIT"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 27
+          }
+        ]
+      },
+      {
+        "id": 115,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/08, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "EXEC"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 28
+          }
+        ]
+      },
+      {
+        "id": 116,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/08, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "FORK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 28
+          }
+        ]
+      },
+      {
+        "id": 117,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/08, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "EXIT"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 28
+          }
+        ]
+      },
+      {
+        "id": 118,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/09, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "EXEC"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 29
+          }
+        ]
+      },
+      {
+        "id": 119,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/09, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "FORK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 29
+          }
+        ]
+      },
+      {
+        "id": 120,
+        "metadata": {
+          "description": "Profiling filler. Matches /no/owlsm/09, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "EXIT"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 29
+          }
+        ]
+      },
+      {
+        "id": 121,
+        "metadata": {
+          "description": "Profiling filler. Matches destination port 1, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "NETWORK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 30
+          }
+        ]
+      },
+      {
+        "id": 122,
+        "metadata": {
+          "description": "Profiling filler. Matches destination port 2, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "NETWORK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 31
+          }
+        ]
+      },
+      {
+        "id": 123,
+        "metadata": {
+          "description": "Profiling filler. Matches destination port 3, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "NETWORK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 32
+          }
+        ]
+      },
+      {
+        "id": 124,
+        "metadata": {
+          "description": "Profiling filler. Matches destination port 4, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "NETWORK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 33
+          }
+        ]
+      },
+      {
+        "id": 125,
+        "metadata": {
+          "description": "Profiling filler. Matches destination port 5, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "NETWORK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 34
+          }
+        ]
+      },
+      {
+        "id": 126,
+        "metadata": {
+          "description": "Profiling filler. Matches destination port 6, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "NETWORK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 35
+          }
+        ]
+      },
+      {
+        "id": 127,
+        "metadata": {
+          "description": "Profiling filler. Matches destination port 7, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "NETWORK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 36
+          }
+        ]
+      },
+      {
+        "id": 128,
+        "metadata": {
+          "description": "Profiling filler. Matches destination port 8, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "NETWORK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 37
+          }
+        ]
+      },
+      {
+        "id": 129,
+        "metadata": {
+          "description": "Profiling filler. Matches destination port 9, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "NETWORK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 38
+          }
+        ]
+      },
+      {
+        "id": 130,
+        "metadata": {
+          "description": "Profiling filler. Matches destination port 10, which this pressure does not touch."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "NETWORK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 39
+          }
+        ]
+      },
+      {
+        "id": 131,
+        "metadata": {
+          "description": "Match file events whose path is under work/."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "FILE_CREATE",
+          "CHOWN",
+          "CHMOD",
+          "WRITE",
+          "READ",
+          "UNLINK",
+          "MKDIR",
+          "RMDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 40
+          }
+        ]
+      },
+      {
+        "id": 132,
+        "metadata": {
+          "description": "Match rename events whose destination path is under work/."
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RENAME"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 41
+          }
+        ]
+      }
+    ]
+  }
+}

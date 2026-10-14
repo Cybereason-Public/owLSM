@@ -15,11 +15,12 @@ echo "Installing profiling tools"
 echo "=========================================="
 
 # perf: flame graphs and lock samples. heaptrack: heap snapshots.
-# perl: FlameGraph scripts. binutils: addr2line for perf stacks.
+# python3-plotly: resources graph HTML. perl: FlameGraph scripts. binutils: addr2line for perf stacks.
 apt-get install -y \
     linux-tools-common \
     linux-tools-generic \
     heaptrack \
+    python3-plotly \
     binutils \
     perl
 
@@ -46,6 +47,11 @@ fi
 
 if ! command -v heaptrack >/dev/null 2>&1; then
     echo "heaptrack was not installed."
+    exit 1
+fi
+
+if ! python3 -c "import plotly" >/dev/null 2>&1; then
+    echo "python3-plotly was not installed."
     exit 1
 fi
 
