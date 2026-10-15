@@ -10,7 +10,7 @@ namespace owlsm::events
 {
 
 ShellAsyncWorker::ShellAsyncWorker()
-    : BaseAsyncWorker<Event>("ShellAsyncWorker")
+    : BaseAsyncWorker<Event>("shell-async")
 {
 }
 

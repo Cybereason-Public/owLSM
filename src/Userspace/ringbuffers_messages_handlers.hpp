@@ -6,6 +6,7 @@
 #include "events/event_to_json.hpp"
 #include "events/event_to_flatbuffer.hpp"
 #include "logger.hpp"
+#include "thread_name.hpp"
 
 #include "globals/global_objects.hpp"
 #include "globals/global_numbers.hpp"
@@ -31,8 +32,10 @@ class RingbufferMessagesHandler
     using RawType = typename MessageType::RawType;
 
 public:
-    RingbufferMessagesHandler(std::shared_ptr<struct ring_buffer>& ringbuffer, int output_fd)
-        : m_ringbuffer(ringbuffer), m_output_fd(output_fd) {}
+    RingbufferMessagesHandler(std::shared_ptr<struct ring_buffer>& ringbuffer, int output_fd,
+        const char* poll_thread_name, const char* consume_thread_name)
+        : m_ringbuffer(ringbuffer), m_output_fd(output_fd),
+          m_poll_thread_name(poll_thread_name), m_consume_thread_name(consume_thread_name) {}
 
     void start()
     {
@@ -92,6 +95,8 @@ public:
 private:
     void ringbufferWorker()
     {
+        ThreadName::setCurrent(m_poll_thread_name);
+
         while (m_running)
         {
             ring_buffer__poll(m_ringbuffer.get(), 100);
@@ -100,6 +105,8 @@ private:
 
     void consumerWorker()
     {
+        ThreadName::setCurrent(m_consume_thread_name);
+
         std::unique_ptr<events::IEventParser<MessageType>> serializer;
         if (owlsm::globals::g_config.userspace.output_type == config::OutputType::FLATBUFFERS)
         {
@@ -203,6 +210,8 @@ private:
 
     std::shared_ptr<struct ring_buffer> m_ringbuffer;
     int m_output_fd;
+    const char* m_poll_thread_name;
+    const char* m_consume_thread_name;
     std::thread m_polling_thread;
     std::thread m_processing_thread;
     std::deque<RawType> m_main_queue;
