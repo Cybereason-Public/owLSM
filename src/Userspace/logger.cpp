@@ -1,9 +1,11 @@
 #include "logger.hpp"
 #include "globals/global_numbers.hpp"
+#include "thread_name.hpp"
 
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/rotating_file_sink.h>
 #include <spdlog/async.h>
+#include <spdlog/details/registry.h>
 #include <spdlog/fmt/fmt.h>
 #include <fstream>
 #include <chrono>
@@ -32,7 +34,10 @@ void Logger::openLogger(const std::string& log_path, ::spdlog::level::level_enum
 {
     if (async)
     {
-        ::spdlog::init_thread_pool(8192, 1);
+        ::spdlog::init_thread_pool(8192, 1, []()
+        {
+            ThreadName::setCurrent("log-worker");
+        });
         m_logger = ::spdlog::create_async<::spdlog::sinks::rotating_file_sink_mt>(
             "owlsm_logger", log_path, 100 * owlsm::globals::MB, owlsm::globals::MAX_LOG_FILES);
         ::spdlog::flush_every(std::chrono::milliseconds(500));
@@ -47,6 +52,22 @@ void Logger::openLogger(const std::string& log_path, ::spdlog::level::level_enum
     m_logger->set_level(level);
     m_async = async;
     m_initialized = true;
+    if (async)
+    {
+        namePeriodicFlushThread();
+    }
+}
+
+void Logger::namePeriodicFlushThread()
+{
+    auto& flusher = ::spdlog::details::registry::instance().get_flusher();
+    if (!flusher || !flusher->get_thread().joinable())
+    {
+        LOG_ERROR("Failed to name thread log-flush");
+        return;
+    }
+
+    ThreadName::set(flusher->get_thread().native_handle(), "log-flush");
 }
 
 void Logger::initialize(const std::string& log_path, enum log_level level, bool async) 

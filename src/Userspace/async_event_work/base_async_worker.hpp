@@ -1,6 +1,7 @@
 #pragma once
 
 #include "logger.hpp"
+#include "thread_name.hpp"
 #include <thread>
 #include <mutex>
 #include <condition_variable>
@@ -67,7 +68,7 @@ protected:
     {
         LOG_INFO(m_name << " thread started");
         std::string shortName = m_name.substr(0, 15);
-        pthread_setname_np(pthread_self(), shortName.c_str());
+        ThreadName::setCurrent(shortName.c_str());
     }
 
     virtual void onThreadStop() 

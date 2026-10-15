@@ -1,6 +1,7 @@
 #include "kubernetes/nri_plugin.hpp"
 #include "kubernetes/client_go/owlsm_k8s.h"
 #include "logger.hpp"
+#include "thread_name.hpp"
 
 #include <chrono>
 #include <cstdlib>
@@ -165,6 +166,8 @@ bool NriPlugin::waitForFirstSync()
 
 void NriPlugin::reconnectLoop()
 {
+    ThreadName::setCurrent("nri-reconnect");
+
     while (!m_stopping.load())
     {
         {

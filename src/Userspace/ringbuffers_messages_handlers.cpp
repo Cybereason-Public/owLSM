@@ -4,8 +4,10 @@ namespace owlsm
 {
     void RingbuffersMessagesHandlers::start(std::shared_ptr<struct ring_buffer>& event_ringbuffer, std::shared_ptr<struct ring_buffer>& error_ringbuffer)
     {
-        m_event_handler = std::make_unique<EventHandler>(event_ringbuffer, STDOUT_FILENO);
-        m_error_handler = std::make_unique<ErrorHandler>(error_ringbuffer, STDERR_FILENO);
+        m_event_handler = std::make_unique<EventHandler>(
+            event_ringbuffer, STDOUT_FILENO, "event-poll", "event-consume");
+        m_error_handler = std::make_unique<ErrorHandler>(
+            error_ringbuffer, STDERR_FILENO, "error-poll", "error-consume");
         m_event_handler->start();
         m_error_handler->start();
     }

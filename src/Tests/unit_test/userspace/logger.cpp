@@ -3,9 +3,11 @@
 #include "logger.hpp"
 #include "globals/global_strings.hpp"
 
+#include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <string>
+#include <thread>
 
 namespace fs = std::filesystem;
 
@@ -51,6 +53,41 @@ protected:
         return fileExists(path) && fs::file_size(path) > 0;
     }
 };
+
+static bool waitForThreadName(const std::string& expected_name)
+{
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(2);
+    while (std::chrono::steady_clock::now() < deadline)
+    {
+        for (const auto& entry : fs::directory_iterator("/proc/self/task"))
+        {
+            std::ifstream comm_file(entry.path() / "comm");
+            std::string name;
+            std::getline(comm_file, name);
+            if (name == expected_name)
+            {
+                return true;
+            }
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    return false;
+}
+
+TEST(LoggerThreadNames, async_spdlog_threads_are_named)
+{
+    const fs::path log_path = "/tmp/owlsm_unit_test_thread_names.log";
+    fs::remove(log_path);
+    owlsm::Logger::shutdown();
+    owlsm::Logger::initialize(log_path.string(), LOG_LEVEL_INFO, true);
+
+    EXPECT_TRUE(waitForThreadName("log-worker"));
+    EXPECT_TRUE(waitForThreadName("log-flush"));
+
+    owlsm::Logger::shutdown();
+    fs::remove(log_path);
+    owlsm::Logger::initialize(owlsm::globals::UNIT_TEST_LOG_PATH, LOG_LEVEL_DEBUG, true);
+}
 
 TEST_F(LoggerMigrationTest, new_path_is_created)
 {

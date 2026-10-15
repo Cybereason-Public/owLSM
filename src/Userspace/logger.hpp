@@ -38,6 +38,7 @@ private:
     ~Logger();
     static ::spdlog::level::level_enum toSpdlogLevel(enum log_level level);
     void openLogger(const std::string& log_path, ::spdlog::level::level_enum level, bool async);
+    static void namePeriodicFlushThread();
 
     std::shared_ptr<::spdlog::logger> m_logger;
     bool m_initialized = false;
