@@ -1,5 +1,6 @@
 """Record a process-wide cpu-clock profile and write one flame graph per thread, plus an overall graph."""
 
+import re
 import shutil
 import signal
 import subprocess
@@ -68,18 +69,21 @@ class FlameGraphProfiler:
     def _render_all(self, perf_data, names, output_dir):
         stackcollapse = _require_tool("stackcollapse-perf.pl")
         flamegraph = _require_tool("flamegraph.pl")
-        script = _perf_script(perf_data, None)
-        _render_svg(script, "owLSM overall", output_dir / "overall.svg", stackcollapse, flamegraph)
+        # Unwind the recording once. A second perf script per thread repeats
+        # that unwind. --tid leaves the thread id on the first frame.
+        folded_text = _fold_once(perf_data, stackcollapse)
+        (output_dir / "stacks.folded").write_text(folded_text, encoding="utf-8")
+        overall, by_tid = _split_folded(folded_text)
+        _write_svg(_format_folded(overall), "owLSM overall", output_dir / "overall.svg", flamegraph)
         for tid, comm in sorted(names.items()):
-            thread_script = _perf_script(perf_data, tid)
-            if not thread_script.strip():
+            stacks = by_tid.get(tid)
+            if not stacks:
                 continue
             filename = f"{_safe_name(comm)}-{tid}.svg"
-            _render_svg(
-                thread_script,
+            _write_svg(
+                _format_folded(stacks),
                 f"owLSM {comm} tid {tid}",
                 output_dir / filename,
-                stackcollapse,
                 flamegraph,
             )
 
@@ -95,29 +99,75 @@ def _collect_thread_names(pid, names):
             continue
 
 
-def _perf_script(perf_data, tid):
-    command = ["perf", "script", "-i", str(perf_data)]
-    if tid is not None:
-        command.extend(["--tid", str(tid)])
-    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    if result.returncode != 0:
-        raise RuntimeError(f"perf script failed:\n{result.stderr}")
-    return result.stdout
-
-
-def _render_svg(script_text, title, svg_path, stackcollapse, flamegraph):
-    collapsed = subprocess.run(
-        [stackcollapse],
-        input=script_text,
+def _fold_once(perf_data, stackcollapse):
+    script = subprocess.Popen(
+        ["perf", "script", "-i", str(perf_data)],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
     )
-    if collapsed.returncode != 0:
-        raise RuntimeError(f"stackcollapse-perf.pl failed:\n{collapsed.stderr}")
+    folded = subprocess.Popen(
+        [stackcollapse, "--tid"],
+        stdin=script.stdout,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    script.stdout.close()
+    script_error = []
+    script_error_reader = threading.Thread(target=_read_stream, args=(script.stderr, script_error), name="perf-script-error")
+    script_error_reader.start()
+    folded_text, folded_error = folded.communicate()
+    script_error_reader.join()
+    script.wait()
+    if script.returncode != 0:
+        raise RuntimeError(f"perf script failed:\n{''.join(script_error)}")
+    if folded.returncode != 0:
+        raise RuntimeError(f"stackcollapse-perf.pl failed:\n{folded_error}")
+    return folded_text
+
+
+def _read_stream(stream, chunks):
+    chunks.append(stream.read())
+
+
+_THREAD_PREFIX = re.compile(r"^(.+)-(\?|\d+)/(\d+)$")
+
+
+def _split_folded(folded_text):
+    overall = {}
+    by_tid = {}
+    for line in folded_text.splitlines():
+        if not line.strip():
+            continue
+        stack, count_text = line.rsplit(" ", 1)
+        count = int(count_text)
+        frames = stack.split(";")
+        comm, tid = _thread_prefix(frames[0])
+        # The SVGs use the thread name as the root frame. --tid appends "-pid/tid".
+        frames[0] = comm
+        key = ";".join(frames)
+        overall[key] = overall.get(key, 0) + count
+        thread_stacks = by_tid.setdefault(tid, {})
+        thread_stacks[key] = thread_stacks.get(key, 0) + count
+    return overall, by_tid
+
+
+def _thread_prefix(frame):
+    match = _THREAD_PREFIX.fullmatch(frame)
+    if match is None:
+        raise RuntimeError(f"folded stack is missing its thread id: {frame}")
+    return match.group(1), int(match.group(3))
+
+
+def _format_folded(stacks):
+    return "".join(f"{stack} {count}\n" for stack, count in stacks.items())
+
+
+def _write_svg(folded_text, title, svg_path, flamegraph):
     graph = subprocess.run(
         [flamegraph, "--title", title, "--countname", "samples"],
-        input=collapsed.stdout,
+        input=folded_text,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
