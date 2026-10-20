@@ -16,30 +16,32 @@ ShellAsyncWorker::ShellAsyncWorker()
 
 void ShellAsyncWorker::distributeIfNeeded(std::shared_ptr<Event> event)
 {
-    const auto& process_file = event->process.file;
-    const FileKey key{process_file.inode, process_file.dev, process_file.last_modified_seconds};
+    const FileKey key = fileKeyFromEvent(*event);
 
-    if (m_non_shells_quick_cache.contains(key))
+    if (m_non_shells_quick_cache.contains(key) || isKnownShell(key))
     {
         return;
     }
 
-    if (ShellBinaryInfoExtractor::getShellType(process_file.path.value) == ShellType::UNKNOWN)
+    if (ShellBinaryInfoExtractor::getShellType(event->process.file.path.value) == ShellType::UNKNOWN)
     {
         m_non_shells_quick_cache.insert(key);
         return;
     }
 
+    rememberKnownShell(key);
     enqueue(std::move(event));
 }
 
 void ShellAsyncWorker::processItem(std::shared_ptr<Event>& item)
 {
+    const FileKey key = fileKeyFromEvent(*item);
     const std::string& shell_path = item->process.file.path.value;
-    
+
     const auto shell_info = ShellBinaryInfoExtractor::getShellInfo(shell_path);
     if (!shell_info.has_value())
     {
+        forgetKnownShell(key);
         LOG_WARN("Failed to get shell info for: " << shell_path);
         return;
     }
@@ -52,6 +54,7 @@ void ShellAsyncWorker::processItem(std::shared_ptr<Event>& item)
 
     if (!owlsm::globals::g_shells_db.set(shell_info.value()))
     {
+        forgetKnownShell(key);
         LOG_ERROR("Failed to add shell to DB: " << shell_path);
         return;
     }
@@ -60,6 +63,30 @@ void ShellAsyncWorker::processItem(std::shared_ptr<Event>& item)
 
     auto uprobe = std::make_shared<UprobeProbe>(shell_path, shell_info->shell_type);
     owlsm::globals::g_probe_manager.addAndAttachProbe(uprobe);
+}
+
+FileKey ShellAsyncWorker::fileKeyFromEvent(const Event& event) const
+{
+    const auto& process_file = event.process.file;
+    return FileKey{process_file.inode, process_file.dev, process_file.last_modified_seconds};
+}
+
+bool ShellAsyncWorker::isKnownShell(const FileKey& key) const
+{
+    std::lock_guard<std::mutex> lock(m_known_shells_mutex);
+    return m_known_shells_quick_cache.contains(key);
+}
+
+void ShellAsyncWorker::rememberKnownShell(const FileKey& key)
+{
+    std::lock_guard<std::mutex> lock(m_known_shells_mutex);
+    m_known_shells_quick_cache.insert(key);
+}
+
+void ShellAsyncWorker::forgetKnownShell(const FileKey& key)
+{
+    std::lock_guard<std::mutex> lock(m_known_shells_mutex);
+    m_known_shells_quick_cache.erase(key);
 }
 
 }
