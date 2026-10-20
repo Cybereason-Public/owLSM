@@ -42,6 +42,16 @@ protected:
         return m_worker->m_non_shells_quick_cache;
     }
 
+    std::unordered_set<FileKey, FileKeyHash>& getKnownShellsCache()
+    {
+        return m_worker->m_known_shells_quick_cache;
+    }
+
+    void processItem(std::shared_ptr<Event>& event)
+    {
+        m_worker->processItem(event);
+    }
+
     std::unique_ptr<ShellAsyncWorker> m_worker;
 };
 
@@ -145,8 +155,72 @@ TEST_F(ShellAsyncWorkerTest, distributeIfNeeded_shell_not_added_to_non_shells_ca
     const FileKey key{12345, 100, 1000000};
 
     EXPECT_TRUE(getNonShellsCache().empty());
+    EXPECT_TRUE(getKnownShellsCache().empty());
     m_worker->distributeIfNeeded(event);
     EXPECT_FALSE(getNonShellsCache().contains(key));
+    EXPECT_TRUE(getKnownShellsCache().contains(key));
+}
+
+TEST_F(ShellAsyncWorkerTest, distributeIfNeeded_known_shell_returns_before_shell_check)
+{
+    auto event = createEvent(12345, 100, 1000000, "/nonexistent/path/to/binary");
+    const FileKey key{12345, 100, 1000000};
+
+    getKnownShellsCache().insert(key);
+    m_worker->distributeIfNeeded(event);
+
+    EXPECT_TRUE(getNonShellsCache().empty());
+    EXPECT_TRUE(getKnownShellsCache().contains(key));
+}
+
+TEST_F(ShellAsyncWorkerTest, distributeIfNeeded_same_shell_cached_once)
+{
+    if (!std::filesystem::exists("/usr/bin/bash"))
+    {
+        GTEST_SKIP() << "/usr/bin/bash not found";
+    }
+
+    auto first_event = createEvent(12345, 100, 1000000, "/usr/bin/bash");
+    auto second_event = createEvent(12345, 100, 1000000, "/usr/bin/bash");
+    const FileKey key{12345, 100, 1000000};
+
+    m_worker->distributeIfNeeded(first_event);
+    m_worker->distributeIfNeeded(second_event);
+
+    EXPECT_EQ(getKnownShellsCache().size(), 1u);
+    EXPECT_TRUE(getKnownShellsCache().contains(key));
+    EXPECT_TRUE(getNonShellsCache().empty());
+}
+
+TEST_F(ShellAsyncWorkerTest, distributeIfNeeded_same_shell_path_different_mtime_cached_separately)
+{
+    if (!std::filesystem::exists("/usr/bin/bash"))
+    {
+        GTEST_SKIP() << "/usr/bin/bash not found";
+    }
+
+    auto event1 = createEvent(12345, 100, 1000000, "/usr/bin/bash");
+    auto event2 = createEvent(12345, 100, 2000000, "/usr/bin/bash");
+    const FileKey key1{12345, 100, 1000000};
+    const FileKey key2{12345, 100, 2000000};
+
+    m_worker->distributeIfNeeded(event1);
+    m_worker->distributeIfNeeded(event2);
+
+    EXPECT_TRUE(getKnownShellsCache().contains(key1));
+    EXPECT_TRUE(getKnownShellsCache().contains(key2));
+    EXPECT_EQ(getKnownShellsCache().size(), 2u);
+}
+
+TEST_F(ShellAsyncWorkerTest, processItem_failed_shell_info_removes_known_shell)
+{
+    auto event = createEvent(12345, 100, 1000000, "/nonexistent/path/to/binary");
+    const FileKey key{12345, 100, 1000000};
+
+    getKnownShellsCache().insert(key);
+    processItem(event);
+
+    EXPECT_FALSE(getKnownShellsCache().contains(key));
 }
 
 TEST_F(ShellAsyncWorkerTest, distributeIfNeeded_text_file_adds_to_cache)
