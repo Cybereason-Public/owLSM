@@ -84,7 +84,7 @@ public:
             std::lock_guard<std::mutex> lock(m_main_queue_mutex);
             if (m_main_queue.size() >= owlsm::globals::g_config.userspace.max_events_queue_size)
             {
-                LOG_ERROR("Max events queue size reached");
+                LOG_ERROR_EVERY_N_SEC(10, "Max events queue size reached");
                 return -1;
             }
             m_main_queue.push_back(*ev);
