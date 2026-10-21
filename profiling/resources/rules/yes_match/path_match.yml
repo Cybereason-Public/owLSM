@@ -1,0 +1,11 @@
+id: 111
+description: target file path starts with /tmp/profiling_work
+action: ALLOW_EVENT
+events:
+  - FILE_CREATE
+  - CHMOD
+  - CHOWN
+detection:
+  selection:
+    target.file.path|startswith: "/tmp/profiling_work"
+  condition: selection

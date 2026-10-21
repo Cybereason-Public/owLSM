@@ -8,6 +8,7 @@
 #include "probes_objects/create_probe_objects.hpp"
 #include "globals/global_objects.hpp"
 #include "posix_signal_handler.hpp"
+#include "profiler_stats.hpp"
 #include "rules_managment/rules_organizer.hpp"
 #include "configuration/schema.inc"
 #include "shell_detection/shells_finder.hpp"
@@ -144,6 +145,7 @@ void setupShellDetection()
 
 void cleanup()
 {
+    owlsm::profiler::ProfilerStats::logSummary();
     owlsm::globals::g_probe_manager.bpfDetach();
     owlsm::globals::g_probe_manager.bpfDestroy();
     owlsm::globals::g_kubernetes_client.destroy();

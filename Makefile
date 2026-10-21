@@ -59,7 +59,7 @@ PACKAGE_MODE   := owlsm
 endif
 
 # ---- Phony Targets -------------------------------------------
-.PHONY: all clean test tarball automation help kernel userspace rules_generator k8s
+.PHONY: all clean test tarball automation help kernel userspace rules_generator k8s profiler
 .DEFAULT_GOAL := all
 
 # ---- Build Targets -------------------------------------------
@@ -85,6 +85,13 @@ test: kernel
 	@echo "==> Building unit tests..."
 	@$(MAKE) -C $(UNIT_TEST_DIR)
 	@python3 $(SCRIPTS_DIR)/package.py unit_tests
+
+profiler:
+	@echo "==> Building Kernel (eBPF) profiler..."
+	@$(MAKE) -C $(KERNEL_DIR) PROFILER_BUILD=1
+	@echo "==> Building Userspace profiler..."
+	@$(MAKE) -C $(USERSPACE_DIR) PROFILER_BUILD=1
+	@python3 $(SCRIPTS_DIR)/package.py profiler
 
 # Top-level directory inside the archive stays "owlsm".
 ifdef ARCH
@@ -130,6 +137,7 @@ help:
 	@echo "  tarball    - Create Linux release tarball (always Linux, ignores K8S=1)"
 	@echo "  automation - Build and setup automation tests"
 	@echo "  rules_generator - Build RulesGenerator binary → Rules/RulesGenerator/rules_generator"
+	@echo "  profiler   - Release userspace build plus -g -DPROFILER_BUILD → build/owlsm/"
 	@echo "  clean      - Clean all build artifacts (Linux and K8s)"
 	@echo "  help       - Show this help message"
 	@echo ""
@@ -145,6 +153,7 @@ help:
 	@echo "  make K8S=1 -j\$$(nproc)        # Kubernetes build → build/owlsm-k8s/"
 	@echo "  make k8s -j\$$(nproc)          # Same as make K8S=1"
 	@echo "  make DEBUG=1 -j\$$(nproc)      # Debug build"
+	@echo "  make profiler -j\$$(nproc)     # Profiler build"
 	@echo "  make tarball VERSION=2.0.0    # → build/owlsm-2.0.0.tar.gz"
 	@echo "  make tarball ARCH=aarch64 VERSION=2.0.0  # → build/owlsm-aarch64-v2.0.0.tar.gz"
 	@echo "  make test -j\$$(nproc)         # Build + package unit tests"

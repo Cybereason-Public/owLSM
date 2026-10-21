@@ -37,6 +37,10 @@ else
     CXXFLAGS   += -O2 -DNDEBUG -D_FORTIFY_SOURCE=2 -fstack-protector-strong -fPIE
 endif
 
+ifdef PROFILER_BUILD
+    CXXFLAGS   += -g -DPROFILER_BUILD
+endif
+
 # ---- Linker Flags --------------------------------------------
 LDFLAGS        := -pthread -static-libstdc++ -static-libgcc -Wl,-rpath,'$$ORIGIN/../lib' -Wl,--enable-new-dtags
 

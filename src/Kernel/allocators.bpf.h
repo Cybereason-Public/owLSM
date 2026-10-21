@@ -90,7 +90,8 @@ statfunc struct event_t* allocate_empty_event()
     struct event_t *event = bpf_ringbuf_reserve(&rb, sizeof(struct event_t), 0);
     if(!event)
     {
-        REPORT_ERROR(GENERIC_ERROR, "bpf_ringbuf_reserve failed");
+        unsigned long long failures = __sync_fetch_and_add(&profiler_ring_buffer_alloc_failures, 1) + 1;
+        REPORT_ERROR(GENERIC_ERROR, "bpf_ringbuf_reserve failed. failures: %llu", failures);
         return NULL;
     }
     if(bpf_probe_read_kernel(event, sizeof(*event), &empty_event_t) != SUCCESS)

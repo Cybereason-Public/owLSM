@@ -194,6 +194,16 @@ namespace owlsm
         return map_fd;
     }
 
+    unsigned long long ProbeManager::getRingBufferAllocFailures() const
+    {
+        if (!m_skel)
+        {
+            LOG_ERROR("m_skel is null");
+            return 0;
+        }
+        return m_skel->bss->profiler_ring_buffer_alloc_failures;
+    }
+
     void ProbeManager::disableUnavailableProbes()
     {
         if (!m_ebpf_features.chown_hook_available)

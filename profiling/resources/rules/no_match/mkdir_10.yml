@@ -1,0 +1,9 @@
+id: 100
+description: uid is not 1337
+action: ALLOW_EVENT
+events:
+  - MKDIR
+detection:
+  selection:
+    process.ruid|neq: 1337
+  condition: selection

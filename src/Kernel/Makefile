@@ -20,12 +20,16 @@ SHARED_DIR     := $(CURDIR)/../Shared
 CONSTANTS_H    := $(SHARED_DIR)/constants.h
 CONSTANTS_JSON := $(SHARED_DIR)/constants.json
 
-# ---- BPF Compilation Flags (fixed, no mode variations) -------
+# ---- BPF Compilation Flags -------------------------------------
 BPF_CPPFLAGS   := -D__TARGET_ARCH_$(BPF_TARGET_ARCH) \
                   -D__BPF_KERNEL__ \
                   -I$(CURDIR) \
                   -I$(CURDIR)/Programs/syscall_monitoring \
                   -I$(SHARED_DIR)
+
+ifdef PROFILER_BUILD
+    BPF_CPPFLAGS += -DPROFILER_BUILD
+endif
 
 BPF_CFLAGS     := -O2 -g -Wall -Wno-unused-function -Wno-c23-extensions -target bpf \
                 -Wno-address-of-packed-member \
