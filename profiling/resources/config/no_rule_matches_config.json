@@ -1,0 +1,2806 @@
+{
+  "features": {
+    "file_monitoring": {
+      "enabled": true,
+      "events": {
+        "chmod": true,
+        "chown": true,
+        "file_create": true,
+        "unlink": true,
+        "rename": true,
+        "write": true,
+        "read": false,
+        "mkdir": true,
+        "rmdir": true
+      }
+    },
+    "network_monitoring": {
+      "enabled": true
+    },
+    "shell_commands_monitoring": {
+      "enabled": true
+    },
+    "anti_tampering": {
+      "enabled": true,
+      "events": {
+        "signals": "BLOCK_EVENT",
+        "ptrace": "BLOCK_EVENT"
+      }
+    },
+    "legacy_exec": false
+  },
+  "userspace": {
+    "max_events_queue_size": 10000,
+    "output_type": "JSON",
+    "log_level": "LOG_LEVEL_INFO",
+    "set_limits": true
+  },
+  "kernel": {
+    "log_level": "LOG_LEVEL_WARNING"
+  },
+  "rules": {
+    "id_to_string": {},
+    "id_to_predicate": {
+      "0": {
+        "field": "process.ruid",
+        "comparison_type": "equal",
+        "string_idx": -1,
+        "numerical_value": 1337,
+        "fieldref": "FIELD_TYPE_NONE"
+      }
+    },
+    "id_to_ip": {},
+    "rules": [
+      {
+        "id": 1,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHMOD"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHMOD"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHMOD"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHMOD"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHMOD"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHMOD"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHMOD"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHMOD"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHMOD"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHMOD"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHOWN"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHOWN"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 13,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHOWN"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 14,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHOWN"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 15,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHOWN"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 16,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHOWN"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 17,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHOWN"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 18,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHOWN"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 19,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHOWN"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 20,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "CHOWN"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 61,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "EXEC"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 62,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "EXEC"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 63,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "EXEC"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 64,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "EXEC"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 65,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "EXEC"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 66,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "EXEC"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 67,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "EXEC"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 68,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "EXEC"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 69,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "EXEC"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 70,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "EXEC"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 51,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "FILE_CREATE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 52,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "FILE_CREATE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 53,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "FILE_CREATE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 54,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "FILE_CREATE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 55,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "FILE_CREATE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 56,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "FILE_CREATE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 57,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "FILE_CREATE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 58,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "FILE_CREATE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 59,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "FILE_CREATE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 60,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "FILE_CREATE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 91,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "MKDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 92,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "MKDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 93,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "MKDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 94,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "MKDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 95,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "MKDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 96,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "MKDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 97,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "MKDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 98,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "MKDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 99,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "MKDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 100,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "MKDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 81,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "NETWORK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 82,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "NETWORK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 83,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "NETWORK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 84,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "NETWORK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 85,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "NETWORK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 86,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "NETWORK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 87,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "NETWORK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 88,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "NETWORK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 89,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "NETWORK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 90,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "NETWORK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 21,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "READ"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 22,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "READ"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 23,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "READ"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 24,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "READ"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 25,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "READ"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 26,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "READ"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 27,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "READ"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 28,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "READ"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 29,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "READ"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 30,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "READ"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 71,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RENAME"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 72,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RENAME"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 73,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RENAME"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 74,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RENAME"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 75,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RENAME"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 76,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RENAME"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 77,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RENAME"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 78,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RENAME"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 79,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RENAME"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 80,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RENAME"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 101,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RMDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 102,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RMDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 103,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RMDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 104,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RMDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 105,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RMDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 106,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RMDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 107,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RMDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 108,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RMDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 109,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RMDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 110,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "RMDIR"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 41,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "UNLINK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 42,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "UNLINK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 43,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "UNLINK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 44,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "UNLINK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 45,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "UNLINK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 46,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "UNLINK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 47,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "UNLINK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 48,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "UNLINK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 49,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "UNLINK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 50,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "UNLINK"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 31,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "WRITE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 32,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "WRITE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 33,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "WRITE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 34,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "WRITE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 35,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "WRITE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 36,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "WRITE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 37,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "WRITE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 38,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "WRITE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 39,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "WRITE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      },
+      {
+        "id": 40,
+        "metadata": {
+          "description": "uid is not 1337",
+          "title": "",
+          "severity": "unknown",
+          "mitre_tags": [],
+          "name": "",
+          "author": "",
+          "status": ""
+        },
+        "action": "ALLOW_EVENT",
+        "applied_events": [
+          "WRITE"
+        ],
+        "tokens": [
+          {
+            "operator_type": "OPERATOR_PREDICATE",
+            "predicate_idx": 0
+          },
+          {
+            "operator_type": "OPERATOR_NOT"
+          }
+        ]
+      }
+    ]
+  }
+}

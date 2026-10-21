@@ -1,0 +1,9 @@
+id: 29
+description: uid is not 1337
+action: ALLOW_EVENT
+events:
+  - READ
+detection:
+  selection:
+    process.ruid|neq: 1337
+  condition: selection

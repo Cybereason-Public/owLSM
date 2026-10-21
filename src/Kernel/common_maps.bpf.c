@@ -13,3 +13,4 @@ const volatile struct ebpf_features g_ebpf_features SEC(".rodata");
 const volatile int legacy_exec_enabled SEC(".rodata");
 const volatile struct k8s_config k8s_config SEC(".rodata");
 volatile unsigned long long global_event_id_counter = 1;
+volatile unsigned long long profiler_ring_buffer_alloc_failures = 0;

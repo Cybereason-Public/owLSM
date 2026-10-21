@@ -25,6 +25,8 @@ extern const struct printed_message  empty_printed_message                 SEC("
 extern const volatile struct ebpf_features g_ebpf_features                 SEC(".rodata");
 extern const volatile int            legacy_exec_enabled                   SEC(".rodata");
 extern const volatile struct k8s_config k8s_config                         SEC(".rodata");
+extern volatile unsigned long long global_event_id_counter;
+extern volatile unsigned long long profiler_ring_buffer_alloc_failures;
 
 #ifndef DEFINE_MAPS
 extern
@@ -194,11 +196,6 @@ struct {
         __type(key,        u32);
         __type(value,      int);
 } protected_processes SEC(".maps");
-
-#ifndef DEFINE_MAPS
-extern
-#endif
-volatile unsigned long long global_event_id_counter;
 
 #ifndef DEFINE_MAPS
 extern

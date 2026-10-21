@@ -1,0 +1,9 @@
+id: 74
+description: uid is not 1337
+action: ALLOW_EVENT
+events:
+  - RENAME
+detection:
+  selection:
+    process.ruid|neq: 1337
+  condition: selection

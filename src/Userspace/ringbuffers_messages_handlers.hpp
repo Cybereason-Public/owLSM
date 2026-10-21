@@ -7,6 +7,7 @@
 #include "events/event_to_flatbuffer.hpp"
 #include "logger.hpp"
 #include "thread_name.hpp"
+#include "profiler_stats.hpp"
 
 #include "globals/global_objects.hpp"
 #include "globals/global_numbers.hpp"
@@ -85,6 +86,7 @@ public:
             if (m_main_queue.size() >= owlsm::globals::g_config.userspace.max_events_queue_size)
             {
                 LOG_ERROR_EVERY_N_SEC(10, "Max events queue size reached");
+                owlsm::profiler::ProfilerStats::recordQueueFull();
                 return -1;
             }
             m_main_queue.push_back(*ev);
@@ -136,7 +138,7 @@ private:
             convertToMessages();
             enrichMessages();
             serializer->buildOutputBuffer(m_messages_queue);
-            efficientBulkWrite(serializer->data(), serializer->size());
+            writeAndRecord(serializer->data(), serializer->size());
             distributeMessages();
             m_messages_queue.clear();
             m_thread_queue.clear();
@@ -152,7 +154,7 @@ private:
             convertToMessages();
             enrichMessages();
             serializer->buildOutputBuffer(m_messages_queue);
-            efficientBulkWrite(serializer->data(), serializer->size());
+            writeAndRecord(serializer->data(), serializer->size());
             distributeMessages();
             m_messages_queue.clear();
             m_thread_queue.clear();
@@ -185,8 +187,21 @@ private:
             m_async_work_distributor.distribute(msg);
         }
     }
+    
+    void writeAndRecord(const void* data, size_t size)
+    {
+        const unsigned long long event_count = m_messages_queue.size();
+        if (efficientBulkWrite(data, size))
+        {
+            owlsm::profiler::ProfilerStats::recordWrittenEvents(event_count);
+        }
+        else
+        {
+            owlsm::profiler::ProfilerStats::recordFailedEvents(event_count);
+        }
+    }
 
-    void efficientBulkWrite(const void* data, size_t size)
+    bool efficientBulkWrite(const void* data, size_t size)
     {
         auto* ptr = static_cast<const char*>(data);
         size_t remaining = size;
@@ -201,11 +216,12 @@ private:
                     continue;
                 }
                 LOG_ERROR("Failed to write to output file descriptor");
-                break;
+                return false;
             }
             ptr += written;
             remaining -= written;
         }
+        return true;
     }
 
     std::shared_ptr<struct ring_buffer> m_ringbuffer;
