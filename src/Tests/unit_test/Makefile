@@ -21,6 +21,7 @@ OBJ_DIR             := .obj
 
 # ---- Compilers -----------------------------------------------
 BPF_CC         := clang
+CC             := clang
 CXX            := clang++
 
 # ---- Architecture (libbpf expects x86 / arm64, not uname -m) -
@@ -71,6 +72,13 @@ ifdef DEBUG
     CXXFLAGS   += -O0 -g -DDEBUG -fPIE -fstack-protector-strong
 else
     CXXFLAGS   += -O2 -DNDEBUG -D_FORTIFY_SOURCE=2 -fstack-protector-strong -fPIE
+endif
+
+CFLAGS         := -std=c11 -Wall -Wextra -Wno-unused-parameter -fPIE
+ifdef DEBUG
+    CFLAGS     += -O0 -g -fstack-protector-strong
+else
+    CFLAGS     += -O2 -DNDEBUG -D_FORTIFY_SOURCE=2 -fstack-protector-strong
 endif
 
 # ---- Linker Flags --------------------------------------------
@@ -136,7 +144,9 @@ KERNEL_TEST_OBJS    := $(patsubst $(KERNEL_TESTS_DIR)/%.cpp,$(OBJ_DIR)/kernel/%.
 USERSPACE_TEST_OBJS := $(patsubst $(USERSPACE_TESTS_DIR)/%.cpp,$(OBJ_DIR)/userspace_tests/%.o,$(USERSPACE_TEST_SRC))
 USERSPACE_IMPL_OBJS := $(patsubst $(USERSPACE_SRC_DIR)/%.cpp,$(OBJ_DIR)/userspace_impl/%.o,$(USERSPACE_IMPL_SRC))
 MAIN_OBJ            := $(OBJ_DIR)/main.o
-ALL_TEST_OBJ        := $(KERNEL_TEST_OBJS) $(USERSPACE_TEST_OBJS) $(USERSPACE_IMPL_OBJS) $(MAIN_OBJ)
+YYJSON_SRC          := $(USERSPACE_SRC_DIR)/3rd_party/yyjson/yyjson.c
+YYJSON_OBJ          := $(OBJ_DIR)/yyjson.o
+ALL_TEST_OBJ        := $(KERNEL_TEST_OBJS) $(USERSPACE_TEST_OBJS) $(USERSPACE_IMPL_OBJS) $(MAIN_OBJ) $(YYJSON_OBJ)
 DEPS                := $(ALL_TEST_OBJ:.o=.d)
 
 # ---- Output Binary -------------------------------------------
@@ -185,6 +195,10 @@ $(OBJ_DIR)/userspace_tests/%.o: $(USERSPACE_TESTS_DIR)/%.cpp
 $(OBJ_DIR)/userspace_impl/%.o: $(USERSPACE_SRC_DIR)/%.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(DEPFLAGS) -c $< -o $@
+
+$(YYJSON_OBJ): $(YYJSON_SRC)
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@
 
 # Link all object files into the test binary
 $(TEST_BIN): $(ALL_TEST_OBJ)

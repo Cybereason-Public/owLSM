@@ -2,13 +2,16 @@
 
 #include "events/IEvent_parser.hpp"
 #include "events/event.hpp"
-#include "logger.hpp"
 
-#include <3rd_party/nlohmann/json.hpp>
 #include <3rd_party/magic_enum/magic_enum.hpp>
 
-#include <exception>
+#include <cstddef>
+#include <memory>
+#include <string>
 #include <type_traits>
+#include <vector>
+
+struct yyjson_mut_doc;
 
 template <typename T>
 constexpr std::string_view to_string(T e) noexcept
@@ -18,6 +21,31 @@ constexpr std::string_view to_string(T e) noexcept
 
 namespace owlsm::events
 {
+
+class EventJsonWriter
+{
+public:
+    EventJsonWriter();
+    ~EventJsonWriter();
+
+    EventJsonWriter(const EventJsonWriter&) = delete;
+    EventJsonWriter& operator=(const EventJsonWriter&) = delete;
+
+    void appendEvent(std::string& out, const Event& event);
+    void appendError(std::string& out, const Error& error);
+
+private:
+    struct Shapes;
+
+    bool writeLine(std::string& out, yyjson_mut_doc* doc);
+
+    static constexpr size_t INITIAL_LINE_BYTES = 16 * 1024;
+    static constexpr size_t MAX_LINE_BYTES = 8 * 1024 * 1024;
+    static constexpr int MAX_WRITE_ATTEMPTS = 8;
+
+    std::unique_ptr<Shapes> m_shapes;
+    std::vector<char> m_line;
+};
 
 template <typename MessageType>
 class EventToJson : public IEventParser<MessageType>
@@ -36,36 +64,24 @@ public:
         m_buffer.clear();
         for (const auto& msg : messages)
         {
-            try
+            if constexpr (std::is_same_v<MessageType, Event>)
             {
-                nlohmann::json j;
-                if constexpr (std::is_same_v<MessageType, Event>)
-                {
-                    write_root_event_json(j, *msg);
-                }
-                else if constexpr (std::is_same_v<MessageType, Error>)
-                {
-                    write_root_error_json(j, *msg);
-                }
-                else
-                {
-                    static_assert(sizeof(MessageType) == 0, "EventToJson only supports Event and Error");
-                }
-                m_buffer += j.dump();
-                m_buffer += '\n';
+                m_writer.appendEvent(m_buffer, *msg);
             }
-            catch (const std::exception& e)
+            else if constexpr (std::is_same_v<MessageType, Error>)
             {
-                LOG_ERROR("Failed to serialize message to JSON: " << e.what());
+                m_writer.appendError(m_buffer, *msg);
+            }
+            else
+            {
+                static_assert(sizeof(MessageType) == 0, "EventToJson only supports Event and Error");
             }
         }
     }
 
 private:
-
-    void write_root_event_json(nlohmann::json& j, const Event& ev);
-    void write_root_error_json(nlohmann::json& j, const Error& e);
     std::string m_buffer;
+    EventJsonWriter m_writer;
 };
 
-} // namespace owlsm::events
+}
