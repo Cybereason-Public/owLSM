@@ -50,6 +50,7 @@ BPF_CFLAGS     := -O2 -g -Wall -Wno-unused-function -Wno-c23-extensions -target 
 
 # ---- C++ Compilation Flags -----------------------------------
 CPPFLAGS       := -DOWLSM_VERSION_STR=\"$(VERSION)\" \
+                  -DOWLSM_UNIT_TEST \
                   -I$(KERNEL_TESTS_DIR) \
                   -I$(USERSPACE_TESTS_DIR) \
                   -I$(SHARED_HDR_DIR) \

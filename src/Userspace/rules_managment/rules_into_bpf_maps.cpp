@@ -202,6 +202,12 @@ int RulesIntoBpfMaps::create_pin_map(enum bpf_map_type type,const std::string& m
 
 void RulesIntoBpfMaps::freeze_map(int fd)
 {
+#ifdef OWLSM_UNIT_TEST
+    // The shared test skeleton cannot refill a frozen map.
+    (void)fd;
+    return;
+#endif
+
     if (bpf_map_freeze(fd) < 0)
     {
         throw std::system_error(errno, std::generic_category(), "bpf_map_freeze failed");

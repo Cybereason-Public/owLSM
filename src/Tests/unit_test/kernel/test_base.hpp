@@ -8,39 +8,24 @@
 #include "system_setup.hpp"
 #include "ebpf_unit_tests.skel.h"
 
-class BpfTestBase : public ::testing::Test 
+class BpfTestBase : public ::testing::Test
 {
 protected:
-    void SetUp() override 
-    {
-        bpf_object_open_opts open_opts = {};
-        open_opts.sz = sizeof(open_opts);
-        open_opts.pin_root_path = owlsm::globals::SYS_FS_BPF_OWLSM_PATH;
-        skel = ebpf_unit_tests__open_opts(&open_opts);
-        if (!skel) 
-        {
-            throw std::runtime_error("Failed to open BPF skeleton. errno: " + std::to_string(errno));
-        }
-        
-        int err = ebpf_unit_tests__load(skel);
-        if (err)
-        {
-            ebpf_unit_tests__destroy(skel);
-            skel = nullptr;
-            throw std::runtime_error("Failed to load BPF skeleton. errno: " + std::to_string(err));
-        }
-    }
-
-    void TearDown() override 
-    {
-        if (skel) 
-        {
-            ebpf_unit_tests__destroy(skel);
-            skel = nullptr;
-        }
-        owlsm::SystemSetup::cleanupOwlsmDirectory();
-    }
+    // One load for the whole suite. Reloading verifies every program again (~1s per test).
+    static void SetUpTestSuite();
+    static void TearDownTestSuite();
+    void SetUp() override;
 
     ebpf_unit_tests* skel = nullptr;
-};
 
+private:
+    static ebpf_unit_tests* loadSkeleton();
+    static void resetMaps(ebpf_unit_tests* skeleton);
+    static bool shouldResetMap(const struct bpf_map* map);
+    static void resetMap(struct bpf_map* map);
+    static void deleteAllKeys(int fd, __u32 key_size);
+    static bool zeroAllEntries(struct bpf_map* map);
+    static bool isPerCpuMap(enum bpf_map_type type);
+
+    static ebpf_unit_tests* m_shared_skel;
+};
