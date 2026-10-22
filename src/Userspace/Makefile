@@ -13,6 +13,7 @@ endif
 endif
 
 # ---- Compiler ------------------------------------------------
+CC             := clang
 CXX            := clang++
 
 # ---- Preprocessor Flags --------------------------------------
@@ -37,8 +38,16 @@ else
     CXXFLAGS   += -O2 -DNDEBUG -D_FORTIFY_SOURCE=2 -fstack-protector-strong -fPIE
 endif
 
+CFLAGS         := -std=c11 -Wall -Wextra -Wno-unused-parameter -fPIE
+ifdef DEBUG
+    CFLAGS     += -O0 -g3 -fstack-protector-strong
+else
+    CFLAGS     += -O2 -DNDEBUG -D_FORTIFY_SOURCE=2 -fstack-protector-strong
+endif
+
 ifdef PROFILER_BUILD
     CXXFLAGS   += -g -DPROFILER_BUILD
+    CFLAGS     += -g -DPROFILER_BUILD
 endif
 
 # ---- Linker Flags --------------------------------------------
@@ -75,6 +84,8 @@ endif
 
 OBJS           := $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(SRC))
 DEPS           := $(OBJS:.o=.d)
+YYJSON_SRC     := 3rd_party/yyjson/yyjson.c
+YYJSON_OBJ     := $(OBJ_DIR)/3rd_party/yyjson/yyjson.o
 
 # ---- Dependencies --------------------------------------------
 BPF_SKEL       := ../Kernel/Programs/syscall_monitoring/all_bpf.skel.h
@@ -100,11 +111,15 @@ $(OBJ_DIR)/%.o: %.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(DEPFLAGS) -c $< -o $@
 
+$(YYJSON_OBJ): $(YYJSON_SRC)
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@
+
 k8s:
 	$(MAKE) -C $(K8S_CLIENT_GO_DIR)
 
-$(BINARY): $(OBJS) $(K8S_LINK_DEPS)
-	$(CXX) $(OBJS) -o $@ $(LDFLAGS) $(LDLIBS)
+$(BINARY): $(OBJS) $(YYJSON_OBJ) $(K8S_LINK_DEPS)
+	$(CXX) $(OBJS) $(YYJSON_OBJ) -o $@ $(LDFLAGS) $(LDLIBS)
 
 clean:
 	$(RM) $(BINARY)

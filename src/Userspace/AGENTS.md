@@ -38,7 +38,8 @@ Userspace/
     ├── cxxopts/                    # CLI parsing
     ├── flatbuffers/                # FlatBuffers runtime headers (v25.12.19)
     ├── magic_enum/                 # Enum reflection
-    ├── nlohmann/                   # JSON parsing
+    ├── nlohmann/                   # JSON parsing (config and rules)
+    ├── yyjson/                     # JSON writer for events (v0.13.0)
     ├── semver/                     # Version handling
     ├── spdlog/                     # Logging
     └── valijson/                   # JSON schema validation

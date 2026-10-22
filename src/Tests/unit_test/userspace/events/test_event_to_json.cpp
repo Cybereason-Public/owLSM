@@ -976,3 +976,31 @@ TEST_F(EventToJsonTest, utf8_path_round_trips)
     const nlohmann::json actual = serialize(event);
     expectJsonEqual(actual["process"]["file"]["path"], nlohmann::json(UTF8_PATH));
 }
+
+TEST_F(EventToJsonTest, optional_objects_attach_and_detach_between_events)
+{
+    owlsm::events::Event with_optional = makeBaseEvent();
+    with_optional.matched_rule_metadata.title = RULE_TITLE;
+    with_optional.kubernetes.host_event = true;
+
+    owlsm::events::Event plain = makeBaseEvent();
+    plain.id = SECOND_EVENT_ID;
+
+    owlsm::events::Event with_optional_again = with_optional;
+    with_optional_again.id = 9;
+
+    owlsm::events::EventToJson<owlsm::events::Event> serializer;
+    const std::vector<std::shared_ptr<owlsm::events::Event>> messages{
+        shareEvent(std::move(with_optional)),
+        shareEvent(std::move(plain)),
+        shareEvent(std::move(with_optional_again))
+    };
+    const std::vector<nlohmann::json> documents = parseDocuments(render(serializer, messages));
+    ASSERT_EQ(documents.size(), 3u);
+    expectJsonEqual(documents[0]["matched_rule_metadata"]["title"], nlohmann::json(RULE_TITLE));
+    expectJsonEqual(documents[0]["kubernetes"]["host_event"], nlohmann::json(true));
+    EXPECT_FALSE(documents[1].contains("matched_rule_metadata"));
+    EXPECT_FALSE(documents[1].contains("kubernetes"));
+    expectJsonEqual(documents[2]["matched_rule_metadata"]["title"], nlohmann::json(RULE_TITLE));
+    expectJsonEqual(documents[2]["kubernetes"]["host_event"], nlohmann::json(true));
+}
