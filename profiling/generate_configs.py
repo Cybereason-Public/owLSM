@@ -18,6 +18,7 @@ GENERATOR_DIR = REPO_DIR / "Rules" / "RulesGenerator"
 BASE_CONFIG = GENERATOR_DIR / "base_config.json"
 NO_MATCH_RULES_DIR = PROFILING_DIR / "resources" / "rules" / "no_match"
 NO_MATCH_OUTPUT = PROFILING_DIR / "resources" / "config" / "no_rule_matches_config.json"
+FLATBUFFERS_OUTPUT = PROFILING_DIR / "resources" / "config" / "no_rule_matches_flatbuffers_config.json"
 YES_MATCH_RULES_DIR = PROFILING_DIR / "resources" / "rules" / "yes_match"
 YES_MATCH_OUTPUT = PROFILING_DIR / "resources" / "config" / "config_yes_rule_match.json"
 VENV_PYTHON = GENERATOR_DIR / "venv" / "bin" / "python"
@@ -54,6 +55,7 @@ def _generate_no_match():
             path.write_text(_no_match_rule(rule_id, event_type), encoding="utf-8")
             rule_id += 1
     _compile(NO_MATCH_RULES_DIR, BASE_CONFIG, NO_MATCH_OUTPUT)
+    _write_flatbuffers_config()
 
 
 def _generate_yes_match():
@@ -73,6 +75,15 @@ def _generate_yes_match():
         base_config = workdir / "base_config.json"
         base_config.write_text(json.dumps(_base_from_existing_config(NO_MATCH_OUTPUT)), encoding="utf-8")
         _compile(rules_dir, base_config, YES_MATCH_OUTPUT)
+
+
+def _write_flatbuffers_config():
+    text = NO_MATCH_OUTPUT.read_text(encoding="utf-8")
+    replaced = text.replace('"output_type": "JSON"', '"output_type": "FLATBUFFERS"', 1)
+    if replaced == text:
+        raise RuntimeError(f"{NO_MATCH_OUTPUT} has no JSON output_type")
+    FLATBUFFERS_OUTPUT.write_text(replaced, encoding="utf-8")
+    print(f"wrote {FLATBUFFERS_OUTPUT}")
 
 
 def _base_from_existing_config(config_path):

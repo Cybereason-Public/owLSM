@@ -35,9 +35,12 @@ uv pip install -r requirements.txt
 python start.py --list
 python start.py FlameGraphIdle
 python start.py FlameGraphPressureNoMatches
+python start.py FlameGraphPressureNoMatchesFlatbuffers
 python start.py FlameGraphPressureYesMatches
 python start.py ResourceGraph
+python start.py ResourceGraphFlatbuffers
 python start.py EventStatistics
+python start.py EventStatisticsFlatbuffers
 ```
 
 `Flame_Graph_*` writes `overall.svg` and one SVG per thread.   
