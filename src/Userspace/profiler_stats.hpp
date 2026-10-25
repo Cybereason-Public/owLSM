@@ -14,10 +14,10 @@ namespace owlsm::profiler
 class ProfilerStats
 {
 public:
-    static void recordQueueFull()
+    static void recordQueueFull(unsigned long long count = 1)
     {
 #ifdef PROFILER_BUILD
-        m_queue_full_drops.fetch_add(1, std::memory_order_relaxed);
+        m_queue_full_drops.fetch_add(count, std::memory_order_relaxed);
 #endif
     }
 
