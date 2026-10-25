@@ -18,6 +18,7 @@
 #include <thread>
 #include <atomic>
 #include <mutex>
+#include <condition_variable>
 #include <memory>
 #include <string>
 #include <chrono>
@@ -52,7 +53,11 @@ public:
 
     void destroy()
     {
-        m_running = false;
+        {
+            std::lock_guard<std::mutex> lock(m_main_queue_mutex);
+            m_running = false;
+        }
+        m_main_queue_cv.notify_one();
         if (m_polling_thread.joinable())
         {
             m_polling_thread.join();
@@ -142,6 +147,7 @@ private:
         }
 
         std::size_t dropped = 0;
+        bool enqueued = false;
         {
             std::lock_guard<std::mutex> lock(m_main_queue_mutex);
             static const auto max_size = static_cast<std::size_t>(owlsm::globals::g_config.userspace.max_events_queue_size);
@@ -152,8 +158,14 @@ private:
                 m_main_queue.push_back(m_local_queue[index]);
             }
             dropped = m_local_queue.size() - accepted;
+            enqueued = accepted > 0;
         }
         m_local_queue.clear();
+
+        if (enqueued)
+        {
+            m_main_queue_cv.notify_one();
+        }
 
         if (dropped == 0)
         {
@@ -182,18 +194,21 @@ private:
         while (m_running)
         {
             {
-                std::lock_guard<std::mutex> lock(m_main_queue_mutex);
-                if (!m_main_queue.empty())
+                std::unique_lock<std::mutex> lock(m_main_queue_mutex);
+                m_main_queue_cv.wait(lock, [this]()
+                {
+                    return !m_running || !m_main_queue.empty();
+                });
+                if (m_main_queue.empty())
+                {
+                    break;
+                }
+                else
                 {
                     m_thread_queue.swap(m_main_queue);
                 }
             }
 
-            if (m_thread_queue.empty())
-            {
-                std::this_thread::sleep_for(std::chrono::microseconds(100));
-                continue;
-            }
 
             convertToMessages();
             enrichMessages();
@@ -300,6 +315,7 @@ private:
     std::vector<RawType> m_local_queue;
     std::deque<RawType> m_main_queue;
     std::mutex m_main_queue_mutex;
+    std::condition_variable m_main_queue_cv;
     std::deque<RawType> m_thread_queue;
     std::vector<std::shared_ptr<MessageType>> m_messages_queue;
     SyncEnrichment m_sync_enrichment;

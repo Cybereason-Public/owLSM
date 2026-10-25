@@ -1,6 +1,7 @@
 """Sample owLSM CPU%, RSS and virtual memory once a second and plot them."""
 
 import datetime
+import hashlib
 import os
 import threading
 import time
@@ -50,11 +51,14 @@ class ResourceGraphProfiler:
         self._samples = []
         self._pressure_start = None
         self._pressure_end = None
+        self._owlsm_sha256 = None
         self._clock_ticks = os.sysconf("SC_CLK_TCK")
         self._cpu_count = os.cpu_count()
 
     def start(self, pid, output_dir):
         self._pid = pid
+        self._owlsm_sha256 = _sha256(Path(f"/proc/{pid}/exe"))
+        log(f"owlsm sha256 {self._owlsm_sha256}")
         self._output_dir = Path(output_dir)
         self._output_dir.mkdir(parents=True, exist_ok=True)
         self._thread = threading.Thread(target=self._sample_loop, name="resource-sampler", daemon=True)
@@ -99,7 +103,22 @@ class ResourceGraphProfiler:
             yaxis=dict(title="MB", rangemode="tozero"),
             yaxis2=dict(title="CPU % of machine", overlaying="y", side="right", rangemode="tozero"),
         )
-        figure.write_html(self._output_dir / Strings.RESOURCE_GRAPH_HTML)
+        self._write_html(figure)
+
+    def _write_html(self, figure):
+        if not self._owlsm_sha256:
+            raise RuntimeError("owlsm sha256 was not recorded")
+        html = figure.to_html(full_html=True, include_plotlyjs=True)
+        banner = (
+            '<div style="font-family:sans-serif;padding:8px 16px;font-size:14px;'
+            'background:#f4f4f4;border-bottom:1px solid #ccc;">'
+            f"owlsm sha256: {self._owlsm_sha256}</div>\n"
+        )
+        plot_div = '<div style="height:100%; width:100%;">'
+        if plot_div not in html:
+            raise RuntimeError("resource graph HTML has no plot container")
+        html = html.replace(plot_div, banner + '<div style="height:calc(100% - 36px); width:100%;">', 1)
+        (self._output_dir / Strings.RESOURCE_GRAPH_HTML).write_text(html, encoding="utf-8")
 
     def _sample_loop(self):
         start = time.monotonic()
@@ -125,6 +144,17 @@ class ResourceGraphProfiler:
             previous = (cpu_ticks, wall_time)
             self._samples.append((wall_time, rss_kb / 1024, vsz_kb / 1024, cpu_percent))
             index += 1
+
+
+def _sha256(path):
+    digest = hashlib.sha256()
+    with path.open("rb") as binary:
+        while True:
+            chunk = binary.read(1024 * 1024)
+            if not chunk:
+                break
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def _read_sample(pid):
