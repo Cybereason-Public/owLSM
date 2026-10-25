@@ -36,11 +36,15 @@ public:
     RingbufferMessagesHandler(std::shared_ptr<struct ring_buffer>& ringbuffer, int output_fd,
         const char* poll_thread_name, const char* consume_thread_name)
         : m_ringbuffer(ringbuffer), m_output_fd(output_fd),
-          m_poll_thread_name(poll_thread_name), m_consume_thread_name(consume_thread_name) {}
+          m_poll_thread_name(poll_thread_name), m_consume_thread_name(consume_thread_name)
+    {
+        m_local_queue.reserve(LOCAL_QUEUE_MAX_SIZE);
+    }
 
     void start()
     {
         m_running = true;
+        m_poll_thread_done = false;
         m_polling_thread = std::thread(&RingbufferMessagesHandler::ringbufferWorker, this);
         m_processing_thread = std::thread(&RingbufferMessagesHandler::consumerWorker, this);
         LOG_INFO("RingbufferMessagesHandler started. Output fd: " << m_output_fd);
@@ -81,15 +85,14 @@ public:
             return -1;
         }
 
+        m_local_queue.push_back(*ev);
+        if (m_local_queue.size() < LOCAL_QUEUE_MAX_SIZE)
         {
-            std::lock_guard<std::mutex> lock(m_main_queue_mutex);
-            if (m_main_queue.size() >= owlsm::globals::g_config.userspace.max_events_queue_size)
-            {
-                LOG_ERROR_EVERY_N_SEC(10, "Max events queue size reached");
-                owlsm::profiler::ProfilerStats::recordQueueFull();
-                return -1;
-            }
-            m_main_queue.push_back(*ev);
+            return 0;
+        }
+        if (!flushLocalQueue())
+        {
+            return -1;
         }
         return 0;
     }
@@ -101,8 +104,65 @@ private:
 
         while (m_running)
         {
-            ring_buffer__poll(m_ringbuffer.get(), 100);
+            const int consumed = ring_buffer__consume(m_ringbuffer.get());
+            if (!m_running)
+            {
+                break;
+            }
+            if (consumed < 0)
+            {
+                flushLocalQueue();
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                continue;
+            }
+            if (consumed == 0)
+            {
+                if (flushLocalQueue())
+                {
+                    ring_buffer__poll(m_ringbuffer.get(), static_cast<int>(WAIT_TIME.count()));
+                }
+                else
+                {
+                    std::this_thread::sleep_for(WAIT_TIME);
+                }
+                continue;
+            }
+            std::this_thread::sleep_for(WAIT_TIME);
         }
+
+        flushLocalQueue();
+        m_poll_thread_done.store(true, std::memory_order_release);
+    }
+
+    bool flushLocalQueue()
+    {
+        if (m_local_queue.empty())
+        {
+            return true;
+        }
+
+        std::size_t dropped = 0;
+        {
+            std::lock_guard<std::mutex> lock(m_main_queue_mutex);
+            static const auto max_size = static_cast<std::size_t>(owlsm::globals::g_config.userspace.max_events_queue_size);
+            const std::size_t room = m_main_queue.size() >= max_size ? 0 : max_size - m_main_queue.size();
+            const std::size_t accepted = std::min(room, m_local_queue.size());
+            for (std::size_t index = 0; index < accepted; ++index)
+            {
+                m_main_queue.push_back(m_local_queue[index]);
+            }
+            dropped = m_local_queue.size() - accepted;
+        }
+        m_local_queue.clear();
+
+        if (dropped == 0)
+        {
+            return true;
+        }
+
+        owlsm::profiler::ProfilerStats::recordQueueFull(dropped);
+        LOG_ERROR_EVERY_N_SEC(10, "Max events queue size reached");
+        return false;
     }
 
     void consumerWorker()
@@ -142,6 +202,11 @@ private:
             distributeMessages();
             m_messages_queue.clear();
             m_thread_queue.clear();
+        }
+
+        while (!m_poll_thread_done.load(std::memory_order_acquire))
+        {
+            std::this_thread::sleep_for(WAIT_TIME);
         }
 
         {
@@ -230,6 +295,9 @@ private:
     const char* m_consume_thread_name;
     std::thread m_polling_thread;
     std::thread m_processing_thread;
+    static constexpr std::size_t LOCAL_QUEUE_MAX_SIZE = 100;
+    static constexpr std::chrono::microseconds WAIT_TIME{250};
+    std::vector<RawType> m_local_queue;
     std::deque<RawType> m_main_queue;
     std::mutex m_main_queue_mutex;
     std::deque<RawType> m_thread_queue;
@@ -237,6 +305,7 @@ private:
     SyncEnrichment m_sync_enrichment;
     AsyncWorkDistributor m_async_work_distributor;
     std::atomic<bool> m_running{false};
+    std::atomic<bool> m_poll_thread_done{false};
 };
 
 class RingbuffersMessagesHandlers 
