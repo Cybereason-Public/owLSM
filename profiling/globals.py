@@ -16,6 +16,7 @@ class Strings:
     WORK_ROOT = Path("/tmp/profiling_work")
     ATTACHED_LINE = "Attached all probes"
     CONFIG_NO_RULE_MATCHES = "no_rule_matches_config.json"
+    CONFIG_NO_RULE_MATCHES_FLATBUFFERS = "no_rule_matches_flatbuffers_config.json"
     CONFIG_YES_RULE_MATCHES = "config_yes_rule_match.json"
     OWLSM_EVENTS_LOG = "owlsm_events.jsonl"
     MATCHED_RULE_FIELD = '"matched_rule_id":111'  # must match generate_configs.py's YES_MATCH_RULE_ID
