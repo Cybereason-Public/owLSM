@@ -65,3 +65,4 @@ kubectl
 # profiling
 profiling/results/
 profiling/owlsm/*
+.cursor/skills/cpp_profiler_optimizations_loop/kb/*

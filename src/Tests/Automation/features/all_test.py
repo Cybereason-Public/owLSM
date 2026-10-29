@@ -1,3 +1,4 @@
+import pytest
 from pytest_bdd import scenario
 from Utils.distro_utils import is_fedora_35
 
@@ -16,6 +17,7 @@ from features.rules_generator_steps import *
 def test_allowed_chmod():
     pass
 
+@pytest.mark.profiler_safe
 @scenario('on_chmod_test.feature', 'blocked_chmod_when_config_is_passed_via_stdin')
 def test_blocked_chmod_when_config_is_passed_via_stdin():
     pass
@@ -148,6 +150,7 @@ def test_allowed_rename():
 def test_blocked_rename():
     pass
 
+@pytest.mark.profiler_safe
 @scenario('on_file_create.feature', 'excluded_file_create')
 def test_excluded_file_create():
     pass
@@ -184,10 +187,12 @@ def test_mkdir_and_rmdir_directory_tree():
 def test_allowed_stdio_redirection():
     pass
 
+@pytest.mark.profiler_safe
 @scenario('life_cycle_test.feature', 'restart_owlsm_twice')
 def test_restart_owlsm_twice():
     pass
 
+@pytest.mark.profiler_safe
 @scenario('life_cycle_test.feature', 'owlsm_cleans_maps')
 def test_owlsm_cleans_maps():
     pass
@@ -204,6 +209,7 @@ def test_cached_write_event_reported_only_once():
 def test_read_event_disabled_in_config():
     pass
 
+@pytest.mark.profiler_safe
 @scenario('logger_test.feature', 'owLSM_log_contains_starting_message')
 def test_owLSM_log_contains_starting_message():
     pass
@@ -272,6 +278,7 @@ def test_mixed_shell_builtin_and_external_commands():
 def test_shell_exits_before_child_process():
     pass
 
+@pytest.mark.profiler_safe
 @scenario('shell_commands.feature', 'shell_exec_to_another_process')
 def test_shell_exec_to_another_process():
     pass
@@ -292,6 +299,7 @@ def test_complex_commands():
 def test_shell_db_contains_all_system_shells():
     pass
 
+@pytest.mark.profiler_safe
 @scenario('shell_commands.feature', 'shell_monitoring_disabled')
 def test_shell_monitoring_disabled():
     pass
@@ -316,6 +324,7 @@ def test_placeholder_expand_all_three_fields_match_blocks_chmod():
 def test_placeholder_expand_two_of_three_fields_match_allows_chmod():
     pass
 
+@pytest.mark.profiler_safe
 @scenario('flatbuffer.feature', 'flatbuffer_output_events_and_errors')
 def test_flatbuffer_output_events_and_errors():
     pass
