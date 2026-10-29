@@ -3,6 +3,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <cstring>
+#include <string_view>
 
 namespace owlsm::events
 {
@@ -143,8 +144,8 @@ template <typename MessageType>
 flatbuffers::Offset<fb::File> EventToFlatbuffer<MessageType>::serializeFile(
     flatbuffers::FlatBufferBuilder& builder, const File& f)
 {
-    auto path_off = builder.CreateString(f.path.value);
-    auto filename_off = builder.CreateString(f.filename.value);
+    auto path_off = builder.CreateString(std::string_view(f.path.value));
+    auto filename_off = builder.CreateString(std::string_view(f.filename.value));
     fb::Owner owner(f.owner.uid, f.owner.gid);
 
     return fb::CreateFile(
@@ -158,8 +159,8 @@ flatbuffers::Offset<fb::Process> EventToFlatbuffer<MessageType>::serializeProces
     flatbuffers::FlatBufferBuilder& builder, const Process& p)
 {
     auto file_off = serializeFile(builder, p.file);
-    auto cmd_off = builder.CreateString(p.cmd.value);
-    auto shell_cmd_off = builder.CreateString(p.shell_command.value);
+    auto cmd_off = builder.CreateString(std::string_view(p.cmd.value));
+    auto shell_cmd_off = builder.CreateString(std::string_view(p.shell_command.value));
 
     fb::StdioFileDescriptors stdio(
         toFbFileType(p.stdio_file_descriptors_at_process_creation.stdin_fd),

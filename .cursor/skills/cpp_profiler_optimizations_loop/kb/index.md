@@ -1,0 +1,5 @@
+# Optimization attempts
+
+- [borrow-event-strings-from-raw-event-29102026](borrow-event-strings-from-raw-event-29102026) — Path/CommandLine/Filename now borrow `event_t` bytes instead of copying into `std::string`. Both post-runs agreed: pressure CPU 2.67% → 2.32%/2.38% (~11–13%), Event construction and malloc dropped. Events/s up, drops 0. Keep.
+- [move-raw-event-batches-29102026](move-raw-event-batches-29102026) — Moved full `event_t` batches out of `flushLocalQueue` instead of copying each event into a deque. The deque copy disappeared (~18% → 0%), but the remaining vector copy about doubled, so pressure CPU only fell ~7% (2.65% → 2.45%). Below the 8% bar. Rejected.
+- [inline-event-string-buffers-28102026](inline-event-string-buffers-28102026) — Replaced `Path`/`CommandLine`/`Filename` `std::string`s with inline buffers. Both post-runs agreed: `Event::Event` rose (~15% → ~16.4%), consume stayed ~63%, no 8% owLSM-CPU win. Machine CPU flat, events/s unchanged. Rejected; larger `Event` objects made construction more expensive.

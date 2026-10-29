@@ -6,6 +6,9 @@
 #include "probes_objects/uprobe_probe.hpp"
 #include "shell_detection/shell_binary_info_extractor.hpp"
 
+#include <string>
+#include <string_view>
+
 namespace owlsm::events
 {
 
@@ -23,20 +26,22 @@ void ShellAsyncWorker::distributeIfNeeded(std::shared_ptr<Event> event)
         return;
     }
 
-    if (ShellBinaryInfoExtractor::getShellType(event->process.file.path.value) == ShellType::UNKNOWN)
+    const std::string path(std::string_view(event->process.file.path.value));
+    if (ShellBinaryInfoExtractor::getShellType(path) == ShellType::UNKNOWN)
     {
         m_non_shells_quick_cache.insert(key);
         return;
     }
 
     rememberKnownShell(key);
+    event->process.file.path.value = path;
     enqueue(std::move(event));
 }
 
 void ShellAsyncWorker::processItem(std::shared_ptr<Event>& item)
 {
     const FileKey key = fileKeyFromEvent(*item);
-    const std::string& shell_path = item->process.file.path.value;
+    const std::string shell_path(std::string_view(item->process.file.path.value));
 
     const auto shell_info = ShellBinaryInfoExtractor::getShellInfo(shell_path);
     if (!shell_info.has_value())

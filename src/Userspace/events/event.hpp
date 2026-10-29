@@ -5,14 +5,125 @@
 
 #include <cstring>
 #include <map>
+#include <string>
+#include <string_view>
+#include <utility>
 #include <variant>
 
 namespace owlsm::events
 {
 
+class EventString
+{
+public:
+    EventString() = default;
+    EventString(const char* data, short length);
+    EventString(const EventString& other);
+    EventString(EventString&& other) noexcept;
+    EventString& operator=(const EventString& other);
+    EventString& operator=(EventString&& other) noexcept;
+    EventString& operator=(std::string_view text);
+    operator std::string_view() const;
+    const char* data() const;
+    std::size_t size() const;
+    bool empty() const;
+
+private:
+    void copyFrom(const EventString& other);
+    void moveFrom(EventString&& other);
+
+    std::string m_owned;
+    std::string_view m_view;
+};
+
+inline EventString::EventString(const char* data, short length)
+    : m_view(data != nullptr ? data : "", static_cast<std::size_t>(length < 0 ? 0 : length))
+{
+}
+
+inline EventString::EventString(const EventString& other)
+{
+    copyFrom(other);
+}
+
+inline EventString::EventString(EventString&& other) noexcept
+{
+    moveFrom(std::move(other));
+}
+
+inline EventString& EventString::operator=(const EventString& other)
+{
+    if (this != &other)
+    {
+        copyFrom(other);
+    }
+    return *this;
+}
+
+inline EventString& EventString::operator=(EventString&& other) noexcept
+{
+    if (this != &other)
+    {
+        moveFrom(std::move(other));
+    }
+    return *this;
+}
+
+inline EventString& EventString::operator=(std::string_view text)
+{
+    m_owned.assign(text);
+    m_view = m_owned;
+    return *this;
+}
+
+inline EventString::operator std::string_view() const
+{
+    return m_view;
+}
+
+inline const char* EventString::data() const
+{
+    return m_view.data();
+}
+
+inline std::size_t EventString::size() const
+{
+    return m_view.size();
+}
+
+inline bool EventString::empty() const
+{
+    return m_view.empty();
+}
+
+inline void EventString::copyFrom(const EventString& other)
+{
+    if (!other.m_owned.empty())
+    {
+        m_owned = other.m_owned;
+        m_view = m_owned;
+        return;
+    }
+    m_owned.clear();
+    m_view = other.m_view;
+}
+
+inline void EventString::moveFrom(EventString&& other)
+{
+    if (!other.m_owned.empty())
+    {
+        m_owned = std::move(other.m_owned);
+        m_view = m_owned;
+        other.m_view = other.m_owned;
+        return;
+    }
+    m_owned.clear();
+    m_view = other.m_view;
+}
+
 struct Path
 {
-    std::string value;
+    EventString value;
 
     Path() = default;
     explicit Path(const path_t& p) : value(p.value, p.length) {}
@@ -20,7 +131,7 @@ struct Path
 
 struct CommandLine
 {
-    std::string value;
+    EventString value;
 
     CommandLine() = default;
     explicit CommandLine(const command_line_t& c) : value(c.value, c.length) {}
@@ -28,7 +139,7 @@ struct CommandLine
 
 struct Filename
 {
-    std::string value;
+    EventString value;
 
     Filename() = default;
     explicit Filename(const filename_t& f) : value(f.value, f.length) {}

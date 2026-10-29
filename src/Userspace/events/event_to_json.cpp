@@ -647,7 +647,7 @@ private:
 
     template <typename Enum>
     bool setEnum(yyjson_mut_val* slot, Enum value) const;
-    void setString(yyjson_mut_val* slot, const std::string& value) const;
+    void setString(yyjson_mut_val* slot, std::string_view value) const;
     void setUint(yyjson_mut_val* slot, uint64_t value) const;
     void setSint(yyjson_mut_val* slot, int64_t value) const;
     void setAddress(char* buffer, yyjson_mut_val* slot, int family, const void* address) const;
@@ -989,7 +989,7 @@ bool EventJsonWriter::Shapes::setEnum(yyjson_mut_val* slot, Enum value) const
     return yyjson_mut_set_strn(slot, name.data(), name.size());
 }
 
-void EventJsonWriter::Shapes::setString(yyjson_mut_val* slot, const std::string& value) const
+void EventJsonWriter::Shapes::setString(yyjson_mut_val* slot, std::string_view value) const
 {
     yyjson_mut_set_strn(slot, value.data(), value.size());
 }
