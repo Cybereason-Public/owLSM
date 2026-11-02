@@ -23,6 +23,7 @@
 #include <string>
 #include <chrono>
 #include <algorithm>
+#include <utility>
 #include <unistd.h>
 
 namespace owlsm
@@ -90,7 +91,7 @@ public:
             return -1;
         }
 
-        m_local_queue.push_back(*ev);
+        m_local_queue.push_back(std::make_shared<MessageType>(*ev));
         if (m_local_queue.size() < LOCAL_QUEUE_MAX_SIZE)
         {
             return 0;
@@ -155,7 +156,7 @@ private:
             const std::size_t accepted = std::min(room, m_local_queue.size());
             for (std::size_t index = 0; index < accepted; ++index)
             {
-                m_main_queue.push_back(m_local_queue[index]);
+                m_main_queue.push_back(std::move(m_local_queue[index]));
             }
             dropped = m_local_queue.size() - accepted;
             enqueued = accepted > 0;
@@ -243,13 +244,12 @@ private:
 
     void convertToMessages()
     {
-        m_messages_queue.resize(m_thread_queue.size());
-        std::transform(
-            m_thread_queue.begin(),
-            m_thread_queue.end(),
-            m_messages_queue.begin(),
-            [](const RawType& ev) { return std::make_shared<MessageType>(ev); }
-        );
+        m_messages_queue.clear();
+        m_messages_queue.reserve(m_thread_queue.size());
+        for (auto& message : m_thread_queue)
+        {
+            m_messages_queue.push_back(std::move(message));
+        }
     }
 
     void enrichMessages()
@@ -312,11 +312,11 @@ private:
     std::thread m_processing_thread;
     static constexpr std::size_t LOCAL_QUEUE_MAX_SIZE = 100;
     static constexpr std::chrono::microseconds WAIT_TIME{250};
-    std::vector<RawType> m_local_queue;
-    std::deque<RawType> m_main_queue;
+    std::vector<std::shared_ptr<MessageType>> m_local_queue;
+    std::deque<std::shared_ptr<MessageType>> m_main_queue;
     std::mutex m_main_queue_mutex;
     std::condition_variable m_main_queue_cv;
-    std::deque<RawType> m_thread_queue;
+    std::deque<std::shared_ptr<MessageType>> m_thread_queue;
     std::vector<std::shared_ptr<MessageType>> m_messages_queue;
     SyncEnrichment m_sync_enrichment;
     AsyncWorkDistributor m_async_work_distributor;
