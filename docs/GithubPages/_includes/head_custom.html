@@ -311,5 +311,32 @@ html {
 }
 </style>
 
+{% if page.full_width %}
+<script>document.documentElement.classList.add("full-width-docs");</script>
+<style>
+html.full-width-docs .main {
+  max-width: none !important;
+  width: auto !important;
+}
+@media (min-width: 50rem) {
+  html.full-width-docs .main {
+    margin-left: calc(var(--writeup-sidebar-gap, 16px) + 260px) !important;
+    margin-right: 16px !important;
+    width: calc(100% - 260px - 32px) !important;
+  }
+  html.full-width-docs .main-content-wrap,
+  html.full-width-docs .main-content,
+  html.full-width-docs .main-content main {
+    max-width: none !important;
+    width: 100% !important;
+  }
+  html.full-width-docs .main-content img {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+}
+</style>
+{% endif %}
+
 <!-- Custom JavaScript -->
 <script defer src="{{ '/assets/js/custom.js' | relative_url }}"></script>
