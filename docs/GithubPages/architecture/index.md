@@ -19,3 +19,4 @@ Here we discuss and describe how different components of owLSM work.
 | [Event Flow](event-flow/) | How events flow from kernel hooks to userspace output |
 | [Event Caching](event-caching/) | high-frequency events are caching |
 | [Shell Command Monitoring](shell-commands/) | How interactive shell commands are captured using uprobes |
+| [Agentic Profiling Loop](agentic-profiling-loop/) | How the C++ CPU optimization agentic loop is built |
