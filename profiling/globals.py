@@ -24,6 +24,9 @@ class Strings:
     STACKS_FOLDED = "stacks.folded"
     PERF_DATA = "perf.data"
     RESOURCE_GRAPH_HTML = "resources_graph.html"
+    BPF_PROGRAMS_CPU_GRAPH_HTML = "bpf_programs_cpu_graph.html"
+    BPFTOP_BIN = PROFILING_DIR / "bpftop" / "target" / "release" / "bpftop"
+    BPFTOP_EXPORT_JSONL = "bpftop_export.jsonl"
     PRESSURE_START_LABEL = "pressure start"
     PRESSURE_END_LABEL = "pressure end"
     PROFILER_STATS_LABEL = "Profiler stats: "  # must match the LOG_INFO prefix in profiler_stats.hpp (PROFILER_BUILD)
@@ -72,6 +75,9 @@ class Numbers:
     RESOURCE_GRAPH_IDLE_SECONDS = 30
     RESOURCE_SAMPLE_INTERVAL_SECONDS = 1.0
     RESOURCE_SAMPLER_STOP_TIMEOUT_SECONDS = 5
+    BPFTOP_STARTUP_SECONDS = 2
+    BPFTOP_STOP_TIMEOUT_SECONDS = 5
+    BPFTOP_SAMPLE_DELAY_SECONDS = 1
 
 
 def log(message):

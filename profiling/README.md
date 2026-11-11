@@ -8,6 +8,7 @@ Linux x86_64 userspace profiling for owLSM. Build with `make profiler` (producti
 - Resources graph. Every 1 second, written to an HTML file you open in the browser: RSS and virtual memory in MB, and CPU % of the machine. Not per thread. 
 - Event drop rate. Drops in the kernel ring buffer, the userspace queue (`max_events_queue_size`), and the stdout write. 
 - Events per second. How many events owlsm generates (successfull writes to stdout) in a second under pressure.
+- eBPF program CPU graph. Per-program CPU% of a single core over time (`BpfProgramsCpuGraph`; needs `profiling/bpftop`).
 
 
 # How to run a profiling session
@@ -41,11 +42,20 @@ python start.py ResourceGraph
 python start.py ResourceGraphFlatbuffers
 python start.py EventStatistics
 python start.py EventStatisticsFlatbuffers
+python start.py BpfProgramsCpuGraph
+
+# Optional: For eBPF profiling using bpftop
+cd ..
+git submodule update --init profiling/bpftop
+cd profiling/bpftop
+cargo build --release -j$(nproc)
+sudo ./target/release/bpftop --export /tmp/bpftop.jsonl
 ```
 
 `Flame_Graph_*` writes `overall.svg` and one SVG per thread.   
 `resources_graph` writes `resources_graph.html` with plotly. Open either in a browser.
 `EventStatistics` writes `event_statistics.json`.
+`BpfProgramsCpuGraph` writes `bpf_programs_cpu_graph.html`.
 
 The profiling machine needs `perf`, `flamegraph.pl`, and `stackcollapse-perf.pl` for the flame graphs. See `scripts/oci_testing_machines_setup/ubuntu_24_profiling.sh`.
 

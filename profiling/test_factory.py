@@ -8,6 +8,7 @@ from tests.resource_graph import ResourceGraph
 from tests.resource_graph_flatbuffers import ResourceGraphFlatbuffers
 from tests.event_statistics import EventStatistics
 from tests.event_statistics_flatbuffers import EventStatisticsFlatbuffers
+from tests.bpf_programs_cpu_graph import BpfProgramsCpuGraph
 
 
 class ProfilingTestFactory:
@@ -22,6 +23,7 @@ class ProfilingTestFactory:
             ResourceGraphFlatbuffers,
             EventStatistics,
             EventStatisticsFlatbuffers,
+            BpfProgramsCpuGraph,
         ]
 
     @classmethod
