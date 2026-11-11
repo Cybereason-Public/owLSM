@@ -1,0 +1,4 @@
+[submodule "profiling/bpftop"]
+	path = profiling/bpftop
+	url = git@github.com:ArielSilver99/bpftop.git
+	branch = export_data_to_file

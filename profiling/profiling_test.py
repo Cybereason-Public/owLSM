@@ -33,6 +33,7 @@ class ProfilingTest:
         try:
             self._delete_finish()
             self._start_killer()
+            self._before_start_owlsm()
             self._start_owlsm()
             self._wait_until_attached()
             log("step 6: run")
@@ -61,6 +62,14 @@ class ProfilingTest:
 
     def create_results(self):
         raise NotImplementedError
+
+    def _before_start_owlsm(self):
+        pass
+
+    def exclude_pids(self):
+        if self._killer is None:
+            return []
+        return [self._killer.pid]
 
     def _delete_finish(self):
         log("step 2: delete finish file")
@@ -101,13 +110,11 @@ class ProfilingTest:
         if self.capture_events_log:
             self._events_log_file = (self.output_dir / Strings.OWLSM_EVENTS_LOG).open("wb")
             stdout_target = self._events_log_file
+        command = [str(Strings.OWLSM_BIN), "-c", str(config_path), "-p", str(self._killer.pid)]
+        for pid in self.exclude_pids():
+            command.extend(["-e", str(pid)])
         self._owlsm = subprocess.Popen(
-            [
-                str(Strings.OWLSM_BIN),
-                "-c", str(config_path),
-                "-p", str(self._killer.pid),
-                "-e", str(self._killer.pid),
-            ],
+            command,
             stdout=stdout_target,
             stderr=subprocess.DEVNULL,
             start_new_session=True,
