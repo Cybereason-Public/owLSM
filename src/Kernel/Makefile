@@ -50,7 +50,6 @@ BPF_SRC        := common_maps.bpf.c \
                   Programs/syscall_monitoring/on_exec.bpf.c \
                   Programs/syscall_monitoring/legacy_on_exec.bpf.c \
                   Programs/syscall_monitoring/on_exit.bpf.c \
-                  Programs/syscall_monitoring/on_syscall.bpf.c \
                   Programs/syscall_monitoring/on_file_create.bpf.c \
                   Programs/syscall_monitoring/on_mkdir.bpf.c \
                   Programs/syscall_monitoring/on_rmdir.bpf.c \

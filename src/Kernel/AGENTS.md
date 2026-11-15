@@ -25,8 +25,7 @@ Kernel/
 │   │   ├── on_chown.bpf.c       # Ownership changes
 │   │   ├── on_unlink.bpf.c      # File deletion
 │   │   ├── on_rename.bpf.c      # File rename
-│   │   ├── on_file_create.bpf.c # File creation
-│   │   └── on_syscall.bpf.c     # Generic syscall handler
+│   │   └── on_file_create.bpf.c # File creation
 │   ├── anti_tampering/          # Anti-tampering LSM hook programs
 │   │   ├── on_signal.bpf.c      # Signals (LSM task_kill)
 │   │   └── on_ptrace.bpf.c      # Ptrace attach (LSM ptrace_access_check)

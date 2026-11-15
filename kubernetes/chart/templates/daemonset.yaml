@@ -22,6 +22,7 @@ spec:
     spec:
       serviceAccountName: owlsm
       hostNetwork: true
+      hostPID: true
       dnsPolicy: ClusterFirstWithHostNet
       nodeSelector:
         kubernetes.io/os: linux

@@ -220,3 +220,8 @@ struct error_report_t{
     char details[ERROR_DETAILS_MAX];
     char hook_name[HOOK_NAME_MAX_LENGTH];
 };
+
+struct pid_to_kill_t
+{
+    unsigned int pid;
+};

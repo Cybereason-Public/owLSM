@@ -44,6 +44,14 @@ struct {
         __uint(max_entries, 1 << 21);
 } errors SEC(".maps");
 
+#ifndef DEFINE_MAPS
+extern
+#endif
+struct {
+        __uint(type, BPF_MAP_TYPE_RINGBUF);
+        __uint(max_entries, 1 << 14);
+} pids_to_kill SEC(".maps");
+
 
 #ifndef DEFINE_MAPS
 extern
@@ -164,17 +172,6 @@ struct {
     __type(key, __u32);
     __type(value, unsigned long long);
 } ebpf_program_start_time SEC(".maps");
-
-
-#ifndef DEFINE_MAPS
-extern
-#endif
-struct {
-    __uint(type, BPF_MAP_TYPE_HASH);
-    __uint(max_entries, 32);
-    __type(key, __u32);
-    __type(value, int);
-} parent_processes_to_kill SEC(".maps");
 
 
 #ifndef DEFINE_MAPS

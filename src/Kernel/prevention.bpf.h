@@ -39,9 +39,13 @@ statfunc void kill_proccesses(enum rule_action action, struct event_t * event)
         }
 
         unsigned int ppid = event->process.ppid;
-        if (bpf_map_update_elem(&parent_processes_to_kill, &ppid, &ppid, BPF_ANY) < 0)
+        struct pid_to_kill_t *pid_to_kill = bpf_ringbuf_reserve(&pids_to_kill, sizeof(*pid_to_kill), 0);
+        if (!pid_to_kill)
         {
-            REPORT_ERROR(GENERIC_ERROR, "bpf_map_update_elem. ppid: %d", event->process.ppid);
+            REPORT_ERROR(GENERIC_ERROR, "bpf_ringbuf_reserve pids_to_kill failed. ppid: %d", ppid);
+            return;
         }
+        pid_to_kill->pid = ppid;
+        bpf_ringbuf_submit(pid_to_kill, 0);
     }
 }
