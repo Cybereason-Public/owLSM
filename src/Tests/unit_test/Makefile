@@ -124,6 +124,7 @@ USERSPACE_IMPL_SRC := $(USERSPACE_SRC_DIR)/logger.cpp \
                       $(USERSPACE_SRC_DIR)/rules_managment/dfa_builder.cpp \
                       $(USERSPACE_SRC_DIR)/probes_objects/probe_manager.cpp \
                       $(USERSPACE_SRC_DIR)/ringbuffers_messages_handlers.cpp \
+                      $(USERSPACE_SRC_DIR)/pids_to_kill_reader.cpp \
                       $(USERSPACE_SRC_DIR)/events/event_to_json.cpp \
                       $(USERSPACE_SRC_DIR)/events/event_to_flatbuffer.cpp \
                       $(USERSPACE_SRC_DIR)/events/kubernetes_event_enrichment.cpp \

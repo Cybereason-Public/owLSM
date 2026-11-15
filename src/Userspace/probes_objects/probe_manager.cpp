@@ -8,6 +8,7 @@
 #include "events_structs.h"
 #include "probe_manager.hpp"
 #include "globals/global_objects.hpp"
+#include "pids_to_kill_reader.hpp"
 #include "ringbuffers_messages_handlers.hpp"
 #include "system_setup.hpp"
 #include "globals/global_numbers.hpp"
@@ -94,6 +95,7 @@ namespace owlsm
 
     void ProbeManager::bpfDestroy()
     {
+        g_pids_to_kill_reader.destroy();
         g_ringbuffers_messages_handlers.destroy();
         for (auto& probe : m_probes)
         {
@@ -120,6 +122,7 @@ namespace owlsm
             throw std::runtime_error("failed to create error ring buffer. errno: " + std::to_string(errno));
         }
         g_ringbuffers_messages_handlers.start(event_ring_buffer_ptr, error_ring_buffer_ptr);
+        g_pids_to_kill_reader.start(bpf_map__fd(m_skel->maps.pids_to_kill));
     }
 
     void ProbeManager::saveEbpfAttachTime()
