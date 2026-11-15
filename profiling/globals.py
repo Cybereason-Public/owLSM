@@ -22,6 +22,8 @@ class Strings:
     MATCHED_RULE_FIELD = '"matched_rule_id":111'  # must match generate_configs.py's YES_MATCH_RULE_ID
     OVERALL_SVG = "overall.svg"
     STACKS_FOLDED = "stacks.folded"
+    BPF_HOOK_KERNEL_SVG = "{hook}_kernel.svg"
+    BPF_HOOK_KERNEL_STACKS_FOLDED = "{hook}_kernel.stacks.folded"
     PERF_DATA = "perf.data"
     RESOURCE_GRAPH_HTML = "resources_graph.html"
     BPF_PROGRAMS_CPU_GRAPH_HTML = "bpf_programs_cpu_graph.html"
@@ -69,6 +71,7 @@ class Numbers:
     LISTENER_READY_SECONDS = 5
     BASE_PORT = 19100
     PERF_STOP_TIMEOUT_SECONDS = 120
+    EBPF_KERNEL_SAMPLE_FREQ = 997
     FILE_MODE_A = 0o640
     FILE_MODE_B = 0o660
     LOG_TAIL_LINES = 40
