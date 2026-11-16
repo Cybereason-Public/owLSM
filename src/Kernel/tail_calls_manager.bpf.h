@@ -287,7 +287,7 @@ statfunc int store_currently_handled_event(struct event_t* e)
 
 statfunc void submit_event_to_userspace(struct event_t* event)
 {
-    struct event_t *event_to_send = allocate_empty_event();
+    struct event_t *event_to_send = allocate_empty_event_ringbuf();
     if(!event_to_send)
     {
         REPORT_ERROR(GENERIC_ERROR, "bpf_ringbuf_reserve failed");

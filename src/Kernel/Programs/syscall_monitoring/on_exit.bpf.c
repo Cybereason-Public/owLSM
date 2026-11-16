@@ -36,10 +36,10 @@ int BPF_PROG(exit_hook, long code)
         return ALLOW; 
     }
     pid = tgid;
-    struct event_t *event = allocate_event_with_basic_stats();
+    struct event_t *event = allocate_event_with_basic_stats_ringbuf();
     if (!event)
     {
-        REPORT_ERROR(GENERIC_ERROR, "allocate_event_with_basic_stats failed pid: %d", pid);
+        REPORT_ERROR(GENERIC_ERROR, "allocate_event_with_basic_stats_ringbuf failed pid: %d", pid);
         return ALLOW;
     }
 

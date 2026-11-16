@@ -45,10 +45,10 @@ int BPF_PROG(write_hook, struct file *file, int mask)
         return verdict == ALLOW ? ALLOW : DENY;
     }
 
-    struct event_t *event = allocate_event_with_basic_stats();
+    struct event_t *event = allocate_event_with_basic_stats_map();
     if (!event)
     {
-        REPORT_ERROR(GENERIC_ERROR, "allocate_event_with_basic_stats failed");
+        REPORT_ERROR(GENERIC_ERROR, "allocate_event_with_basic_stats_map failed");
         return ALLOW;
     }
 
@@ -61,15 +61,12 @@ int BPF_PROG(write_hook, struct file *file, int mask)
 
     fill_event_process_from_cache(&event->process);
     fill_event_parent_process_from_cache(&event->process, &event->parent_process);
-    store_currently_handled_event(event);
-
-    bpf_ringbuf_discard(event, 0);
+    
     reset_tail_counter();
     do_tail_call(ctx, &write_prog_array);
     return ALLOW;
     
 allow_event:
-    bpf_ringbuf_discard(event, 0);
     return ALLOW;
 }
 

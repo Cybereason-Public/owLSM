@@ -113,10 +113,10 @@ int BPF_PROG(bprm_creds_from_file, struct linux_binprm *bprm)
         return ALLOW;
     }
 
-    struct event_t *event = allocate_event_with_basic_stats();
+    struct event_t *event = allocate_event_with_basic_stats_map();
     if (!event)
     {
-        REPORT_ERROR(GENERIC_ERROR, "allocate_event_with_basic_stats returned null");
+        REPORT_ERROR(GENERIC_ERROR, "allocate_event_with_basic_stats_map returned null");
         return ALLOW;
     }
 
@@ -174,14 +174,11 @@ int BPF_PROG(bprm_creds_from_file, struct linux_binprm *bprm)
         goto allow_event;
     }
 
-    store_currently_handled_event(event);
-    bpf_ringbuf_discard(event, 0);
     reset_tail_counter();
     do_tail_call(ctx, &exec_prog_array);
     return ALLOW;
 
 allow_event:
-    bpf_ringbuf_discard(event, 0);
     return ALLOW;
 }
 

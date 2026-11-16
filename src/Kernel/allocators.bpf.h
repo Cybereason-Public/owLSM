@@ -85,7 +85,7 @@ statfunc struct process_t* allocate_process_t(void)
     return p;
 }
 
-statfunc struct event_t* allocate_empty_event()
+statfunc struct event_t* allocate_empty_event_ringbuf()
 {
     struct event_t *event = bpf_ringbuf_reserve(&rb, sizeof(struct event_t), 0);
     if(!event)
@@ -108,20 +108,39 @@ statfunc unsigned long long get_next_event_id()
     return __sync_fetch_and_add(&global_event_id_counter, 1);
 }
 
-statfunc struct event_t* allocate_event_with_basic_stats()
+statfunc void set_event_basic_stats(struct event_t *event)
 {
-    struct event_t *event = allocate_empty_event();
-    if(event)
+    event->time = bpf_ktime_get_ns();
+    event->id = get_next_event_id();
+}
+
+statfunc struct event_t* allocate_event_with_basic_stats_ringbuf()
+{
+    struct event_t *event = allocate_empty_event_ringbuf();
+    if (event)
     {
-        event->time = bpf_ktime_get_ns();
-        event->id = get_next_event_id();
-        if(event->id == 0)
-        {
-            bpf_ringbuf_discard(event, 0);
-            return NULL;
-        }
+        set_event_basic_stats(event);
     }
 
+    return event;
+}
+
+statfunc struct event_t* allocate_event_with_basic_stats_map()
+{
+    u32 key = 0;
+    struct event_t *event = bpf_map_lookup_elem(&currently_handled_event, &key);
+    if (!event)
+    {
+        REPORT_ERROR(GENERIC_ERROR, "bpf_map_lookup_elem failed");
+        return NULL;
+    }
+    if (bpf_probe_read_kernel(event, sizeof(*event), &empty_event_t) != SUCCESS)
+    {
+        REPORT_ERROR(GENERIC_ERROR, "bpf_probe_read_kernel failed");
+        return NULL;
+    }
+
+    set_event_basic_stats(event);
     return event;
 }
 
