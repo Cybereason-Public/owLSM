@@ -20,7 +20,7 @@ int BPF_PROG(test_get_path_from_path, struct path *path, kuid_t *uid, kgid_t *gi
         return ALLOW;
     }
 
-    struct event_t *event = allocate_event_with_basic_stats();
+    struct event_t *event = allocate_event_with_basic_stats_ringbuf();
     if(!event)
     {
         return ALLOW;
@@ -51,7 +51,7 @@ int BPF_PROG(test_get_cmd_from_task, struct file *file)
         return ALLOW;
     }
 
-    struct event_t *event = allocate_event_with_basic_stats();
+    struct event_t *event = allocate_event_with_basic_stats_ringbuf();
     if(!event)
     {
         return ALLOW;
@@ -103,7 +103,7 @@ int test_get_cmd_from_user_argv(struct trace_event_raw_sys_enter *ctx)
         return 0;
     }
 
-    struct event_t *event = allocate_event_with_basic_stats();
+    struct event_t *event = allocate_event_with_basic_stats_ringbuf();
     if (!event)
     {
         return 0;

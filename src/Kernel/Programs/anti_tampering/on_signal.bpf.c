@@ -42,10 +42,10 @@ int BPF_PROG(signal_hook, struct task_struct *p, struct kernel_siginfo *info, in
         return ALLOW;
     }
 
-    struct event_t *event = allocate_event_with_basic_stats();
+    struct event_t *event = allocate_event_with_basic_stats_ringbuf();
     if (!event)
     {
-        REPORT_ERROR(GENERIC_ERROR, "allocate_event_with_basic_stats returned null");
+        REPORT_ERROR(GENERIC_ERROR, "allocate_event_with_basic_stats_ringbuf returned null");
         return ALLOW;
     }
 

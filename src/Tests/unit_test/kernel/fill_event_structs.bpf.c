@@ -18,7 +18,7 @@ int BPF_PROG(test_fill_file_t, struct path *path, kuid_t *uid, kgid_t *gid)
         return ALLOW;
     }
 
-    struct event_t *event = allocate_event_with_basic_stats();
+    struct event_t *event = allocate_event_with_basic_stats_ringbuf();
     if(!event)
     {
         return ALLOW;
