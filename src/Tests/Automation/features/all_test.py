@@ -370,3 +370,23 @@ def test_ptrace_protection_disabled():
 @scenario('on_ptrace.feature', 'ptrace_on_protected_process_is_blocked')
 def test_ptrace_on_protected_process_is_blocked():
     pass
+
+
+@scenario('non_ascii_characters.feature', 'different_non_ascii_characters_per_string')
+def test_different_non_ascii_characters_per_string():
+    pass
+
+
+@scenario('non_ascii_characters.feature', 'mixed_characters')
+def test_mixed_characters():
+    pass
+
+
+@scenario('non_ascii_characters.feature', 'short_in_characters_long_in_bytes')
+def test_short_in_characters_long_in_bytes():
+    pass
+
+
+@scenario('non_ascii_characters.feature', 'mixed_characters_flatbuffer')
+def test_mixed_characters_flatbuffer():
+    pass

@@ -40,6 +40,7 @@ src/Tests/Automation/resources/flatbuffer_reader/flatbuffer_reader
 src/Tests/Automation/resources/related_process
 src/Tests/Automation/owLSM_output_errors.bin
 src/Tests/Automation/owLSM_output_events.bin
+src/Tests/Automation/resources/ptrace_attacher
 
 # secrets and environment variables
 .env
