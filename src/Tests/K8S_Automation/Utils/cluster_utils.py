@@ -406,11 +406,38 @@ def owlsm_pod_name_on_node(node_name: str) -> str:
             "--field-selector",
             f"spec.nodeName={node_name}",
             "-o",
-            "jsonpath={.items[0].metadata.name}",
+            "json",
         ],
         check=False,
     )
-    return (result.stdout or "").strip()
+    if result.returncode != 0 or not (result.stdout or "").strip():
+        return ""
+    try:
+        payload = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        logger.log_error(f"owlsm pod list on {node_name} is not JSON")
+        return ""
+    return _running_owlsm_pod_name(payload)
+
+
+def _running_owlsm_pod_name(payload: dict) -> str:
+    # Helm rollout keeps the previous pod until it terminates. That pod is often
+    # items[0], and its stdout still has JSON from the process that already exited.
+    running = []
+    for item in payload.get("items") or []:
+        metadata = item.get("metadata") or {}
+        if metadata.get("deletionTimestamp"):
+            continue
+        if (item.get("status") or {}).get("phase") != "Running":
+            continue
+        name = metadata.get("name") or ""
+        if not name:
+            continue
+        running.append((metadata.get("creationTimestamp") or "", name))
+    if not running:
+        return ""
+    running.sort()
+    return running[-1][1]
 
 
 def _require_kind_cluster_type() -> None:
