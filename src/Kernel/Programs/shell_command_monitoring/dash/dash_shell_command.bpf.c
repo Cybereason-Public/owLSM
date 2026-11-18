@@ -812,8 +812,11 @@ __noinline int processSubshellBinary(unsigned long node_addr, struct CmdStr *out
  * Extracted loop body for DFS walk to reduce program size for verifier.
  * Returns the new stack top after processing one node.
  */
-static __noinline int processDfsIteration(struct WalkState *ws, int top)
-{
+ __noinline int processDfsIteration(struct WalkState *ws, int top)
+ {
+     if (!ws)
+         return 0;
+        
     top--;
     int idx = top & (MAX_CHAIN_CMDS - 1);  // bounds mask for verifier
     unsigned long node_addr = ws->node_addrs[idx];
