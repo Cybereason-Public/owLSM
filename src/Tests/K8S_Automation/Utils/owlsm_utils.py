@@ -1,16 +1,21 @@
 from __future__ import annotations
 
 import json
+import re
+import shlex
 import shutil
 import subprocess
 import time
+from datetime import datetime
 from pathlib import Path
 
 from Utils.cluster_models import StdoutReader
 from Utils.cluster_utils import (
+    clear_replaced_owlsm_pod_names,
     delete_manifests,
     get_cluster,
     owlsm_pod_name_on_node,
+    remember_owlsm_pods_before_rollout,
     remove_test_namespace,
     remove_test_pod,
     run_kubectl,
@@ -19,6 +24,9 @@ from Utils.logger_utils import logger
 from globals.global_numbers import global_numbers
 from globals.global_objects import global_objects
 from globals.global_strings import global_strings
+
+_LOG_TIME_RE = re.compile(r"\[(\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}:\d{2}\.\d{1,6})\]")
+_probes_attached_baseline: datetime | None = None
 
 
 def deploy_owlsm(image_repository: str, image_tag: str) -> None:
@@ -31,6 +39,7 @@ def deploy_owlsm(image_repository: str, image_tag: str) -> None:
         f"Helm installing {release} from {chart} into {namespace} "
         f"image={image_repository}:{image_tag}"
     )
+    _remember_rollout_baseline()
     _run_helm(
         [
             "upgrade",
@@ -138,6 +147,7 @@ def upgrade_owlsm_values(values: dict[str, str]) -> None:
     for key, value in values.items():
         args.extend(["--set", f"{key}={value}"])
     logger.log_info(f"Helm upgrading {release} values={values}")
+    _remember_rollout_baseline()
     _run_helm(args)
     _wait_for_owlsm_rollout()
 
@@ -204,22 +214,60 @@ def wait_until_owlsm_pod_log_has_json_event() -> bool:
                     except json.JSONDecodeError:
                         continue
                     if isinstance(event, dict) and event.get("type"):
-                        logger.log_info("owlsm pod log has JSON events")
+                        logger.log_info(f"owlsm pod {pod_name} log has JSON events")
                         return True
                 if _owlsm_logger_says_probes_attached(pod_name):
-                    logger.log_info("owlsm probes are attached")
+                    logger.log_info(f"owlsm pod {pod_name} probes are attached")
                     return True
         time.sleep(0.5)
     return False
 
 
+def clear_owlsm_rollout_baseline() -> None:
+    global _probes_attached_baseline
+    _probes_attached_baseline = None
+    clear_replaced_owlsm_pod_names()
+
+
+def _remember_rollout_baseline() -> None:
+    remember_owlsm_pods_before_rollout()
+    _remember_probes_attached_baseline()
+
+
+def _remember_probes_attached_baseline() -> None:
+    global _probes_attached_baseline
+    log_path = shlex.quote(global_strings.OWLSM_CONTAINER_LOG_PATH)
+    output = get_cluster().main_node.run_ssh_command(
+        f"if [ -f {log_path} ]; then grep 'Attached all probes' {log_path}; fi",
+        check=False,
+    )
+    _probes_attached_baseline = _latest_log_timestamp(output)
+    logger.log_info(f"Attached all probes baseline is {_probes_attached_baseline}")
+
+
 def _owlsm_logger_says_probes_attached(pod_name: str) -> bool:
-    log_path = global_strings.OWLSM_CONTAINER_LOG_PATH
-    # The log file is on a host mount, so a previous process can leave "Attached all probes" behind.
+    # The log file is a host mount shared by the old and new pod.
+    start_line, attached_lines = _owlsm_probe_log_lines(pod_name)
+    if _probes_attached_baseline is not None:
+        latest = _latest_log_timestamp("\n".join(attached_lines))
+        return latest is not None and latest > _probes_attached_baseline
+    if start_line is None or not attached_lines:
+        return False
+    start_number = _leading_line_number(start_line)
+    attached_number = _leading_line_number(attached_lines[-1])
+    return (
+        start_number is not None
+        and attached_number is not None
+        and attached_number > start_number
+    )
+
+
+def _owlsm_probe_log_lines(pod_name: str) -> tuple[str | None, list[str]]:
+    log_path = shlex.quote(global_strings.OWLSM_CONTAINER_LOG_PATH)
     script = (
-        f"start=$(grep -n 'Starting OWLSM' {log_path} | tail -n 1 | cut -d: -f1); "
-        f"attached=$(grep -n 'Attached all probes' {log_path} | tail -n 1 | cut -d: -f1); "
-        'test -n "$start" && test -n "$attached" && test "$attached" -gt "$start"'
+        f"grep -n 'Starting OWLSM' {log_path} | tail -n 1; "
+        f"printf '%s\\n' '---'; "
+        f"grep -n 'Attached all probes' {log_path} || true"
     )
     result = run_kubectl(
         [
@@ -236,7 +284,33 @@ def _owlsm_logger_says_probes_attached(pod_name: str) -> bool:
         ],
         check=False,
     )
-    return result.returncode == 0
+    if result.returncode != 0:
+        return None, []
+    start_text, separator, attached_text = (result.stdout or "").partition("---")
+    if not separator:
+        return None, []
+    start_line = start_text.strip() or None
+    attached_lines = [line for line in attached_text.splitlines() if line.strip()]
+    return start_line, attached_lines
+
+
+def _latest_log_timestamp(text: str) -> datetime | None:
+    latest = None
+    for line in text.splitlines():
+        match = _LOG_TIME_RE.search(line)
+        if match is None:
+            continue
+        stamped = datetime.strptime(match.group(1), "%d.%m.%Y %H:%M:%S.%f")
+        if latest is None or stamped > latest:
+            latest = stamped
+    return latest
+
+
+def _leading_line_number(line: str) -> int | None:
+    number, separator, _rest = line.partition(":")
+    if not separator or not number.strip().isdigit():
+        return None
+    return int(number.strip())
 
 
 def wait_until_owlsm_stdout_has_json_event() -> bool:

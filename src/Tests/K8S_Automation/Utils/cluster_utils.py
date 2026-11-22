@@ -394,23 +394,62 @@ def main_node_owlsm_pod() -> Pod:
     )
 
 
+_replaced_owlsm_pod_names: set[str] = set()
+
+
+def remember_owlsm_pods_before_rollout() -> None:
+    global _replaced_owlsm_pod_names
+    names = set()
+    for item in _owlsm_pod_items():
+        name = str((item.get("metadata") or {}).get("name") or "")
+        if name:
+            names.add(name)
+    _replaced_owlsm_pod_names = names
+    logger.log_info(f"owlsm pods replaced by this rollout: {sorted(names)}")
+
+
+def clear_replaced_owlsm_pod_names() -> None:
+    global _replaced_owlsm_pod_names
+    _replaced_owlsm_pod_names = set()
+
+
 def owlsm_pod_name_on_node(node_name: str) -> str:
-    result = run_kubectl(
-        [
-            "get",
-            "pods",
-            "-n",
-            global_strings.OWLSM_NAMESPACE,
-            "-l",
-            f"app.kubernetes.io/name={global_strings.OWLSM_APP_NAME}",
-            "--field-selector",
-            f"spec.nodeName={node_name}",
-            "-o",
-            "jsonpath={.items[0].metadata.name}",
-        ],
-        check=False,
-    )
-    return (result.stdout or "").strip()
+    candidates: list[tuple[str, str]] = []
+    for item in _owlsm_pod_items(node_name):
+        metadata = item.get("metadata") or {}
+        name = str(metadata.get("name") or "")
+        if not name or name in _replaced_owlsm_pod_names or metadata.get("deletionTimestamp"):
+            continue
+        phase = str((item.get("status") or {}).get("phase") or "")
+        if phase != "Running":
+            continue
+        created = str(metadata.get("creationTimestamp") or "")
+        candidates.append((created, name))
+    if not candidates:
+        return ""
+    candidates.sort()
+    return candidates[-1][1]
+
+
+def _owlsm_pod_items(node_name: str | None = None) -> list[dict]:
+    args = [
+        "get",
+        "pods",
+        "-n",
+        global_strings.OWLSM_NAMESPACE,
+        "-l",
+        f"app.kubernetes.io/name={global_strings.OWLSM_APP_NAME}",
+        "-o",
+        "json",
+    ]
+    if node_name:
+        args.extend(["--field-selector", f"spec.nodeName={node_name}"])
+    result = run_kubectl(args, check=False)
+    if result.returncode != 0 or not (result.stdout or "").strip():
+        return []
+    payload = json.loads(result.stdout)
+    items = payload.get("items") or []
+    return items if isinstance(items, list) else []
 
 
 def _require_kind_cluster_type() -> None:

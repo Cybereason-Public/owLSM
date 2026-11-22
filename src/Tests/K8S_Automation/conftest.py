@@ -17,6 +17,7 @@ from Utils.cluster_utils import (
 from Utils.log_utils import clear_owlsm_log_and_output, remove_old_log_directories, save_log_files
 from Utils.logger_utils import logger
 from Utils.owlsm_utils import (
+    clear_owlsm_rollout_baseline,
     deploy_owlsm_and_ensure_running,
     is_owlsm_deployed_cluster_wide,
     remove_leftover_cluster_objects,
@@ -90,6 +91,7 @@ def pytest_sessionfinish(session, exitstatus):
 def pytest_bdd_before_scenario(request, feature, scenario):
     try:
         clear_owlsm_log_and_output()
+        clear_owlsm_rollout_baseline()
         if is_owlsm_deployed_cluster_wide():
             start_owlsm_stdout_reader()
         logger.log_info(f"BEFORE scenario: '{scenario.name}' in feature: '{feature.name}'")

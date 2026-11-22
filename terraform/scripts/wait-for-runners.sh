@@ -10,7 +10,7 @@ set -euo pipefail
 # Arguments:
 #   repo             - GitHub repository (owner/repo)
 #   run_label        - Runner label to filter by (e.g., run-12345678)
-#   expected_count   - Number of runners expected to come online
+#   expected_count   - Kept for callers. The tfvars names are what this script waits for.
 #   tfvars_path      - Path to runners.auto.tfvars.json (maps display names to TF keys)
 #   max_wait         - Max wait time in seconds (default: 300)
 #   poll_interval    - Polling interval in seconds (default: 30)
@@ -44,17 +44,43 @@ if [ ! -f "$TFVARS_PATH" ]; then
     exit 1
 fi
 
+# TF keys match display_name, so: automation-owlsm-<key>-<run_id>
+# When ENABLE_ARM=false, skip A1 shapes (matches terraform enable_arm filter).
+# Match these names. Linux and K8s share the run label, so a count of every
+# runner with that label treats the other lane's machines as this lane's.
+RUN_ID="${RUN_LABEL#run-}"
+ENABLE_ARM="${ENABLE_ARM:-true}"
+EXPECTED_NAMES=$(jq -r --arg rid "$RUN_ID" --arg arm "$ENABLE_ARM" '
+    .runners
+    | to_entries[]
+    | select(($arm != "false") or (.value.shape | contains("A1") | not))
+    | "automation-owlsm-\(.key)-\($rid)"
+    ' "$TFVARS_PATH")
+
+if [ -z "$EXPECTED_NAMES" ]; then
+    echo "::error::No runners found in $TFVARS_PATH"
+    exit 1
+fi
+EXPECTED_COUNT=$(printf '%s\n' "$EXPECTED_NAMES" | wc -l | tr -d ' ')
+
+if [ "$EXPECTED_RUNNERS" != "$EXPECTED_COUNT" ]; then
+    echo "Caller count is $EXPECTED_RUNNERS. Waiting for the $EXPECTED_COUNT runner(s) named in $TFVARS_PATH."
+fi
+
 echo "Waiting for runners to register with GitHub..."
 echo "  Repository:       $REPO"
 echo "  Run label:        $RUN_LABEL"
-echo "  Expected runners: $EXPECTED_RUNNERS"
+echo "  Expected runners: $EXPECTED_COUNT"
 echo "  Max wait:         ${MAX_WAIT}s"
 echo "  Poll interval:    ${POLL_INTERVAL}s"
 echo "  TFVars:           $TFVARS_PATH"
+printf '%s\n' "$EXPECTED_NAMES" | sed 's/^/    /'
 
 ELAPSED=0
 ONLINE_COUNT=0
 SEEN_ONLINE=""
+ONLINE_NAMES=""
+MERGED="[]"
 
 while [ $ELAPSED -lt $MAX_WAIT ]; do
     RUNNERS_JSON=$(gh api "repos/${REPO}/actions/runners" --paginate --jq '.runners' 2>&1) || true
@@ -69,24 +95,24 @@ while [ $ELAPSED -lt $MAX_WAIT ]; do
         "[.[] | select(.status == \"online\") | select(any(.labels[]; .name == \"$RUN_LABEL\"))] | .[].name" \
         2>/dev/null) || ONLINE_NAMES=""
 
-    if [ -z "$ONLINE_NAMES" ]; then
-        ONLINE_COUNT=0
-    else
-        ONLINE_COUNT=$(echo "$ONLINE_NAMES" | wc -l | tr -d ' ')
-    fi
+    ONLINE_COUNT=0
+    while IFS= read -r expected_name; do
+        if [ -z "$expected_name" ]; then
+            continue
+        fi
+        if ! printf '%s\n' "$ONLINE_NAMES" | grep -qxF "$expected_name"; then
+            continue
+        fi
+        ONLINE_COUNT=$((ONLINE_COUNT + 1))
+        if ! printf '%s\n' "$SEEN_ONLINE" | grep -qxF "$expected_name"; then
+            echo "  ✓ Runner online: $expected_name (at ${ELAPSED}s)"
+            SEEN_ONLINE="${SEEN_ONLINE}${expected_name}"$'\n'
+        fi
+    done <<< "$EXPECTED_NAMES"
 
-    if [ -n "$ONLINE_NAMES" ]; then
-        while IFS= read -r runner_name; do
-            if ! echo "$SEEN_ONLINE" | grep -qF "$runner_name"; then
-                echo "  ✓ Runner online: $runner_name (at ${ELAPSED}s)"
-                SEEN_ONLINE="${SEEN_ONLINE}${runner_name}"$'\n'
-            fi
-        done <<< "$ONLINE_NAMES"
-    fi
+    echo "  Online expected runners: $ONLINE_COUNT / $EXPECTED_COUNT (elapsed: ${ELAPSED}s)"
 
-    echo "  Online runners with label '$RUN_LABEL': $ONLINE_COUNT / $EXPECTED_RUNNERS (elapsed: ${ELAPSED}s)"
-
-    if [ "$ONLINE_COUNT" -ge "$EXPECTED_RUNNERS" ]; then
+    if [ "$ONLINE_COUNT" -eq "$EXPECTED_COUNT" ]; then
         echo "All expected runners are online!"
         exit 0
     fi
@@ -96,27 +122,15 @@ while [ $ELAPSED -lt $MAX_WAIT ]; do
 done
 
 # ---- Timeout: identify which runners failed ----
-echo "::error::Timed out waiting for runners. Only $ONLINE_COUNT / $EXPECTED_RUNNERS are online after ${MAX_WAIT}s."
+echo "::error::Timed out waiting for runners. Only $ONLINE_COUNT / $EXPECTED_COUNT are online after ${MAX_WAIT}s."
 echo "  Final runner state:"
 echo "$MERGED" | jq -r '.[] | "    \(.name) | status=\(.status) | labels=\([.labels[].name] | join(","))"' 2>/dev/null || true
-
-# Build the list of expected runner display names from tfvars
-# TF keys match display_name, so: automation-owlsm-<key>-<run_id>
-# When ENABLE_ARM=false, skip A1 shapes (matches terraform enable_arm filter)
-RUN_ID="${RUN_LABEL#run-}"
-ENABLE_ARM="${ENABLE_ARM:-true}"
-EXPECTED_NAMES=$(jq -r --arg rid "$RUN_ID" --arg arm "$ENABLE_ARM" '
-    .runners
-    | to_entries[]
-    | select(($arm != "false") or (.value.shape | contains("A1") | not))
-    | "automation-owlsm-\(.key)-\($rid)"
-    ' "$TFVARS_PATH")
 
 # Find which expected runners are NOT in the online list
 FAILED_KEYS="[]"
 while IFS= read -r expected_name; do
     if [ -z "$expected_name" ]; then continue; fi
-    if ! echo "$ONLINE_NAMES" | grep -qF "$expected_name"; then
+    if ! printf '%s\n' "$ONLINE_NAMES" | grep -qxF "$expected_name"; then
         TF_KEY=$(echo "$expected_name" | sed "s/^automation-owlsm-//;s/-${RUN_ID}$//")
         FAILED_KEYS=$(echo "$FAILED_KEYS" | jq --arg k "$TF_KEY" '. + [$k]')
     fi

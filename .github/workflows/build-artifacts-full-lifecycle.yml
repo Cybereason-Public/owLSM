@@ -73,11 +73,11 @@ env:
   RUN_K8S_CI: ${{ github.event_name != 'workflow_dispatch' || inputs.k8s_ci == true }}
 
 jobs:
-  build:
-    name: Build Artifact
+  build-x64:
+    name: Build x86_64 artifact
     if: >-
-      github.event_name == 'workflow_dispatch' ||
-      github.event.workflow_run.conclusion == 'success'
+      (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success') &&
+      (github.event_name != 'workflow_dispatch' || inputs.linux_ci == true)
     runs-on: ["OCI", "owLSM"]
     permissions:
       contents: write
@@ -96,7 +96,7 @@ jobs:
         run: |
           if [ "${{ inputs.create_tag }}" = "true" ]; then
             if [ "${{ inputs.run_automation_tests }}" != "true" ]; then
-              echo "::error::create_tag=true requires run_automation_tests=true (aarch64 unit tests run with automation)."
+              echo "::error::create_tag=true requires run_automation_tests=true."
               exit 1
             fi
             if [ "${{ inputs.linux_ci }}" != "true" ] || [ "${{ inputs.k8s_ci }}" != "true" ]; then
@@ -131,23 +131,11 @@ jobs:
           echo "Branch: $BRANCH_NAME"
           echo "Revision: $BRANCH_REVISION"
 
-      - name: Enable QEMU / prepare aarch64 workspace
-        if: env.RUN_LINUX_CI == 'true' && env.BUILD_ARM == 'true'
-        run: |
-          docker run --privileged --rm tonistiigi/binfmt --install all
-          sudo rm -rf /tmp/owlsm-aarch64
-          cp -a "${{ github.workspace }}" /tmp/owlsm-aarch64
-
       - name: Pull CI Docker image
-        if: env.RUN_LINUX_CI == 'true' || env.RUN_K8S_CI == 'true'
         run: |
           docker pull --platform linux/amd64 ${{ env.DOCKER_IMAGE }}
-          if [ "${{ env.RUN_LINUX_CI }}" = "true" ] && [ "${{ env.BUILD_ARM }}" = "true" ]; then
-            docker pull --platform linux/arm64 ${{ env.DOCKER_IMAGE }}
-          fi
 
       - name: Run RulesGenerator unit tests
-        if: env.RUN_LINUX_CI == 'true'
         run: |
           docker run --rm --platform linux/amd64 \
             -v "${{ github.workspace }}:/workspace" \
@@ -162,42 +150,24 @@ jobs:
               python3 -m pytest Tests/ -v
             "
 
-      - name: Build artifacts (x86_64 + optional aarch64 in parallel)
-        if: env.RUN_LINUX_CI == 'true'
+      - name: Build artifacts (x86_64)
         run: |
           set -e
-          build_one() {
-            docker run --rm --platform "$1" -v "$2:/workspace" -w /workspace \
-              ${{ env.DOCKER_IMAGE }} \
-              bash -c "set -e
-                make -j\$(nproc) VERSION=${{ env.VERSION }}
-                make test -j\$(nproc)
-                make automation
-                ls -la ./build/"
-          }
-          build_one linux/amd64 "${{ github.workspace }}" &
-          PID_X64=$!
-          PID_ARM=""
-          if [ "${{ env.BUILD_ARM }}" = "true" ]; then
-            build_one linux/arm64 /tmp/owlsm-aarch64 &
-            PID_ARM=$!
-          fi
-          FAIL=0
-          wait "$PID_X64" || FAIL=1
-          if [ -n "$PID_ARM" ]; then
-            wait "$PID_ARM" || FAIL=1
-          fi
-          exit "$FAIL"
+          docker run --rm --platform linux/amd64 -v "${{ github.workspace }}:/workspace" -w /workspace \
+            ${{ env.DOCKER_IMAGE }} \
+            bash -c "set -e
+              make -j\$(nproc) VERSION=${{ env.VERSION }}
+              make test -j\$(nproc)
+              make automation
+              ls -la ./build/"
 
       - name: Run x86_64 unit tests
-        if: env.RUN_LINUX_CI == 'true'
         run: |
           sudo chmod +x ./build/unit_tests/bin/unit_tests
           sudo ./build/unit_tests/bin/unit_tests
 
-      - name: Create CI archives
+      - name: Create CI archive
         id: archive
-        if: env.RUN_LINUX_CI == 'true'
         run: |
           set -e
           BASE="${{ env.VERSION }}-${{ steps.branch_info.outputs.branch_name }}-${{ steps.branch_info.outputs.branch_revision }}"
@@ -212,40 +182,25 @@ jobs:
             ls -lh "/tmp/${name}.tar.gz"
           }
           pack x86_64 "${{ github.workspace }}"
-          [ "${{ env.BUILD_ARM }}" = "true" ] && pack aarch64 /tmp/owlsm-aarch64
           echo "artifact_base=$BASE" >> "$GITHUB_OUTPUT"
 
       - name: Upload CI artifact (x86_64)
-        if: env.RUN_LINUX_CI == 'true'
         uses: actions/upload-artifact@v5
         with:
           name: ${{ steps.archive.outputs.artifact_name_x86_64 }}
           path: /tmp/${{ steps.archive.outputs.artifact_name_x86_64 }}.tar.gz
           retention-days: 30
 
-      - name: Upload CI artifact (aarch64)
-        if: env.RUN_LINUX_CI == 'true' && env.BUILD_ARM == 'true'
-        uses: actions/upload-artifact@v5
-        with:
-          name: ${{ steps.archive.outputs.artifact_name_aarch64 }}
-          path: /tmp/${{ steps.archive.outputs.artifact_name_aarch64 }}.tar.gz
-          retention-days: 30
-
-      - name: Create release tarballs
-        if: inputs.create_tag == true && env.RUN_LINUX_CI == 'true'
+      - name: Create release tarball
+        if: inputs.create_tag == true
         run: |
           set -e
           V="${{ env.VERSION }}"
-          pack_rel() {
-            local arch="$1" root="$2"
-            sudo tar -czf "/tmp/owlsm-${arch}-v${V}.tar.gz" -C "${root}/build" owlsm
-            sha256sum "/tmp/owlsm-${arch}-v${V}.tar.gz" | sudo tee "/tmp/checksum-${arch}-v${V}.txt"
-          }
-          pack_rel x86_64 "${{ github.workspace }}"
-          [ "${{ env.BUILD_ARM }}" = "true" ] && pack_rel aarch64 /tmp/owlsm-aarch64
+          sudo tar -czf "/tmp/owlsm-x86_64-v${V}.tar.gz" -C "${{ github.workspace }}/build" owlsm
+          sha256sum "/tmp/owlsm-x86_64-v${V}.tar.gz" | sudo tee "/tmp/checksum-x86_64-v${V}.txt"
 
       - name: Upload release artifact (x86_64)
-        if: inputs.create_tag == true && env.RUN_LINUX_CI == 'true'
+        if: inputs.create_tag == true
         uses: actions/upload-artifact@v5
         with:
           name: release-owlsm-x86_64-${{ env.VERSION }}
@@ -254,8 +209,115 @@ jobs:
             /tmp/checksum-x86_64-v${{ env.VERSION }}.txt
           retention-days: 90
 
+      - name: Summary
+        run: |
+          {
+            echo "## Build x86_64"
+            echo "| Property | Value |"
+            echo "|----------|-------|"
+            echo "| Version | ${{ env.VERSION }} |"
+            echo "| Branch | ${{ steps.branch_info.outputs.branch_name }} |"
+            echo "| CI x86_64 | ${{ steps.archive.outputs.artifact_name_x86_64 }} |"
+            if [ "${{ inputs.create_tag }}" = "true" ]; then
+              echo "| Release | release-owlsm-x86_64-${{ env.VERSION }} |"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Cleanup workspace
+        if: always()
+        run: |
+          docker rmi ${{ env.DOCKER_IMAGE }} || true
+          cd ${{ github.workspace }}
+          sudo git clean -ffdx
+
+    outputs:
+      artifact_base: ${{ steps.archive.outputs.artifact_base }}
+
+  build-aarch64:
+    name: Build aarch64 artifact
+    if: >-
+      (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success') &&
+      (github.event_name != 'workflow_dispatch' || inputs.linux_ci == true) &&
+      (github.event_name != 'workflow_dispatch' || inputs.arm == true || inputs.create_tag == true)
+    runs-on: ["owlsm-build-aarch64"]
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0  # Full history for revision info
+          # For workflow_run (fork PR): check out the PR's head commit.
+          # For workflow_dispatch: falls back to the default sha (HEAD).
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Get branch info
+        id: branch_info
+        run: |
+          BRANCH_NAME=${GITHUB_REF_NAME//\//-}  # Replace / with -
+          BRANCH_REVISION=$(git rev-parse --short HEAD)
+          COMMIT_SHA=$(git rev-parse HEAD)
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "branch_revision=$BRANCH_REVISION" >> $GITHUB_OUTPUT
+          echo "commit_sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
+          echo "Branch: $BRANCH_NAME"
+          echo "Revision: $BRANCH_REVISION"
+
+      - name: Pull CI Docker image
+        run: |
+          docker pull --platform linux/arm64 ${{ env.DOCKER_IMAGE }}
+
+      - name: Build artifacts (aarch64)
+        run: |
+          set -e
+          docker run --rm --platform linux/arm64 -v "${{ github.workspace }}:/workspace" -w /workspace \
+            ${{ env.DOCKER_IMAGE }} \
+            bash -c "set -e
+              make -j\$(nproc) VERSION=${{ env.VERSION }}
+              make test -j\$(nproc)
+              make automation
+              ls -la ./build/"
+
+      - name: Run aarch64 unit tests
+        run: |
+          sudo chmod +x ./build/unit_tests/bin/unit_tests
+          sudo ./build/unit_tests/bin/unit_tests
+
+      - name: Create CI archive
+        id: archive
+        run: |
+          set -e
+          BASE="${{ env.VERSION }}-${{ steps.branch_info.outputs.branch_name }}-${{ steps.branch_info.outputs.branch_revision }}"
+          pack() {
+            local arch="$1" src="$2"
+            local name="${BASE}-${arch}"
+            tar czf "/tmp/${name}.tar.gz" --dereference \
+              --exclude='.git*' --exclude='.github*' --exclude='*.o' \
+              --exclude='venv' --exclude='.uv-cache' --exclude='.cache' \
+              -C "$src" .
+            echo "artifact_name_${arch}=${name}" >> "$GITHUB_OUTPUT"
+            ls -lh "/tmp/${name}.tar.gz"
+          }
+          pack aarch64 "${{ github.workspace }}"
+
+      - name: Upload CI artifact (aarch64)
+        uses: actions/upload-artifact@v5
+        with:
+          name: ${{ steps.archive.outputs.artifact_name_aarch64 }}
+          path: /tmp/${{ steps.archive.outputs.artifact_name_aarch64 }}.tar.gz
+          retention-days: 30
+
+      - name: Create release tarball
+        if: inputs.create_tag == true
+        run: |
+          set -e
+          V="${{ env.VERSION }}"
+          sudo tar -czf "/tmp/owlsm-aarch64-v${V}.tar.gz" -C "${{ github.workspace }}/build" owlsm
+          sha256sum "/tmp/owlsm-aarch64-v${V}.tar.gz" | sudo tee "/tmp/checksum-aarch64-v${V}.txt"
+
       - name: Upload release artifact (aarch64)
-        if: inputs.create_tag == true && env.RUN_LINUX_CI == 'true' && env.BUILD_ARM == 'true'
+        if: inputs.create_tag == true
         uses: actions/upload-artifact@v5
         with:
           name: release-owlsm-aarch64-${{ env.VERSION }}
@@ -264,14 +326,65 @@ jobs:
             /tmp/checksum-aarch64-v${{ env.VERSION }}.txt
           retention-days: 90
 
-      - name: Clean Linux build tree for K8s
-        if: env.RUN_K8S_CI == 'true'
+      - name: Summary
         run: |
-          echo "Removing ${{ github.workspace }}/build so K8s output is not mixed with Linux"
-          sudo rm -rf "${{ github.workspace }}/build"
+          {
+            echo "## Build aarch64"
+            echo "| Property | Value |"
+            echo "|----------|-------|"
+            echo "| Version | ${{ env.VERSION }} |"
+            echo "| Branch | ${{ steps.branch_info.outputs.branch_name }} |"
+            echo "| CI aarch64 | ${{ steps.archive.outputs.artifact_name_aarch64 }} |"
+            if [ "${{ inputs.create_tag }}" = "true" ]; then
+              echo "| Release | release-owlsm-aarch64-${{ env.VERSION }} |"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Cleanup workspace
+        if: always()
+        run: |
+          docker rmi ${{ env.DOCKER_IMAGE }} || true
+          cd ${{ github.workspace }}
+          sudo git clean -ffdx
+
+  build-k8s:
+    name: Build K8s artifact
+    if: >-
+      (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success') &&
+      (github.event_name != 'workflow_dispatch' || inputs.k8s_ci == true)
+    runs-on: ["owlsm-build-k8s"]
+    permissions:
+      contents: write
+      packages: write
+    outputs:
+      commit_sha: ${{ steps.branch_info.outputs.commit_sha }}
+      test_owlsm_runtime_image: ${{ steps.test_image.outputs.test_image }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0  # Full history for revision info
+          # For workflow_run (fork PR): check out the PR's head commit.
+          # For workflow_dispatch: falls back to the default sha (HEAD).
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Get branch info
+        id: branch_info
+        run: |
+          BRANCH_NAME=${GITHUB_REF_NAME//\//-}  # Replace / with -
+          BRANCH_REVISION=$(git rev-parse --short HEAD)
+          COMMIT_SHA=$(git rev-parse HEAD)
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "branch_revision=$BRANCH_REVISION" >> $GITHUB_OUTPUT
+          echo "commit_sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
+          echo "Branch: $BRANCH_NAME"
+          echo "Revision: $BRANCH_REVISION"
+
+      - name: Pull CI Docker image
+        run: |
+          docker pull --platform linux/amd64 ${{ env.DOCKER_IMAGE }}
 
       - name: Build K8s artifacts (amd64)
-        if: env.RUN_K8S_CI == 'true'
         run: |
           docker run --rm --platform linux/amd64 \
             -v "${{ github.workspace }}:/workspace" \
@@ -282,7 +395,6 @@ jobs:
               ls -la ./build/ ./build/owlsm-k8s/"
 
       - name: Build owlsm-runtime image tar
-        if: env.RUN_K8S_CI == 'true'
         id: runtime_image
         run: |
           set -e
@@ -296,7 +408,6 @@ jobs:
           echo "artifact_name=${BASE}-owlsm-runtime" >> "$GITHUB_OUTPUT"
 
       - name: Push test-owlsm-runtime to GHCR
-        if: env.RUN_K8S_CI == 'true'
         id: test_image
         env:
           GHCR_TOKEN: ${{ secrets.GH_PAT_WITH_PERMISSIONS_ONLY_FOR_WRITE_PACKAGES }}
@@ -330,7 +441,6 @@ jobs:
           fi
 
       - name: Upload CI artifact (owlsm-runtime)
-        if: env.RUN_K8S_CI == 'true'
         uses: actions/upload-artifact@v5
         with:
           name: ${{ steps.runtime_image.outputs.artifact_name }}
@@ -338,7 +448,7 @@ jobs:
           retention-days: 30
 
       - name: Upload release artifact (owlsm-runtime)
-        if: inputs.create_tag == true && env.RUN_K8S_CI == 'true'
+        if: inputs.create_tag == true
         uses: actions/upload-artifact@v5
         with:
           name: release-owlsm-runtime-${{ env.VERSION }}
@@ -346,7 +456,6 @@ jobs:
           retention-days: 90
 
       - name: Package Helm chart
-        if: env.RUN_K8S_CI == 'true'
         id: helm_chart
         run: |
           set -e
@@ -360,7 +469,6 @@ jobs:
           echo "artifact_name=${BASE}-owlsm-chart" >> "$GITHUB_OUTPUT"
 
       - name: Upload CI artifact (owlsm chart)
-        if: env.RUN_K8S_CI == 'true'
         uses: actions/upload-artifact@v5
         with:
           name: ${{ steps.helm_chart.outputs.artifact_name }}
@@ -368,7 +476,7 @@ jobs:
           retention-days: 30
 
       - name: Upload release artifact (owlsm chart)
-        if: inputs.create_tag == true && env.RUN_K8S_CI == 'true'
+        if: inputs.create_tag == true
         uses: actions/upload-artifact@v5
         with:
           name: release-owlsm-chart-${{ env.VERSION }}
@@ -378,28 +486,19 @@ jobs:
       - name: Summary
         run: |
           {
-            echo "## Build Summary"
+            echo "## Build K8s"
             echo "| Property | Value |"
             echo "|----------|-------|"
             echo "| Version | ${{ env.VERSION }} |"
             echo "| Branch | ${{ steps.branch_info.outputs.branch_name }} |"
-            echo "| Linux CI | ${{ env.RUN_LINUX_CI }} |"
-            echo "| K8s CI | ${{ env.RUN_K8S_CI }} |"
-            echo "| ARM | ${{ env.BUILD_ARM }} |"
-            if [ "${{ env.RUN_LINUX_CI }}" = "true" ]; then
-              echo "| CI x86_64 | ${{ steps.archive.outputs.artifact_name_x86_64 }} |"
-              [ "${{ env.BUILD_ARM }}" = "true" ] && \
-                echo "| CI aarch64 | ${{ steps.archive.outputs.artifact_name_aarch64 }} |"
-            fi
-            if [ "${{ env.RUN_K8S_CI }}" = "true" ]; then
-              echo "| K8s package | build/owlsm-k8s |"
-              echo "| owlsm-runtime tar | ${{ steps.runtime_image.outputs.artifact_name }} |"
-              echo "| test-owlsm-runtime | ${{ steps.test_image.outputs.test_image }} |"
-              echo "| owlsm chart | ${{ steps.helm_chart.outputs.artifact_name }} |"
-              if [ "${{ inputs.create_tag }}" = "true" ]; then
-                echo "| Release owlsm-runtime | release-owlsm-runtime-${{ env.VERSION }} |"
-                echo "| Release owlsm chart | release-owlsm-chart-${{ env.VERSION }} |"
-              fi
+            echo "| Commit | ${{ steps.branch_info.outputs.commit_sha }} |"
+            echo "| K8s package | build/owlsm-k8s |"
+            echo "| owlsm-runtime tar | ${{ steps.runtime_image.outputs.artifact_name }} |"
+            echo "| test-owlsm-runtime | ${{ steps.test_image.outputs.test_image }} |"
+            echo "| owlsm chart | ${{ steps.helm_chart.outputs.artifact_name }} |"
+            if [ "${{ inputs.create_tag }}" = "true" ]; then
+              echo "| Release owlsm-runtime | release-owlsm-runtime-${{ env.VERSION }} |"
+              echo "| Release owlsm chart | release-owlsm-chart-${{ env.VERSION }} |"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -407,29 +506,24 @@ jobs:
         if: always()
         run: |
           docker rmi ${{ env.DOCKER_IMAGE }} || true
-          sudo rm -rf /tmp/owlsm-aarch64
           cd ${{ github.workspace }}
           sudo git clean -ffdx
 
-    outputs:
-      artifact_base: ${{ steps.archive.outputs.artifact_base }}
-      commit_sha: ${{ steps.branch_info.outputs.commit_sha }}
-      build_arm: ${{ env.BUILD_ARM }}
-      test_owlsm_runtime_image: ${{ steps.test_image.outputs.test_image }}
-
   automation-tests-runners:
     name: Create runners and run automation tests
-    needs: [build]
+    needs: [build-x64, build-aarch64, build-k8s]
     if: >-
       always() &&
-      needs.build.result == 'success' &&
+      needs.build-x64.result == 'success' &&
+      (needs.build-aarch64.result == 'success' || needs.build-aarch64.result == 'skipped') &&
+      (needs.build-k8s.result == 'success' || needs.build-k8s.result == 'skipped') &&
       ((github.event_name == 'workflow_dispatch' && inputs.run_automation_tests == true && inputs.linux_ci == true) ||
       (github.event_name == 'workflow_run' &&
        github.event.workflow_run.conclusion == 'success'))
     uses: ./.github/workflows/automation-tests-runners.yml
     with:
-      artifact-name: ${{ needs.build.outputs.artifact_base }}
-      enable_arm: ${{ needs.build.outputs.build_arm == 'true' }}
+      artifact-name: ${{ needs.build-x64.outputs.artifact_base }}
+      enable_arm: ${{ github.event_name != 'workflow_dispatch' || inputs.arm == true || inputs.create_tag == true }}
       automation-tests-command-args: ${{ inputs.linux-automation-tests-command-args || 'features/ --junitxml=$AUTOMATION_ROOT_DIR/results.xml -v -s' }}
       destroy_runners: ${{ github.event_name != 'workflow_dispatch' || inputs.destroy_runners }}
       ephemeral_runners: ${{ github.event_name != 'workflow_dispatch' || inputs.ephemeral_runners }}
@@ -439,17 +533,19 @@ jobs:
 
   k8s-automation-tests-runners:
     name: Create K8s controllers and run K8s tests
-    needs: [build]
+    needs: [build-x64, build-aarch64, build-k8s]
     if: >-
       always() &&
-      needs.build.result == 'success' &&
+      needs.build-k8s.result == 'success' &&
+      (needs.build-x64.result == 'success' || needs.build-x64.result == 'skipped') &&
+      (needs.build-aarch64.result == 'success' || needs.build-aarch64.result == 'skipped') &&
       ((github.event_name == 'workflow_dispatch' && inputs.run_automation_tests == true && inputs.k8s_ci == true) ||
       (github.event_name == 'workflow_run' &&
        github.event.workflow_run.conclusion == 'success'))
     uses: ./.github/workflows/k8s-automation-tests-runners.yml
     with:
       image-repository: ghcr.io/cybereason-public/test-owlsm-runtime
-      image-tag: ci-${{ needs.build.outputs.commit_sha }}
+      image-tag: ci-${{ needs.build-k8s.outputs.commit_sha }}
       k8s-tests-command-args: ${{ inputs.k8s-automation-tests-command-args || 'features/ --junitxml=$AUTOMATION_ROOT_DIR/results.xml -v -s' }}
       destroy_runners: ${{ github.event_name != 'workflow_dispatch' || inputs.destroy_runners }}
       ephemeral_runners: ${{ github.event_name != 'workflow_dispatch' || inputs.ephemeral_runners }}
@@ -467,14 +563,16 @@ jobs:
 
   create-tag:
     name: Create Git tag
-    needs: [build, automation-tests-runners, k8s-automation-tests-runners]
+    needs: [build-x64, build-aarch64, build-k8s, automation-tests-runners, k8s-automation-tests-runners]
     if: >-
       always() &&
       github.event_name == 'workflow_dispatch' &&
       inputs.create_tag == true &&
       inputs.linux_ci == true &&
       inputs.k8s_ci == true &&
-      needs.build.result == 'success' &&
+      needs.build-x64.result == 'success' &&
+      needs.build-aarch64.result == 'success' &&
+      needs.build-k8s.result == 'success' &&
       needs.automation-tests-runners.result == 'success' &&
       needs.k8s-automation-tests-runners.result == 'success'
     runs-on: ["OCI", "owLSM"]
@@ -486,7 +584,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_RUNNER_PAT }}
         run: |
           TAG="v${{ env.VERSION }}"
-          SHA="${{ needs.build.outputs.commit_sha }}"
+          SHA="${{ needs.build-k8s.outputs.commit_sha }}"
           echo "==> Creating tag: $TAG (sha: $SHA)"
 
           gh api "/repos/${{ github.repository }}/git/refs" \
