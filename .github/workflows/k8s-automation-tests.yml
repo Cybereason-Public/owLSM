@@ -78,7 +78,7 @@ jobs:
 
       - name: Collect debug logs
         id: collect_logs
-        if: failure() || cancelled()
+        if: failure()
         run: |
           sudo python3 ${{ github.workspace }}/scripts/zip_logs.py \
             --automation-dir "$AUTOMATION_ROOT_DIR" \
@@ -87,7 +87,7 @@ jobs:
           echo "zip_path=$ZIP_PATH" >> "$GITHUB_OUTPUT"
 
       - name: Upload debug logs
-        if: (failure() || cancelled()) && steps.collect_logs.outputs.zip_path != ''
+        if: failure() && steps.collect_logs.outputs.zip_path != ''
         uses: actions/upload-artifact@v5
         with:
           name: k8s-debug-logs-${{ inputs.runner-label }}
@@ -95,11 +95,11 @@ jobs:
           retention-days: 14
 
       - name: Rename results file
-        if: always()
+        if: ${{ !cancelled() }}
         run: mv ${{ env.AUTOMATION_ROOT_DIR }}/results.xml ${{ env.AUTOMATION_ROOT_DIR }}/results-${{ inputs.runner-label }}.xml
 
       - name: Upload test results
-        if: always()
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v5
         with:
           name: k8s-automation-test-results-${{ inputs.runner-label }}

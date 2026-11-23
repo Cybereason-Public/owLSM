@@ -513,13 +513,13 @@ jobs:
     name: Create runners and run automation tests
     needs: [build-x64, build-aarch64, build-k8s]
     if: >-
-      always() &&
+      ${{ !cancelled() &&
       needs.build-x64.result == 'success' &&
       (needs.build-aarch64.result == 'success' || needs.build-aarch64.result == 'skipped') &&
       (needs.build-k8s.result == 'success' || needs.build-k8s.result == 'skipped') &&
       ((github.event_name == 'workflow_dispatch' && inputs.run_automation_tests == true && inputs.linux_ci == true) ||
       (github.event_name == 'workflow_run' &&
-       github.event.workflow_run.conclusion == 'success'))
+       github.event.workflow_run.conclusion == 'success')) }}
     uses: ./.github/workflows/automation-tests-runners.yml
     with:
       artifact-name: ${{ needs.build-x64.outputs.artifact_base }}
@@ -535,13 +535,13 @@ jobs:
     name: Create K8s controllers and run K8s tests
     needs: [build-x64, build-aarch64, build-k8s]
     if: >-
-      always() &&
+      ${{ !cancelled() &&
       needs.build-k8s.result == 'success' &&
       (needs.build-x64.result == 'success' || needs.build-x64.result == 'skipped') &&
       (needs.build-aarch64.result == 'success' || needs.build-aarch64.result == 'skipped') &&
       ((github.event_name == 'workflow_dispatch' && inputs.run_automation_tests == true && inputs.k8s_ci == true) ||
       (github.event_name == 'workflow_run' &&
-       github.event.workflow_run.conclusion == 'success'))
+       github.event.workflow_run.conclusion == 'success')) }}
     uses: ./.github/workflows/k8s-automation-tests-runners.yml
     with:
       image-repository: ghcr.io/cybereason-public/test-owlsm-runtime
@@ -565,7 +565,7 @@ jobs:
     name: Create Git tag
     needs: [build-x64, build-aarch64, build-k8s, automation-tests-runners, k8s-automation-tests-runners]
     if: >-
-      always() &&
+      ${{ !cancelled() &&
       github.event_name == 'workflow_dispatch' &&
       inputs.create_tag == true &&
       inputs.linux_ci == true &&
@@ -574,7 +574,7 @@ jobs:
       needs.build-aarch64.result == 'success' &&
       needs.build-k8s.result == 'success' &&
       needs.automation-tests-runners.result == 'success' &&
-      needs.k8s-automation-tests-runners.result == 'success'
+      needs.k8s-automation-tests-runners.result == 'success' }}
     runs-on: ["OCI", "owLSM"]
     permissions:
       contents: write

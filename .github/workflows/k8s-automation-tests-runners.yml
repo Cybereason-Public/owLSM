@@ -219,7 +219,7 @@ jobs:
           fi
 
       - name: Summary
-        if: always()
+        if: ${{ !cancelled() }}
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: |
           echo "## Prepare K8s Controllers Summary" >> $GITHUB_STEP_SUMMARY
@@ -286,7 +286,7 @@ jobs:
   aggregate-results:
     name: Aggregate K8s Test Results
     needs: [provision-k8s-runners, run-k8s-tests]
-    if: always() && needs.provision-k8s-runners.outputs.runners_ready == 'true'
+    if: ${{ !cancelled() && needs.provision-k8s-runners.outputs.runners_ready == 'true' }}
     runs-on: ["OCI", "owLSM"]
     env:
       RESULTS_DIR: all-results
@@ -328,7 +328,7 @@ jobs:
           fi
 
       - name: Upload aggregated results
-        if: always()
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v5
         with:
           name: k8s-aggregated-test-results
@@ -344,7 +344,7 @@ jobs:
 
   destroy-k8s-runners:
     name: Destroy K8s Controller VMs
-    needs: [provision-k8s-runners, recycle-oke, run-k8s-tests, aggregate-results]
+    needs: [provision-k8s-runners, recycle-oke, run-k8s-tests]
     if: >-
       always() &&
       inputs.destroy_runners == true &&
