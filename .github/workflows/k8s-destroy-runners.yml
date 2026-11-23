@@ -32,6 +32,8 @@ env:
 jobs:
   destroy-k8s-runners:
     name: Destroy K8s Controller VMs
+    # Caller may start this after Cancel. always() keeps terraform destroy from being skipped.
+    if: always()
     runs-on: ["OCI", "owLSM"]
 
     steps:

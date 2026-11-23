@@ -219,7 +219,7 @@ jobs:
       # Summary
       # =====================================================================
       - name: Summary
-        if: always()
+        if: ${{ !cancelled() }}
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: |
           echo "## Prepare Runners Summary" >> $GITHUB_STEP_SUMMARY
@@ -275,7 +275,7 @@ jobs:
   aggregate-results:
     name: Aggregate Test Results
     needs: [provision-runners, run-automation-tests]
-    if: always() && needs.provision-runners.outputs.runners_ready == 'true'
+    if: ${{ !cancelled() && needs.provision-runners.outputs.runners_ready == 'true' }}
     runs-on: ["OCI", "owLSM"]
     env:
       RESULTS_DIR: all-results
@@ -337,7 +337,7 @@ jobs:
           fi
 
       - name: Upload aggregated results
-        if: always()
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v5
         with:
           name: aggregated-test-results
@@ -357,7 +357,7 @@ jobs:
 
   destroy-runners:
     name: Destroy OCI Runner VMs
-    needs: [provision-runners, run-automation-tests, aggregate-results]
+    needs: [provision-runners, run-automation-tests]
     if: >-
       always() &&
       inputs.destroy_runners == true &&

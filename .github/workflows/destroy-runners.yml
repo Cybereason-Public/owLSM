@@ -30,6 +30,8 @@ env:
 jobs:
   destroy-runners:
     name: Destroy OCI Runner VMs
+    # Caller may start this after Cancel. always() keeps terraform destroy from being skipped.
+    if: always()
     runs-on: ["OCI", "owLSM"]
 
     steps:
